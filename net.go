@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -8,17 +9,25 @@ import (
 )
 
 func parseURL(iter int, u string) error {
+	urlList[u] = true
+	fmt.Println("parse: ", u, iter)
 	body, err := getBody(u)
 	if err != nil {
 		return err
 	}
 	body = cleanBody(body)
 	ips := getIP(body)
+	fmt.Println("num of ips: ", len(ips))
 	saveIP(ips)
 	urls := getListURL(u, body)
-	if urls != nil {
-		for _, u := range urls {
-			parseURL(iter+1, u)
+	fmt.Println("num of urls: ", len(urls))
+	if iter < 5 {
+		if urls != nil {
+			for _, u := range urls {
+				if !urlList[u] {
+					parseURL(iter+1, u)
+				}
+			}
 		}
 	}
 	return nil
@@ -45,9 +54,13 @@ func getBody(u string) ([]byte, error) {
 }
 
 func getHost(u string) (string, error) {
-	uParse, err := url.Parse("http://bing.com/search?q=dotnet")
+	uParse, err := url.Parse(u)
 	if err != nil {
 		return "", err
 	}
-	return uParse.Scheme + "://" + uParse.Host, nil
+	addon := ""
+	if uParse.Host == "www.samair.ru" {
+		addon = "/proxy"
+	}
+	return uParse.Scheme + "://" + uParse.Host + addon, nil
 }
