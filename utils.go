@@ -8,6 +8,12 @@ import (
 	"strconv"
 )
 
+func worker(id int, jobs <-chan string, results chan<- int) {
+	for u := range jobs {
+		results <- parseURL(u)
+	}
+}
+
 func cleanBody(body []byte) []byte {
 	for i := range replace {
 		re := regexp.MustCompile(replace[i][0])
@@ -53,7 +59,9 @@ func getIP(body []byte) []string {
 				if ip != "0.0.0.0" && portInt < 65535 {
 					ip = ip + ":" + port
 					if !ipList[ip] {
+						mutex.Lock()
 						ipList[ip] = true
+						mutex.Unlock()
 						ips = append(ips, ip)
 					}
 				}
@@ -68,17 +76,23 @@ func getIP(body []byte) []string {
 				if string(res[1]) != "0.0.0.0" {
 					ip := string(res[1]) + ":80"
 					if !ipList[ip] {
+						mutex.Lock()
 						ipList[ip] = true
+						mutex.Unlock()
 						ips = append(ips, ip)
 					}
 					ip = string(res[1]) + ":3128"
 					if !ipList[ip] {
+						mutex.Lock()
 						ipList[ip] = true
+						mutex.Unlock()
 						ips = append(ips, ip)
 					}
 					ip = string(res[1]) + ":8080"
 					if !ipList[ip] {
+						mutex.Lock()
 						ipList[ip] = true
+						mutex.Unlock()
 						ips = append(ips, ip)
 					}
 				}

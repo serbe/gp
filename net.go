@@ -8,29 +8,27 @@ import (
 	"time"
 )
 
-func parseURL(iter int, u string) error {
+func parseURL(u string) int {
+	mutex.Lock()
 	urlList[u] = true
-	fmt.Println("parse: ", u, iter)
+	mutex.Unlock()
 	body, err := getBody(u)
 	if err != nil {
-		return err
+		return 0
 	}
 	body = cleanBody(body)
 	ips := getIP(body)
-	fmt.Println("num of ips: ", len(ips))
 	saveIP(ips)
 	urls := getListURL(u, body)
 	fmt.Println("num of urls: ", len(urls))
-	if iter < 5 {
-		if urls != nil {
-			for _, u := range urls {
-				if !urlList[u] {
-					parseURL(iter+1, u)
-				}
+	if urls != nil {
+		for _, u := range urls {
+			if !urlList[u] {
+				jobs <- u
 			}
 		}
 	}
-	return nil
+	return len(ips)
 }
 
 func getBody(u string) ([]byte, error) {
