@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"sync"
+	"time"
 )
 
 var (
@@ -12,29 +13,25 @@ var (
 )
 
 func main() {
-	workers := flag.Int("w", 5, "Num of workers")
+	depth := flag.Int("d", 5, "Num of depth")
 
 	flag.Parse()
+
+	t0 := time.Now()
 
 	existsFile("ips.txt")
 	urlList = make(map[string]bool)
 	ipList = make(map[string]bool)
 	getIPList()
 
-	jobs = make(chan string)
-	results := make(chan int)
-
-	for w := 1; w <= *workers; w++ {
-		go worker(w, jobs, results)
-	}
+	finished := make(chan bool)
 
 	for _, u := range siteList {
-		jobs <- u
+		go crawl(u, *depth, finished)
 	}
 
-	for r := range results {
-		if r > 0 {
-			fmt.Println("Add ", r, " ip")
-		}
-	}
+	<-finished
+
+	t1 := time.Now()
+	fmt.Printf("%v\n", t1.Sub(t0))
 }

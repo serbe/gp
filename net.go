@@ -8,30 +8,51 @@ import (
 	"time"
 )
 
-func parseURL(u string) int {
-	mutex.Lock()
-	urlList[u] = true
-	mutex.Unlock()
-	body, err := getBody(u)
-	if err != nil {
-		return 0
+func crawl(startURL string, depth int, finished chan bool) {
+	if depth <= 0 {
+		finished <- false
+		return
 	}
-	body = cleanBody(body)
-	ips := getIP(body)
+
+	// fmt.Println("parse: ", u)
+	mutex.Lock()
+	urlList[startURL] = true
+	mutex.Unlock()
+
+	_, urls, ips, err := fetch(startURL)
+	if err != nil {
+		fmt.Println(err)
+		finished <- false
+		return
+	}
+
 	saveIP(ips)
-	urls := getListURL(u, body)
-	fmt.Println("num of urls: ", len(urls))
-	if urls != nil {
-		for _, u := range urls {
-			if !urlList[u] {
-				jobs <- u
-			}
+
+	urlCount := 0
+
+	innerFinished := make(chan bool)
+
+	for _, u := range urls {
+		if !urlList[u] {
+			urlCount++
+			go crawl(u, depth-1, innerFinished)
 		}
 	}
-	return len(ips)
+
+	if urlCount > 0 {
+		fmt.Printf("found: %s %d in depth: %d\n", startURL, urlCount, depth)
+	}
+
+	for i := 0; i < urlCount; i++ {
+		<-innerFinished
+	}
+
+	finished <- true
+
+	return
 }
 
-func getBody(u string) ([]byte, error) {
+func fetch(u string) ([]byte, []string, []string, error) {
 	client := &http.Client{
 		Timeout: time.Duration(10) * time.Second,
 	}
@@ -44,11 +65,18 @@ func getBody(u string) ([]byte, error) {
 	// }
 	resp, err := client.Get(u)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	return body, err
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	body = cleanBody(body)
+	ips := getIP(body)
+	urls := getListURL(u, body)
+
+	return body, urls, ips, err
 }
 
 func getHost(u string) (string, error) {

@@ -8,12 +8,6 @@ import (
 	"strconv"
 )
 
-func worker(id int, jobs <-chan string, results chan<- int) {
-	for u := range jobs {
-		results <- parseURL(u)
-	}
-}
-
 func cleanBody(body []byte) []byte {
 	for i := range replace {
 		re := regexp.MustCompile(replace[i][0])
