@@ -1,6 +1,16 @@
 package main
 
+import (
+	"flag"
+	"sync"
+)
+
 var (
+	stringChan chan string
+	mutex      = &sync.Mutex{}
+
+	workers = 2
+
 	siteList = []string{
 		`http://webanetlabs.net/publ/24`,
 		`http://awmproxy.com/freeproxy.php`,
@@ -65,3 +75,7 @@ var (
 	urlList map[string]bool
 	ipList  map[string]bool
 )
+
+func init() {
+	flag.IntVar(&workers, "w", workers, "Num of workers")
+}

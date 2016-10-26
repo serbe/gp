@@ -8,21 +8,15 @@ import (
 	"time"
 )
 
-func crawl(startURL string, depth int, finished chan bool) {
-	if depth <= 0 {
-		finished <- false
-		return
-	}
-
-	// fmt.Println("parse: ", u)
+func crawl(u string) {
+	fmt.Println("parse: ", u)
 	mutex.Lock()
-	urlList[startURL] = true
+	urlList[u] = true
 	mutex.Unlock()
 
-	_, urls, ips, err := fetch(startURL)
+	_, urls, ips, err := fetch(u)
 	if err != nil {
 		fmt.Println(err)
-		finished <- false
 		return
 	}
 
@@ -30,25 +24,19 @@ func crawl(startURL string, depth int, finished chan bool) {
 
 	urlCount := 0
 
-	innerFinished := make(chan bool)
-
-	for _, u := range urls {
-		if !urlList[u] {
+	for _, item := range urls {
+		if !urlList[item] {
 			urlCount++
-			go crawl(u, depth-1, innerFinished)
+			stringChan <- item
+			fmt.Println("send ", item)
 		}
 	}
 
 	if urlCount > 0 {
-		fmt.Printf("found: %s %d in depth: %d\n", startURL, urlCount, depth)
+		fmt.Printf("found: %s %d\n", u, urlCount)
 	}
 
-	for i := 0; i < urlCount; i++ {
-		<-innerFinished
-	}
-
-	finished <- true
-
+	fmt.Println("finish ", u)
 	return
 }
 

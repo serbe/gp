@@ -3,19 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"sync"
 	"time"
 )
 
-var (
-	jobs  chan string
-	mutex = &sync.Mutex{}
-)
-
 func main() {
-	depth := flag.Int("d", 5, "Num of depth")
-
 	flag.Parse()
+
+	stringChan = make(chan string, 100000)
 
 	t0 := time.Now()
 
@@ -24,13 +18,15 @@ func main() {
 	ipList = make(map[string]bool)
 	getIPList()
 
-	finished := make(chan bool)
+	grab()
 
-	for _, u := range siteList {
-		go crawl(u, *depth, finished)
+	for _, s := range siteList {
+		stringChan <- s
 	}
 
-	<-finished
+	for len(stringChan) > 1 {
+		// stringChan <- s
+	}
 
 	t1 := time.Now()
 	fmt.Printf("%v\n", t1.Sub(t0))

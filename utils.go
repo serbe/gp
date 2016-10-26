@@ -8,6 +8,12 @@ import (
 	"strconv"
 )
 
+func grab() {
+	for i := 0; i < workers; i++ {
+		go worker()
+	}
+}
+
 func cleanBody(body []byte) []byte {
 	for i := range replace {
 		re := regexp.MustCompile(replace[i][0])
@@ -155,4 +161,13 @@ func createFile(file string) bool {
 		return false
 	}
 	return true
+}
+
+func worker() {
+	for {
+		select {
+		case u := <-stringChan:
+			crawl(u)
+		}
+	}
 }
