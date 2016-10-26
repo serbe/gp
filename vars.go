@@ -9,10 +9,10 @@ var (
 	stringChan chan string
 	mutex      = &sync.Mutex{}
 
-	workers = 2
+	workers = 1
 
 	siteList = []string{
-		`http://webanetlabs.net/publ/24`,
+		// `http://webanetlabs.net/publ/24`,
 		`http://awmproxy.com/freeproxy.php`,
 		`http://www.prime-speed.ru/proxy/free-proxy-list/all-working-proxies.php`,
 		`http://spys.ru/proxies/`,

@@ -8,13 +8,8 @@ import (
 	"strconv"
 )
 
-func grab() {
-	for i := 0; i < workers; i++ {
-		go worker()
-	}
-}
-
 func cleanBody(body []byte) []byte {
+	fmt.Println("clean body")
 	for i := range replace {
 		re := regexp.MustCompile(replace[i][0])
 		if re.Match(body) {
@@ -102,8 +97,8 @@ func getIP(body []byte) []string {
 	return ips
 }
 
-func saveIP(ips []string) {
-	writeSlice(ips, "ips.txt")
+func saveIP(ips []string) error {
+	return writeSlice(ips, "ips.txt")
 }
 
 func getIPList() {
@@ -161,13 +156,4 @@ func createFile(file string) bool {
 		return false
 	}
 	return true
-}
-
-func worker() {
-	for {
-		select {
-		case u := <-stringChan:
-			crawl(u)
-		}
-	}
 }
