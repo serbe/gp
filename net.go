@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -9,7 +8,6 @@ import (
 )
 
 func fetch(u string) ([]byte, error) {
-	fmt.Println("fetch ", u)
 	client := &http.Client{
 		Timeout: time.Duration(10) * time.Second,
 	}
@@ -29,7 +27,6 @@ func fetch(u string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("finish fetch: ", u)
 	return body, err
 }
 

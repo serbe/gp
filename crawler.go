@@ -3,10 +3,7 @@ package main
 import "fmt"
 
 func crawl(u string) error {
-	fmt.Println("parse: ", u)
-	mutex.Lock()
 	urlList[u] = true
-	mutex.Unlock()
 
 	body, err := fetch(u)
 	if err != nil {
@@ -16,46 +13,36 @@ func crawl(u string) error {
 
 	body = cleanBody(body)
 	ips := getIP(body)
+
 	urls := getListURL(u, body)
 
-	err = saveIP(ips)
-	if err != nil {
-		fmt.Println(err)
-	}
+	fmt.Println("len urls ", len(urls))
+
+	go saveIP(ips)
 
 	urlCount := 0
 
 	for _, item := range urls {
 		if !urlList[item] {
+			stringInChan <- item
+			numUrls++
 			urlCount++
-			stringChan <- item
-			fmt.Println("send ", item)
 		}
 	}
 
 	if urlCount > 0 {
-		fmt.Printf("found: %s %d\n", u, urlCount)
+		fmt.Printf("in %s found %d urls\n", u, urlCount)
 	}
 
-	fmt.Println("finish ", u)
 	return nil
 }
 
 func grab() {
-	for i := 0; i < workers; i++ {
-		go worker(i)
-	}
-}
-
-func worker(i int) {
 	for {
 		select {
-		case u := <-stringChan:
-			fmt.Println(i, len(stringChan), " get ", u)
-			err := crawl(u)
-			if err != nil {
-				fmt.Println(err)
-			}
+		case u := <-stringInChan:
+			crawl(u)
+			numUrls--
 		}
 	}
 }

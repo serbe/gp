@@ -9,7 +9,6 @@ import (
 )
 
 func cleanBody(body []byte) []byte {
-	fmt.Println("clean body")
 	for i := range replace {
 		re := regexp.MustCompile(replace[i][0])
 		if re.Match(body) {

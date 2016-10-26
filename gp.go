@@ -9,7 +9,7 @@ import (
 func main() {
 	flag.Parse()
 
-	stringChan = make(chan string, 100000)
+	stringInChan = make(chan string)
 
 	t0 := time.Now()
 
@@ -18,14 +18,15 @@ func main() {
 	ipList = make(map[string]bool)
 	getIPList()
 
-	grab()
+	go grab()
 
 	for _, s := range siteList {
-		stringChan <- s
+		stringInChan <- s
+		numUrls++
 	}
 
-	for len(stringChan) > 1 {
-		// stringChan <- s
+	for numUrls > 0 {
+
 	}
 
 	t1 := time.Now()
