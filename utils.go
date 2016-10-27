@@ -54,6 +54,7 @@ func getIP(body []byte) []string {
 					ip = ip + ":" + port
 					if !ipList[ip] {
 						mutex.Lock()
+						numIPs++
 						ipList[ip] = true
 						mutex.Unlock()
 						ips = append(ips, ip)
@@ -105,6 +106,7 @@ func getIPList() {
 	for _, ip := range ips {
 		ipList[ip] = true
 	}
+	return
 }
 
 func writeSlice(slice []string, filename string) error {

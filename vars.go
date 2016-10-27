@@ -3,10 +3,14 @@ package main
 import "sync"
 
 var (
-	stringInChan chan string
-	mutex        = &sync.Mutex{}
+	mutex          = &sync.Mutex{}
+	urlList        map[string]bool
+	ipList         map[string]bool
+	crawlChan      chan string
+	numWorkWorkers int
 
 	numUrls = 0
+	numIPs  = 0
 
 	siteList = []string{
 		`http://webanetlabs.net/publ/24`,
@@ -69,6 +73,4 @@ var (
 		{`</span>`, ""},
 		{`\n`, ""},
 	}
-	urlList map[string]bool
-	ipList  map[string]bool
 )

@@ -11,13 +11,6 @@ func fetch(u string) ([]byte, error) {
 	client := &http.Client{
 		Timeout: time.Duration(10) * time.Second,
 	}
-	// if proxyADDR != "" {
-	// 	proxyURL, err := url.Parse("http://" + proxyADDR)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	client.Transport = &http.Transport{Proxy: http.ProxyURL(proxyURL)}
-	// }
 	resp, err := client.Get(u)
 	if err != nil {
 		return nil, err
