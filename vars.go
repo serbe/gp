@@ -6,33 +6,36 @@ var (
 	mutex          = &sync.Mutex{}
 	urlList        map[string]bool
 	ipList         map[string]bool
+	tasks          chan string
 	crawlChan      chan string
+	finishTask     chan bool
 	numWorkWorkers int
-
-	numUrls = 0
-	numIPs  = 0
+	iter           int
+	numUrls        int
+	numIPs         int
 
 	siteList = []string{
+		`https://hidester.com/proxydata/php/data.php?mykey=data&offset=0&limit=1000&orderBy=latest_check&sortOrder=DESC&country=&port=&type=undefined&anonymity=undefined&ping=undefined&gproxy=2`,
+		`http://gatherproxy.com/embed/`,
+		`http://txt.proxyspy.net/proxy.txt`,
 		`http://webanetlabs.net/publ/24`,
 		`http://awmproxy.com/freeproxy.php`,
-		`http://www.prime-speed.ru/proxy/free-proxy-list/all-working-proxies.php`,
-		`http://spys.ru/proxies/`,
 		`http://www.samair.ru/proxy/type-01.htm`,
 		`https://www.us-proxy.org/`,
 		`http://free-proxy-list.net/`,
 		`http://www.proxynova.com/proxy-server-list/`,
 		`http://proxyserverlist-24.blogspot.ru/`,
-		`http://www.xroxy.com/proxylist.php?port=Standard&type=All_http&ssl=&country=&latency=1000&reliability=9000#table`,
-		`http://www.freeproxylists.com/anonymous.html`,
-		`http://www.freeproxylists.com/elite.html`,
-	}
+		`http://gatherproxy.com/`,
 
-	// `http://txt.proxyspy.net/proxy.txt`,
-	// `https://best-proxies.ru/proxylist/free/`,
-	// `https://hidester.com/proxylist/`,
-	// `http://proxyservers.pro/`,
-	// `http://gatherproxy.com/`,
-	// `http://proxylistdailyupdated.blogspot.ru/p/blog-page.html`,
+		// `https://best-proxies.ru/proxylist/free/`,
+		// `http://spys.ru/proxies/`,
+
+		// `http://www.freeproxylists.com/elite.html`,
+		// `http://www.freeproxylists.com/anonymous.html`,
+		// `http://www.xroxy.com/proxylist.php?port=Standard&type=All_http&ssl=&country=&latency=1000&reliability=9000#table`,
+		// `http://www.prime-speed.ru/proxy/free-proxy-list/all-working-proxies.php`,
+		// `http://proxyservers.pro/`,
+	}
 
 	reURL = []string{
 		`href=(?:'|")/(publ/\d{1,3}-\d{1,3})(?:'|")\s`,
@@ -45,28 +48,22 @@ var (
 		`<a href=(?:'|")((?:anon|elite)/\d{1,12}.html)(?:'|")>(?:anon|elite)`,
 		`href=(?:'|")/(proxylist\.php\?.+?\#table)`,
 	}
-	reIP        = `((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))`
+	reIP        = `((?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))`
 	reCommaList = []string{
 		`</td><td>`,
 		`:`,
 		`.*?(?:'|")Proxy Port \d{2,5}(?:'|")>`,
+		`(?:'|")\,(?:'|")PORT(?:'|"):`,
+		`(?:'|") data\-port=(?:'|")`,
 	}
 	rePort  = `(\d{2,5})`
 	replace = [][]string{
-		// {`+(b2u1x4^t0s9)`, "1"},
-		// {`+(w3q7a1^y5m3)`, "2"},
-		// {`+(h8h8h8^v2b2)`, "3"},
-		// {`+(y5w3r8^g7e5)`, "4"},
-		// {`+(h8q7u1^v2c3)`, "5"},
-		// {`+(q7x4k1^e5g7)`, "7"},
-		// {`+(t0d4y5^l2p6)`, "8"},
-		// {`+(g7h8m3^b2z6)`, "9"},
-		// {`+(p6j0j0^o5u1)`, "0"},
-		// {`1F90`, "8080"},
-		// {`C38`, "3128"},
-		// {`1FB6`, "8118"},
-		// {`22B8`, "8888"},
-		// {`270F`, "9999"},
+		{`(?:'|")\,(?:'|")PROXY_LAST_UPDATE(?:'|"):(?:'|")\d{1,3} \d{1,3}(?:'|"),(?:'|")PROXY_PORT(?:'|"):(?:'|")1F90(?:'|")`, ":8080"},
+		{`(?:'|")\,(?:'|")PROXY_LAST_UPDATE(?:'|"):(?:'|")\d{1,3} \d{1,3}(?:'|"),(?:'|")PROXY_PORT(?:'|"):(?:'|")C38(?:'|")`, ":3128"},
+		{`(?:'|")\,(?:'|")PROXY_LAST_UPDATE(?:'|"):(?:'|")\d{1,3} \d{1,3}(?:'|"),(?:'|")PROXY_PORT(?:'|"):(?:'|")1FB6(?:'|")`, ":8118"},
+		{`(?:'|")\,(?:'|")PROXY_LAST_UPDATE(?:'|"):(?:'|")\d{1,3} \d{1,3}(?:'|"),(?:'|")PROXY_PORT(?:'|"):(?:'|")22B8(?:'|")`, ":8888"},
+		{`(?:'|")\,(?:'|")PROXY_LAST_UPDATE(?:'|"):(?:'|")\d{1,3} \d{1,3}(?:'|"),(?:'|")PROXY_PORT(?:'|"):(?:'|")270F(?:'|")`, ":9999"},
+		{`(?:'|")\,(?:'|")PROXY_LAST_UPDATE(?:'|"):(?:'|")\d{1,3} \d{1,3}(?:'|"),(?:'|")PROXY_PORT(?:'|"):(?:'|")50(?:'|")`, ":80"},
 		{`<script type=(?:'|")text/javascript(?:'|")>document\.write\((?:'|")<font class=spy2>`, ""},
 		{`</font>(?:'|")`, ""},
 		{`<span>`, ""},

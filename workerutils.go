@@ -1,33 +1,36 @@
 package main
 
-import (
-	"fmt"
-)
+import "fmt"
 
 var (
-	numWorkers = 2
+	numWorkers = 5
 )
 
-func worker(tasks chan string, quit <-chan bool) {
+func addTask(s string) {
+	tasks <- s
+	iter++
+	numUrls++
+}
+
+func worker(id int, tasks chan string, quit <-chan bool) {
 	for {
 		select {
 		case task, ok := <-tasks:
 			if !ok {
 				return
 			}
+			fmt.Printf("Worker %d Grab %s\n", id, task)
 			grab(task)
 		case <-quit:
-			numWorkWorkers--
 			return
 		}
 	}
 }
 
 func grab(host string) {
-	fmt.Println("Grab :", host)
-
 	body, err := fetch(host)
 	if err != nil {
+		finishTask <- true
 		return
 	}
 
@@ -45,5 +48,6 @@ func grab(host string) {
 			crawlChan <- item
 		}
 	}
+	finishTask <- true
 	return
 }

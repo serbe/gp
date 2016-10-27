@@ -52,48 +52,48 @@ func getIP(body []byte) []string {
 				portInt, _ := strconv.Atoi(port)
 				if ip != "0.0.0.0" && portInt < 65535 {
 					ip = ip + ":" + port
+					mutex.Lock()
 					if !ipList[ip] {
-						mutex.Lock()
 						numIPs++
 						ipList[ip] = true
-						mutex.Unlock()
 						ips = append(ips, ip)
 					}
+					mutex.Unlock()
 				}
 			}
 		}
 	}
-	if ips == nil {
-		re := regexp.MustCompile(reIP)
-		if re.Match(body) {
-			results := re.FindAllSubmatch(body, -1)
-			for _, res := range results {
-				if string(res[1]) != "0.0.0.0" {
-					ip := string(res[1]) + ":80"
-					if !ipList[ip] {
-						mutex.Lock()
-						ipList[ip] = true
-						mutex.Unlock()
-						ips = append(ips, ip)
-					}
-					ip = string(res[1]) + ":3128"
-					if !ipList[ip] {
-						mutex.Lock()
-						ipList[ip] = true
-						mutex.Unlock()
-						ips = append(ips, ip)
-					}
-					ip = string(res[1]) + ":8080"
-					if !ipList[ip] {
-						mutex.Lock()
-						ipList[ip] = true
-						mutex.Unlock()
-						ips = append(ips, ip)
-					}
-				}
-			}
-		}
-	}
+	// if ips == nil {
+	// 	re := regexp.MustCompile(reIP)
+	// 	if re.Match(body) {
+	// 		results := re.FindAllSubmatch(body, -1)
+	// 		for _, res := range results {
+	// 			if string(res[1]) != "0.0.0.0" {
+	// 				ip := string(res[1]) + ":80"
+	// 				if !ipList[ip] {
+	// 					mutex.Lock()
+	// 					ipList[ip] = true
+	// 					mutex.Unlock()
+	// 					ips = append(ips, ip)
+	// 				}
+	// 				ip = string(res[1]) + ":3128"
+	// 				if !ipList[ip] {
+	// 					mutex.Lock()
+	// 					ipList[ip] = true
+	// 					mutex.Unlock()
+	// 					ips = append(ips, ip)
+	// 				}
+	// 				ip = string(res[1]) + ":8080"
+	// 				if !ipList[ip] {
+	// 					mutex.Lock()
+	// 					ipList[ip] = true
+	// 					mutex.Unlock()
+	// 					ips = append(ips, ip)
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
 	return ips
 }
 
@@ -110,6 +110,8 @@ func getIPList() {
 }
 
 func writeSlice(slice []string, filename string) error {
+	mutex.Lock()
+	defer mutex.Unlock()
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		return err
