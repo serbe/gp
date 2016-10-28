@@ -14,10 +14,8 @@ type TaskMaster struct {
 }
 
 // InitTaskMaster - inititalize task master
-func InitTaskMaster() TaskMaster {
-	var tm TaskMaster
-
-	return tm
+func InitTaskMaster() *TaskMaster {
+	return &TaskMaster{}
 }
 
 // AddTask - add new task to TaskMaster

@@ -8,9 +8,12 @@ import (
 
 func main() {
 	flag.IntVar(&numWorkers, "w", numWorkers, "количество рабочих")
+
 	flag.Parse()
 
-	tasks = make(chan string, 100000)
+	tm := InitTaskMaster()
+
+	tm.Tasks = make(chan interface{}, 100000)
 	crawlChan = make(chan string)
 	finishTask = make(chan bool)
 
@@ -29,14 +32,14 @@ func main() {
 
 	for _, s := range siteList {
 		urlList[s] = true
-		addTask(s)
+		tm.AddTask(s)
 	}
 
 Loop:
 	for {
 		select {
 		case newWork := <-crawlChan:
-			addTask(newWork)
+			tm.AddTask(newWork)
 		case <-finishTask:
 			iter--
 			if iter == 0 {
