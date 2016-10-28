@@ -6,10 +6,25 @@ var (
 	numWorkers = 5
 )
 
-func addTask(s string) {
-	tasks <- s
-	iter++
-	numUrls++
+// TaskMaster - overseer over the workers
+type TaskMaster struct {
+	Tasks        chan interface{}
+	Iter         int64
+	StartedTasks int64
+}
+
+// InitTaskMaster - inititalize task master
+func InitTaskMaster() TaskMaster {
+	var tm TaskMaster
+
+	return tm
+}
+
+// AddTask - add new task to TaskMaster
+func (tm *TaskMaster) AddTask(s interface{}) {
+	tm.Tasks <- s
+	tm.Iter++
+	tm.StartedTasks++
 }
 
 func worker(id int, tasks chan string, quit <-chan bool) {
@@ -36,7 +51,7 @@ func grab(host string) {
 
 	body = cleanBody(body)
 
-	ips := getIP(body)
+	ips := getListIP(body)
 
 	urls := getListURL(host, body)
 
