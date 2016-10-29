@@ -9,13 +9,17 @@ var (
 // TaskMaster - overseer over the workers
 type TaskMaster struct {
 	Tasks        chan interface{}
+	MaxWorkers   int
 	Iter         int64
 	StartedTasks int64
+	Handler      handler
 }
 
+type handler interface{}
+
 // InitTaskMaster - inititalize task master
-func InitTaskMaster() *TaskMaster {
-	return &TaskMaster{}
+func InitTaskMaster(numWorkers int, work handler) *TaskMaster {
+	return &TaskMaster{MaxWorkers: numWorkers, Handler: work}
 }
 
 // AddTask - add new task to TaskMaster
@@ -33,34 +37,9 @@ func worker(id int, tasks chan string, quit <-chan bool) {
 				return
 			}
 			fmt.Printf("Worker %d Grab %s\n", id, task)
-			grab(task)
+			Grab(task)
 		case <-quit:
 			return
 		}
 	}
-}
-
-func grab(host string) {
-	body, err := fetch(host)
-	if err != nil {
-		finishTask <- true
-		return
-	}
-
-	body = cleanBody(body)
-
-	ips := getListIP(body)
-
-	urls := getListURL(host, body)
-
-	saveIP(ips)
-
-	for _, item := range urls {
-		if !urlList[item] {
-			urlList[item] = true
-			crawlChan <- item
-		}
-	}
-	finishTask <- true
-	return
 }

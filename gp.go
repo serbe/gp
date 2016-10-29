@@ -6,12 +6,38 @@ import (
 	"time"
 )
 
+// Grab - parse url
+func Grab(host string) {
+	body, err := fetch(host)
+	if err != nil {
+		finishTask <- true
+		return
+	}
+
+	body = cleanBody(body)
+
+	ips := getListIP(body)
+
+	urls := getListURL(host, body)
+
+	saveIP(ips)
+
+	for _, item := range urls {
+		if !urlList[item] {
+			urlList[item] = true
+			crawlChan <- item
+		}
+	}
+	finishTask <- true
+	return
+}
+
 func main() {
 	flag.IntVar(&numWorkers, "w", numWorkers, "количество рабочих")
 
 	flag.Parse()
 
-	tm := InitTaskMaster()
+	tm := InitTaskMaster(numWorkers, Grab)
 
 	tm.Tasks = make(chan interface{}, 100000)
 	crawlChan = make(chan string)
