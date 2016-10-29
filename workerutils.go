@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 var (
 	numWorkers = 5
 )
@@ -9,16 +7,26 @@ var (
 // TaskMaster - overseer over the workers
 type TaskMaster struct {
 	Tasks        chan interface{}
+	Quit         chan bool
 	MaxWorkers   int
 	Iter         int64
 	StartedTasks int64
-	Handler      handler
+	Handler      Handler
 }
 
-type handler interface{}
+// Worker ...
+type Worker struct {
+	ID      int
+	Work    chan interface{}
+	Quit    chan bool
+	Handler Handler
+}
+
+// Handler - any function
+type Handler func(interface{})
 
 // InitTaskMaster - inititalize task master
-func InitTaskMaster(numWorkers int, work handler) *TaskMaster {
+func InitTaskMaster(numWorkers int, work Handler) *TaskMaster {
 	return &TaskMaster{MaxWorkers: numWorkers, Handler: work}
 }
 
@@ -29,17 +37,42 @@ func (tm *TaskMaster) AddTask(s interface{}) {
 	tm.StartedTasks++
 }
 
-func worker(id int, tasks chan string, quit <-chan bool) {
+// StartWorkers - start goroutines of nun workers
+func (tm *TaskMaster) StartWorkers() {
+	for i := 0; i < tm.MaxWorkers; i++ {
+		// go worker(i, tm.Quit)
+	}
+}
+
+// BeginWork - start loop for get and set channels
+func (tm *TaskMaster) BeginWork() {
+Loop:
 	for {
 		select {
-		case task, ok := <-tasks:
-			if !ok {
-				return
-			}
-			fmt.Printf("Worker %d Grab %s\n", id, task)
-			Grab(task)
-		case <-quit:
-			return
+		case newWork := <-crawlChan:
+			tm.AddTask(newWork)
+		case <-finishTask:
+			// iter--
+			// if iter == 0 {
+			// 	for i := 0; i < numWorkers; i++ {
+			// 		quit <- true
+			// 	}
+			break Loop
+			// }
 		}
 	}
+}
+
+// Start worker
+func (w Worker) Start() {
+	go func() {
+		for {
+			select {
+			case work := <-w.Work:
+				w.Handler(work)
+			case <-w.Quit:
+				return
+			}
+		}
+	}()
 }

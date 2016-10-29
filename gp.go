@@ -7,7 +7,8 @@ import (
 )
 
 // Grab - parse url
-func Grab(host string) {
+func Grab(hostURL interface{}) {
+	host := hostURL.(string)
 	body, err := fetch(host)
 	if err != nil {
 		finishTask <- true
@@ -40,41 +41,22 @@ func main() {
 	tm := InitTaskMaster(numWorkers, Grab)
 
 	tm.Tasks = make(chan interface{}, 100000)
+
+	// tm.StartWorkers()
+
 	crawlChan = make(chan string)
 	finishTask = make(chan bool)
-
-	quit := make(chan bool)
 
 	existsFile("ips.txt")
 	urlList = make(map[string]bool)
 	ipList = make(map[string]bool)
 	getIPList()
 
-	for i := 0; i < numWorkers; i++ {
-		go worker(i, tasks, quit)
-	}
-
 	t0 := time.Now()
 
 	for _, s := range siteList {
 		urlList[s] = true
 		tm.AddTask(s)
-	}
-
-Loop:
-	for {
-		select {
-		case newWork := <-crawlChan:
-			tm.AddTask(newWork)
-		case <-finishTask:
-			iter--
-			if iter == 0 {
-				for i := 0; i < numWorkers; i++ {
-					quit <- true
-				}
-				break Loop
-			}
-		}
 	}
 
 	close(tasks)
