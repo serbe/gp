@@ -4,6 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"time"
+
+	"github.com/serbe/tm"
+)
+
+var (
+	numWorkers = 5
 )
 
 // Grab - parse url
@@ -38,9 +44,9 @@ func main() {
 
 	flag.Parse()
 
-	tm := InitTaskMaster(numWorkers, Grab)
+	taskm := tm.InitTaskMaster(numWorkers, Grab)
 
-	tm.Tasks = make(chan interface{}, 100000)
+	taskm.Tasks = make(chan interface{}, 100000)
 
 	// tm.StartWorkers()
 
