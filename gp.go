@@ -65,11 +65,7 @@ func main() {
 			case result := <-resultChan:
 				fmt.Printf("Get from chan %d urls\n", len(result))
 				for _, r := range result {
-					mutex.Lock()
-					if !urlList[r] {
-						tm.Work <- r
-					}
-					mutex.Unlock()
+					tm.Work <- r
 				}
 			case <-tm.Quit:
 				return
