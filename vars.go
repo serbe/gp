@@ -3,16 +3,10 @@ package main
 import "sync"
 
 var (
-	mutex          = &sync.Mutex{}
-	urlList        map[string]bool
-	ipList         map[string]bool
-	tasks          chan string
-	crawlChan      chan string
-	finishTask     chan bool
-	numWorkWorkers int
-	iter           int
-	numUrls        int
-	numIPs         int
+	mutex   = &sync.Mutex{}
+	urlList map[string]bool
+	ipList  map[string]bool
+	numIPs  int
 
 	siteList = []string{
 		`https://hidester.com/proxydata/php/data.php?mykey=data&offset=0&limit=1000&orderBy=latest_check&sortOrder=DESC&country=&port=&type=undefined&anonymity=undefined&ping=undefined&gproxy=2`,

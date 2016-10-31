@@ -15,7 +15,7 @@ var (
 
 // Grab - parse url
 func Grab(hostURL interface{}) {
-	resultChan = make(chan []string)
+	fmt.Printf("Start grab %s url\n", hostURL.(string))
 	host := hostURL.(string)
 	body, err := fetch(host)
 	if err != nil {
@@ -30,11 +30,12 @@ func Grab(hostURL interface{}) {
 
 	for _, item := range urls {
 		if !urlList[item] {
+			mutex.Lock()
 			urlList[item] = true
-			crawlChan <- item
+			mutex.Unlock()
 		}
 	}
-	finishTask <- true
+	resultChan <- urls
 	return
 }
 
@@ -44,8 +45,7 @@ func main() {
 
 	tm := tasker.InitTasker(numWorkers, Grab)
 
-	crawlChan = make(chan string)
-	finishTask = make(chan bool)
+	resultChan = make(chan []string)
 
 	existsFile("ips.txt")
 	urlList = make(map[string]bool)
@@ -63,8 +63,13 @@ func main() {
 		for {
 			select {
 			case result := <-resultChan:
-				for i := range result {
-					tm.Work <- result[i]
+				fmt.Printf("Get from chan %d urls\n", len(result))
+				for _, r := range result {
+					mutex.Lock()
+					if !urlList[r] {
+						tm.Work <- r
+					}
+					mutex.Unlock()
 				}
 			case <-tm.Quit:
 				return
@@ -74,6 +79,6 @@ func main() {
 
 	t1 := time.Now()
 	fmt.Printf("Add %d ip adress\n", numIPs)
-	fmt.Printf("Parse %d urls\n", numUrls)
+	fmt.Printf("Parse %d urls\n", len(urlList))
 	fmt.Printf("%v second\n", t1.Sub(t0))
 }
