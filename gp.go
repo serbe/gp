@@ -5,28 +5,27 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/serbe/tm"
+	"github.com/serbe/tasker"
 )
 
 var (
+	resultChan chan []string
 	numWorkers = 5
 )
 
 // Grab - parse url
 func Grab(hostURL interface{}) {
+	resultChan = make(chan []string)
 	host := hostURL.(string)
 	body, err := fetch(host)
 	if err != nil {
-		finishTask <- true
 		return
 	}
 
 	body = cleanBody(body)
-
+	getListIP(body)
 	ips := getListIP(body)
-
 	urls := getListURL(host, body)
-
 	saveIP(ips)
 
 	for _, item := range urls {
@@ -41,14 +40,9 @@ func Grab(hostURL interface{}) {
 
 func main() {
 	flag.IntVar(&numWorkers, "w", numWorkers, "количество рабочих")
-
 	flag.Parse()
 
-	taskm := tm.InitTaskMaster(numWorkers, Grab)
-
-	taskm.Tasks = make(chan interface{}, 100000)
-
-	// tm.StartWorkers()
+	tm := tasker.InitTasker(numWorkers, Grab)
 
 	crawlChan = make(chan string)
 	finishTask = make(chan bool)
@@ -60,12 +54,23 @@ func main() {
 
 	t0 := time.Now()
 
-	for _, s := range siteList {
-		urlList[s] = true
-		tm.AddTask(s)
+	for _, site := range siteList {
+		urlList[site] = true
+		tm.Work <- site
 	}
 
-	close(tasks)
+	func() {
+		for {
+			select {
+			case result := <-resultChan:
+				for i := range result {
+					tm.Work <- result[i]
+				}
+			case <-tm.Quit:
+				return
+			}
+		}
+	}()
 
 	t1 := time.Now()
 	fmt.Printf("Add %d ip adress\n", numIPs)
