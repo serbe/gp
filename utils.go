@@ -27,7 +27,8 @@ func getListURL(baseURL string, body []byte) []string {
 			allResults := re.FindAllSubmatch(body, -1)
 			for _, result := range allResults {
 				fullURL := host + "/" + string(result[1])
-				if !urlList[fullURL] {
+				if !urlList.get(fullURL) {
+					urlList.set(fullURL, true)
 					urls = append(urls, fullURL)
 				}
 			}
@@ -49,9 +50,9 @@ func getListIP(body []byte) []string {
 				if ip != "0.0.0.0" && portInt < 65535 {
 					ip = ip + ":" + port
 					mutex.Lock()
-					if !ipList[ip] {
+					if !ipList.get(ip) {
 						numIPs++
-						ipList[ip] = true
+						ipList.set(ip, true)
 						ips = append(ips, ip)
 					}
 					mutex.Unlock()
@@ -69,7 +70,7 @@ func saveIP(ips []string) error {
 func getIPList() {
 	ips := readSlice("ips.txt")
 	for _, ip := range ips {
-		ipList[ip] = true
+		ipList.set(ip, true)
 	}
 	return
 }

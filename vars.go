@@ -4,22 +4,22 @@ import "sync"
 
 var (
 	mutex   = &sync.Mutex{}
-	urlList map[string]bool
-	ipList  map[string]bool
+	urlList *maps
+	ipList  *maps
 	numIPs  int
 
 	siteList = []string{
-		`https://hidester.com/proxydata/php/data.php?mykey=data&offset=0&limit=1000&orderBy=latest_check&sortOrder=DESC&country=&port=&type=undefined&anonymity=undefined&ping=undefined&gproxy=2`,
-		`http://gatherproxy.com/embed/`,
-		`http://txt.proxyspy.net/proxy.txt`,
+		//		`https://hidester.com/proxydata/php/data.php?mykey=data&offset=0&limit=1000&orderBy=latest_check&sortOrder=DESC&country=&port=&type=undefined&anonymity=undefined&ping=undefined&gproxy=2`,
+		//		`http://gatherproxy.com/embed/`,
+		//		`http://txt.proxyspy.net/proxy.txt`,
 		`http://webanetlabs.net/publ/24`,
-		`http://awmproxy.com/freeproxy.php`,
-		`http://www.samair.ru/proxy/type-01.htm`,
-		`https://www.us-proxy.org/`,
-		`http://free-proxy-list.net/`,
-		`http://www.proxynova.com/proxy-server-list/`,
-		`http://proxyserverlist-24.blogspot.ru/`,
-		`http://gatherproxy.com/`,
+		//		`http://awmproxy.com/freeproxy.php`,
+		//		`http://www.samair.ru/proxy/type-01.htm`,
+		//		`https://www.us-proxy.org/`,
+		//		`http://free-proxy-list.net/`,
+		//		`http://www.proxynova.com/proxy-server-list/`,
+		//		`http://proxyserverlist-24.blogspot.ru/`,
+		//		`http://gatherproxy.com/`,
 
 		// `https://best-proxies.ru/proxylist/free/`,
 		// `http://spys.ru/proxies/`,

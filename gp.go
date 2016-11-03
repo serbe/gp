@@ -28,13 +28,13 @@ func Grab(hostURL interface{}) {
 	urls := getListURL(host, body)
 	saveIP(ips)
 
-	for _, item := range urls {
-		if !urlList[item] {
-			mutex.Lock()
-			urlList[item] = true
-			mutex.Unlock()
-		}
-	}
+	// for _, item := range urls {
+	// 	if !urlList[item] {
+	// 		mutex.Lock()
+	// 		urlList[item] = true
+	// 		mutex.Unlock()
+	// 	}
+	// }
 	resultChan <- urls
 	return
 }
@@ -48,33 +48,37 @@ func main() {
 	resultChan = make(chan []string)
 
 	existsFile("ips.txt")
-	urlList = make(map[string]bool)
-	ipList = make(map[string]bool)
+	urlList = newMaps()
+	ipList = newMaps()
 	getIPList()
 
 	t0 := time.Now()
 
 	for _, site := range siteList {
-		urlList[site] = true
-		tm.Work <- site
+		urlList.set(site, true)
+		tm.Queue(site)
 	}
 
 	func() {
 		for {
 			select {
 			case result := <-resultChan:
-				fmt.Printf("Get from chan %d urls\n", len(result))
-				for _, r := range result {
-					tm.Work <- r
+				if len(result) > 0 {
+					fmt.Printf("Get from chan %d urls\n", len(result))
 				}
-			case <-tm.Quit:
+				for _, r := range result {
+					tm.Queue(r)
+				}
+			case <-tm.Finish:
 				return
+			case <-time.After(time.Second):
+				fmt.Printf("Queue len: %v num of running workers: %v\n", tm.QueueLen(), tm.RunningWorkers())
 			}
 		}
 	}()
 
 	t1 := time.Now()
 	fmt.Printf("Add %d ip adress\n", numIPs)
-	fmt.Printf("Parse %d urls\n", len(urlList))
+	fmt.Printf("Parse %d urls\n", urlList.len())
 	fmt.Printf("%v second\n", t1.Sub(t0))
 }
