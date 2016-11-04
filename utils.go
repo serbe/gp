@@ -48,14 +48,12 @@ func getListIP(body []byte) []string {
 				port := string(res[2])
 				portInt, _ := strconv.Atoi(port)
 				if ip != "0.0.0.0" && portInt < 65535 {
-					ip = ip + ":" + port
-					mutex.Lock()
-					if !ipList.get(ip) {
+					ipWithPort := ip + ":" + port
+					if !ipList.get(ipWithPort) {
 						numIPs++
-						ipList.set(ip, true)
-						ips = append(ips, ip)
+						ipList.set(ipWithPort, true)
+						ips = append(ips, ipWithPort)
 					}
-					mutex.Unlock()
 				}
 			}
 		}

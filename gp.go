@@ -23,18 +23,11 @@ func Grab(hostURL interface{}) {
 	}
 
 	body = cleanBody(body)
-	getListIP(body)
 	ips := getListIP(body)
 	urls := getListURL(host, body)
+
 	saveIP(ips)
 
-	// for _, item := range urls {
-	// 	if !urlList[item] {
-	// 		mutex.Lock()
-	// 		urlList[item] = true
-	// 		mutex.Unlock()
-	// 	}
-	// }
 	resultChan <- urls
 	return
 }

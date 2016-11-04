@@ -9,7 +9,7 @@ import (
 func writeSlice(slice []string, filename string) error {
 	mutex.Lock()
 	defer mutex.Unlock()
-	file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0600)
+	file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0660)
 	if err != nil {
 		return err
 	}
