@@ -3,10 +3,8 @@ package main
 import "sync"
 
 var (
-	mutex   = &sync.Mutex{}
-	urlList *maps
-	ipList  *maps
-	numIPs  int
+	mutex  = &sync.Mutex{}
+	numIPs int
 
 	siteList = []string{
 		`https://hidester.com/proxydata/php/data.php?mykey=data&offset=0&limit=1000&orderBy=latest_check&sortOrder=DESC&country=&port=&type=undefined&anonymity=undefined&ping=undefined&gproxy=2`,
@@ -20,6 +18,8 @@ var (
 		`http://www.proxynova.com/proxy-server-list/`,
 		`http://proxyserverlist-24.blogspot.ru/`,
 		`http://gatherproxy.com/`,
+
+		`https://www.sslproxies.org/`,
 
 		// `https://best-proxies.ru/proxylist/free/`,
 		// `http://spys.ru/proxies/`,

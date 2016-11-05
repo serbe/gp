@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	resultChan chan []string
+	resultChan chan string
 	numWorkers = 5
 )
 
@@ -23,12 +23,9 @@ func Grab(hostURL interface{}) {
 	}
 
 	body = cleanBody(body)
-	ips := getListIP(body)
-	urls := getListURL(host, body)
+	getListIP(body)
+	getListURL(host, body)
 
-	saveIP(ips)
-
-	resultChan <- urls
 	return
 }
 
@@ -36,32 +33,25 @@ func main() {
 	flag.IntVar(&numWorkers, "w", numWorkers, "количество рабочих")
 	flag.Parse()
 
+	initDB()
+	defer db.Close()
+
 	tm := tasker.InitTasker(numWorkers, Grab)
 
-	resultChan = make(chan []string)
-
-	existsFile("ips.txt")
-	urlList = newMaps()
-	ipList = newMaps()
-	getIPList()
+	resultChan = make(chan string)
 
 	t0 := time.Now()
 
 	for _, site := range siteList {
-		urlList.set(site, true)
+		saveLink(site)
 		tm.Queue(site)
 	}
 
 	func() {
 		for {
 			select {
-			case result := <-resultChan:
-				if len(result) > 0 {
-					fmt.Printf("Get from chan %d urls\n", len(result))
-				}
-				for _, r := range result {
-					tm.Queue(r)
-				}
+			case host := <-resultChan:
+				tm.Queue(host)
 			case <-tm.Finish:
 				return
 			case <-time.After(time.Second):
@@ -72,6 +62,5 @@ func main() {
 
 	t1 := time.Now()
 	fmt.Printf("Add %d ip adress\n", numIPs)
-	fmt.Printf("Parse %d urls\n", urlList.len())
 	fmt.Printf("%v second\n", t1.Sub(t0))
 }
