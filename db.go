@@ -10,18 +10,18 @@ import (
 
 var db *bolt.DB
 
-type ip struct {
-	addr     string
-	port     string
-	ssl      bool
-	createAt time.Time
-	workedAt time.Time
+type ipType struct {
+	Addr     string
+	Port     string
+	Ssl      bool
+	CreateAt time.Time
+	WorkedAt time.Time
 }
 
-type link struct {
-	host      string
-	ssl       bool
-	lastCheck time.Time
+type linkType struct {
+	Host    string
+	Ssl     bool
+	CheckAt time.Time
 }
 
 func initDB() {
@@ -30,7 +30,7 @@ func initDB() {
 		panic(err)
 	}
 	db = dbase
-	createBucket([]byte("ips"))
+	createBucket([]byte("ipTypes"))
 	createBucket([]byte("links"))
 }
 

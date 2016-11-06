@@ -2,10 +2,11 @@ package main
 
 import (
 	"bytes"
-	"encoding/binary"
+	"encoding/gob"
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -20,7 +21,6 @@ func cleanBody(body []byte) []byte {
 }
 
 func getListURL(baseURL string, body []byte) error {
-	var urls []string
 	for i := range reURL {
 		host, err := getHost(baseURL)
 		if err != nil {
@@ -31,8 +31,8 @@ func getListURL(baseURL string, body []byte) error {
 			allResults := re.FindAllSubmatch(body, -1)
 			for _, result := range allResults {
 				fullURL := host + "/" + string(result[1])
-				if listIsOld(fullURL) {
-					updateList(fullURL)
+				if linkIsOld(fullURL) {
+					saveLink(fullURL)
 
 					resultChan <- fullURL
 				}
@@ -47,6 +47,7 @@ func getListIP(body []byte) {
 		re := regexp.MustCompile(reIP + reCommaList[i] + rePort)
 		if re.Match(body) {
 			results := re.FindAllSubmatch(body, -1)
+			fmt.Printf("find %d ip\n", len(results))
 			for _, res := range results {
 				ip := string(res[1])
 				port := string(res[2])
@@ -67,11 +68,7 @@ func getListIP(body []byte) {
 func existIP(s string) bool {
 	mutex.Lock()
 	defer mutex.Unlock()
-	ipBytes, err := get([]byte("ips"), []byte(s))
-	if err != nil {
-		return false
-	}
-	_, err = bytesToIP(ipBytes)
+	_, err := get([]byte("ips"), []byte(s))
 	if err != nil {
 		return false
 	}
@@ -81,97 +78,118 @@ func existIP(s string) bool {
 func existLink(s string) bool {
 	mutex.Lock()
 	defer mutex.Unlock()
-	linkBytes, err := get([]byte("links"), []byte(s))
-	if err != nil {
-		return false
-	}
-	_, err = bytesToLink(linkBytes)
+	_, err := get([]byte("links"), []byte(s))
 	if err != nil {
 		return false
 	}
 	return true
 }
 
-func listIsOld() {
-
+func linkIsOld(fullURL string) bool {
+	mutex.Lock()
+	defer mutex.Unlock()
+	byteArray, err := get([]byte("links"), []byte(fullURL))
+	if err != nil {
+		return true
+	}
+	var link linkType
+	link.decode(byteArray)
+	if err != nil {
+		return true
+	}
+	return isOld(link.CheckAt)
 }
 
-func saveLink(s string) error {
+func getLink(fullURL string) (linkType, error) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	byteArray, err := get([]byte("links"), []byte(fullURL))
+	if err != nil {
+		return true
+	}
+	var link linkType
+	link.decode(byteArray)
+	if err != nil {
+		return true
+	}
+}
+
+func saveLink(fullURL string) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	var linkS link
+	var link linkType
 
-	linkB, err := get([]byte("links"), []byte(s))
+	byteArray, err := get([]byte("links"), []byte(fullURL))
 	if err == nil {
-		linkS, _ = bytesToLink(linkB)
+		link.decode(byteArray)
 	}
-	linkS.lastCheck = time.Now()
-	linkB, err = linkToBytes(linkS)
+	link.CheckAt = time.Now()
+	link.Host, link.Ssl = getLinkAttribs(fullURL)
+	byteArray, err = link.encode()
 	if err != nil {
 		return err
 	}
-	return put([]byte("links"), []byte(s), linkB)
+
+	return put([]byte("links"), []byte(fullURL), byteArray)
+}
+
+func getLinkAttribs(s string) (string, bool) {
+	if strings.Contains(s, "http://") {
+		return s[7:], false
+	}
+	if strings.Contains(s, "https://") {
+		return s[8:], true
+	}
+	return s, false
 }
 
 func saveIP(addr, port string) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	var ipS ip
+	var ip ipType
 
 	fullAddress := addr + ":" + port
 
-	ipB, err := get([]byte("ips"), []byte(fullAddress))
+	byteArray, err := get([]byte("ips"), []byte(fullAddress))
 	if err == nil {
-		ipS, _ = bytesToIP(ipB)
-		ipS.addr = addr
-		ipS.port = port
+		ip.decode(byteArray)
+		ip.Addr = addr
+		ip.Port = port
 	}
-	ipS.createAt = time.Now()
-	ipB, err = ipToBytes(ipS)
+	ip.CreateAt = time.Now()
+	byteArray, err = ip.encode()
 	if err != nil {
 		return err
 	}
-	return put([]byte("ips"), []byte(fullAddress), ipB)
+	return put([]byte("ips"), []byte(fullAddress), byteArray)
 }
 
-func ipToBytes(s ip) ([]byte, error) {
-	buf := &bytes.Buffer{}
-	err := binary.Write(buf, binary.BigEndian, s)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
+func (ip ipType) encode() ([]byte, error) {
+	var b bytes.Buffer
+	enc := gob.NewEncoder(&b)
+	err := enc.Encode(ip)
+	return b.Bytes(), err
 }
 
-func linkToBytes(s link) ([]byte, error) {
-	buf := &bytes.Buffer{}
-	err := binary.Write(buf, binary.BigEndian, s)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
+func (ip *ipType) decode(data []byte) error {
+	b := bytes.NewBuffer(data)
+	dec := gob.NewDecoder(b)
+	return dec.Decode(&ip)
 }
 
-func bytesToIP(b []byte) (ip, error) {
-	var value ip
-	buf := bytes.NewBuffer(b)
-	err := binary.Read(buf, binary.BigEndian, &value)
-	if err != nil {
-		return value, err
-	}
-	return value, nil
+func (link linkType) encode() ([]byte, error) {
+	var b bytes.Buffer
+	enc := gob.NewEncoder(&b)
+	err := enc.Encode(link)
+	return b.Bytes(), err
 }
 
-func bytesToLink(b []byte) (link, error) {
-	var value link
-	buf := bytes.NewBuffer(b)
-	err := binary.Read(buf, binary.BigEndian, &value)
-	if err != nil {
-		return value, err
-	}
-	return value, nil
+func (link *linkType) decode(data []byte) error {
+	b := bytes.NewBuffer(data)
+	dec := gob.NewDecoder(b)
+	return dec.Decode(&link)
 }
 
 func toBytes(data interface{}) ([]byte, error) {

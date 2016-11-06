@@ -23,7 +23,9 @@ func Grab(hostURL interface{}) {
 	}
 
 	body = cleanBody(body)
+	oldNumIP := numIPs
 	getListIP(body)
+	fmt.Printf("Find %d new ip address\n", numIPs-oldNumIP)
 	getListURL(host, body)
 
 	return
