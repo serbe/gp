@@ -30,7 +30,7 @@ func initDB() {
 		panic(err)
 	}
 	db = dbase
-	createBucket([]byte("ipTypes"))
+	createBucket([]byte("ips"))
 	createBucket([]byte("links"))
 }
 
