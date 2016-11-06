@@ -102,11 +102,9 @@ func getLink(fullURL string) (linkType, error) {
 }
 
 func saveLink(fullURL string) error {
-	mutex.Lock()
-	defer mutex.Unlock()
 	var link linkType
 	link, err := getLink(fullURL)
-	if err == nil {
+	if err != nil {
 		return err
 	}
 	link.CheckAt = time.Now()
@@ -115,6 +113,8 @@ func saveLink(fullURL string) error {
 	if err != nil {
 		return err
 	}
+	mutex.Lock()
+	defer mutex.Unlock()
 	return put([]byte("links"), []byte(fullURL), byteArray)
 }
 
@@ -141,8 +141,6 @@ func getIP(fullAddress string) (ipType, error) {
 }
 
 func saveIP(addr, port string) error {
-	mutex.Lock()
-	defer mutex.Unlock()
 	var ip ipType
 	fullAddress := addr + ":" + port
 	ip, err := getIP(fullAddress)
@@ -156,6 +154,8 @@ func saveIP(addr, port string) error {
 	if err != nil {
 		return err
 	}
+	mutex.Lock()
+	defer mutex.Unlock()
 	return put([]byte("ips"), []byte(fullAddress), byteArray)
 }
 

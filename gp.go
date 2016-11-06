@@ -55,6 +55,7 @@ func main() {
 			case host := <-resultChan:
 				tm.Queue(host)
 			case <-tm.Finish:
+				fmt.Println("finish")
 				return
 			case <-time.After(time.Second):
 				fmt.Printf("Queue len: %v num of running workers: %v\n", tm.QueueLen(), tm.RunningWorkers())
