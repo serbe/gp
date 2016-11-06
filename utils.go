@@ -66,34 +66,23 @@ func getListIP(body []byte) {
 }
 
 func existIP(s string) bool {
-	mutex.Lock()
-	defer mutex.Unlock()
-	_, err := get([]byte("ips"), []byte(s))
-	if err != nil {
+	ip, err := getIP(s)
+	if err != nil || ip.Addr == "" {
 		return false
 	}
 	return true
 }
 
 func existLink(s string) bool {
-	mutex.Lock()
-	defer mutex.Unlock()
-	_, err := get([]byte("links"), []byte(s))
-	if err != nil {
+	link, err := getLink(s)
+	if err != nil || link.Host == "" {
 		return false
 	}
 	return true
 }
 
 func linkIsOld(fullURL string) bool {
-	mutex.Lock()
-	defer mutex.Unlock()
-	byteArray, err := get([]byte("links"), []byte(fullURL))
-	if err != nil {
-		return true
-	}
-	var link linkType
-	link.decode(byteArray)
+	link, err := getLink(fullURL)
 	if err != nil {
 		return true
 	}
@@ -103,34 +92,29 @@ func linkIsOld(fullURL string) bool {
 func getLink(fullURL string) (linkType, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
+	var link linkType
 	byteArray, err := get([]byte("links"), []byte(fullURL))
 	if err != nil {
-		return true
+		return link, err
 	}
-	var link linkType
 	link.decode(byteArray)
-	if err != nil {
-		return true
-	}
+	return link, err
 }
 
 func saveLink(fullURL string) error {
 	mutex.Lock()
 	defer mutex.Unlock()
-
 	var link linkType
-
-	byteArray, err := get([]byte("links"), []byte(fullURL))
+	link, err := getLink(fullURL)
 	if err == nil {
-		link.decode(byteArray)
+		return err
 	}
 	link.CheckAt = time.Now()
 	link.Host, link.Ssl = getLinkAttribs(fullURL)
-	byteArray, err = link.encode()
+	byteArray, err := link.encode()
 	if err != nil {
 		return err
 	}
-
 	return put([]byte("links"), []byte(fullURL), byteArray)
 }
 
@@ -144,22 +128,31 @@ func getLinkAttribs(s string) (string, bool) {
 	return s, false
 }
 
+func getIP(fullAddress string) (ipType, error) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	var ip ipType
+	byteArray, err := get([]byte("ips"), []byte(fullAddress))
+	if err != nil {
+		return ip, err
+	}
+	ip.decode(byteArray)
+	return ip, err
+}
+
 func saveIP(addr, port string) error {
 	mutex.Lock()
 	defer mutex.Unlock()
-
 	var ip ipType
-
 	fullAddress := addr + ":" + port
-
-	byteArray, err := get([]byte("ips"), []byte(fullAddress))
-	if err == nil {
-		ip.decode(byteArray)
-		ip.Addr = addr
-		ip.Port = port
+	ip, err := getIP(fullAddress)
+	if err != nil {
+		return err
 	}
+	ip.Addr = addr
+	ip.Port = port
 	ip.CreateAt = time.Now()
-	byteArray, err = ip.encode()
+	byteArray, err := ip.encode()
 	if err != nil {
 		return err
 	}
