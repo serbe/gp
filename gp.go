@@ -9,8 +9,11 @@ import (
 )
 
 var (
-	resultChan chan string
-	numWorkers = 5
+	resultChan   chan string
+	numWorkers   = 5
+	ips          *mapsIP
+	links        *mapsLink
+	startAppTime time.Time
 )
 
 // Grab - parse url
@@ -38,14 +41,15 @@ func main() {
 	initDB()
 	defer db.Close()
 
+	startAppTime = time.Now()
+
 	tm := tasker.InitTasker(numWorkers, Grab)
-
 	resultChan = make(chan string)
-
-	t0 := time.Now()
+	links = newMapsLink()
+	ips = getAllIP()
 
 	for _, site := range siteList {
-		saveLink(site)
+		links.set(site, true)
 		tm.Queue(site)
 	}
 
@@ -54,16 +58,16 @@ func main() {
 			select {
 			case host := <-resultChan:
 				tm.Queue(host)
-			case <-tm.Finish:
+			case <-*tm.Finish:
 				fmt.Println("finish")
 				return
-			case <-time.After(time.Second):
-				fmt.Printf("Queue len: %v num of running workers: %v\n", tm.QueueLen(), tm.RunningWorkers())
 			}
 		}
 	}()
 
-	t1 := time.Now()
+	saveNewIP()
+
+	endAppTime := time.Now()
 	fmt.Printf("Add %d ip adress\n", numIPs)
-	fmt.Printf("%v second\n", t1.Sub(t0))
+	fmt.Printf("%v second\n", endAppTime.Sub(startAppTime))
 }
