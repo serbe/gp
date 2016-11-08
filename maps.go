@@ -2,6 +2,7 @@ package main
 
 import (
 	"sync"
+	"time"
 )
 
 type mapsIP struct {
@@ -11,7 +12,7 @@ type mapsIP struct {
 
 type mapsLink struct {
 	m      sync.Mutex
-	values map[string]bool
+	values map[string]linkType
 }
 
 func newMapsIP() *mapsIP {
@@ -38,18 +39,21 @@ func (mIP *mapsIP) len() int {
 }
 
 func newMapsLink() *mapsLink {
-	return &mapsLink{values: make(map[string]bool)}
+	return &mapsLink{values: make(map[string]linkType)}
 }
 
-func (mLink *mapsLink) get(s string) bool {
+func (mLink *mapsLink) get(s string) linkType {
 	mLink.m.Lock()
 	defer mLink.m.Unlock()
 	return mLink.values[s]
 }
 
-func (mLink *mapsLink) set(s string, value bool) {
+func (mLink *mapsLink) set(s string) {
 	mLink.m.Lock()
 	defer mLink.m.Unlock()
+	var value linkType
+	value.Host = s
+	value.CheckAt = time.Now()
 	mLink.values[s] = value
 	return
 }

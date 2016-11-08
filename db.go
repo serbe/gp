@@ -18,7 +18,6 @@ type ipType struct {
 
 type linkType struct {
 	Host    string
-	Ssl     bool
 	CheckAt time.Time
 }
 
@@ -29,6 +28,7 @@ func initDB() {
 	}
 	db = dbase
 	createBucket([]byte("ips"))
+	createBucket([]byte("links"))
 }
 
 func createBucket(b []byte) {
@@ -66,6 +66,35 @@ func saveNewIP() error {
 				ipBytes, _ := v.encode()
 				b.Put([]byte(k), ipBytes)
 			}
+		}
+		return nil
+	})
+	return err
+}
+
+func getAllLinks() *mapsLink {
+	allLinks := newMapsLink()
+	db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("links"))
+		c := b.Cursor()
+
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			var link linkType
+			link.decode(v)
+			allLinks.set(string(k))
+		}
+
+		return nil
+	})
+	return allLinks
+}
+
+func saveLinks() error {
+	err := db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("links"))
+		for k, v := range links.values {
+			linkBytes, _ := v.encode()
+			b.Put([]byte(k), linkBytes)
 		}
 		return nil
 	})

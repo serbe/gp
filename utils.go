@@ -29,8 +29,8 @@ func getListURL(baseURL string, body []byte) error {
 			allResults := re.FindAllSubmatch(body, -1)
 			for _, result := range allResults {
 				fullURL := host + "/" + string(result[1])
-				if links.get(fullURL) == false {
-					links.set(fullURL, true)
+				if isOld(links.get(fullURL)) {
+					links.set(fullURL)
 
 					resultChan <- fullURL
 				}
@@ -81,4 +81,30 @@ func (ip *ipType) decode(data []byte) error {
 	b := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(b)
 	return dec.Decode(&ip)
+}
+
+// func newLink(addr, port string) linkType {
+// 	var link linkType
+// 	ip.Addr = addr
+// 	ip.Port = port
+// 	link.UpdateAt = time.Now()
+// 	return link
+// }
+
+func (link linkType) encode() ([]byte, error) {
+	var b bytes.Buffer
+	enc := gob.NewEncoder(&b)
+	err := enc.Encode(link)
+	return b.Bytes(), err
+}
+
+func (link *linkType) decode(data []byte) error {
+	b := bytes.NewBuffer(data)
+	dec := gob.NewDecoder(b)
+	return dec.Decode(&link)
+}
+
+func isOld(link linkType) bool {
+	currentTime := time.Now()
+	return currentTime.Sub(link.CheckAt) > time.Duration(15*time.Second)
 }

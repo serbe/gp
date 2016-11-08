@@ -47,11 +47,11 @@ func main() {
 
 	tm := tasker.InitTasker(numWorkers, Grab)
 	resultChan = make(chan string)
-	links = newMapsLink()
+	links = getAllLinks()
 	ips = getAllIP()
 
 	for _, site := range siteList {
-		links.set(site, true)
+		links.set(site)
 		tm.Queue(site)
 	}
 
@@ -74,6 +74,7 @@ func main() {
 	}()
 
 	saveNewIP()
+	saveLinks()
 
 	endAppTime := time.Now()
 	fmt.Printf("Add %d ip adress\n", numIPs)
