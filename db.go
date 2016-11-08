@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -25,13 +23,12 @@ type linkType struct {
 }
 
 func initDB() {
-	dbase, err := bolt.Open("bolt.db", 0644, nil)
+	dbase, err := bolt.Open("ips.db", 0644, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		panic(err)
 	}
 	db = dbase
 	createBucket([]byte("ips"))
-	createBucket([]byte("links"))
 }
 
 func createBucket(b []byte) {
@@ -44,39 +41,33 @@ func createBucket(b []byte) {
 	}
 }
 
-func get(bucket, key []byte) ([]byte, error) {
-	var value []byte
+func getAllIP() *mapsIP {
+	allIP := newMapsIP()
+	db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("ips"))
+		c := b.Cursor()
 
-	err := db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket(bucket)
-		v := b.Get(key)
-		if v != nil {
-			value = append(value, b.Get(key)...)
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			var ip ipType
+			ip.decode(v)
+			allIP.set(string(k), ip)
+		}
+
+		return nil
+	})
+	return allIP
+}
+
+func saveNewIP() error {
+	err := db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("ips"))
+		for k, v := range ips.values {
+			if v.CreateAt.Sub(startAppTime) > 0 {
+				ipBytes, _ := v.encode()
+				b.Put([]byte(k), ipBytes)
+			}
 		}
 		return nil
 	})
-
-	return value, err
-}
-
-func put(bucket, key, value []byte) error {
-	err := db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(bucket)
-		return b.Put(key, value)
-	})
-
-	return err
-}
-
-func del(bucket []byte, key interface{}) error {
-	err := db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(bucket)
-		k, err := toBytes(key)
-		if err != nil {
-			return fmt.Errorf("invalid key:%v", err)
-		}
-		return b.Delete(k)
-	})
-
 	return err
 }
