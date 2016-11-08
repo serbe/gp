@@ -56,10 +56,6 @@ func main() {
 	}
 
 	func() {
-		// var (
-		// 	temptime  time.Time
-		// 	startWait bool
-		// )
 		for {
 			select {
 			case host := <-resultChan:
@@ -67,20 +63,11 @@ func main() {
 			case <-*tm.Finish:
 				fmt.Println("finish")
 				return
-				// case <-time.After(time.Second):
-				// 	if tm.QueueLen() == 0 {
-				// 		if !startWait {
-				// 			startWait = true
-				// 			temptime = time.Now()
-				// 			fmt.Println("Wait 30 secont to finish all tasks")
-				// 		} else {
-				// 			temptime2 := time.Now()
-				// 			if temptime2.Sub(temptime) > time.Duration(30*time.Second) {
-				// 				*tm.Finish <- true
-				// 				break
-				// 			}
-				// 			fmt.Printf("Len queue %d, have task %d workers\n", tm.QueueLen(), tm.RunningWorkers())
-				// 		}
+				// case <-time.After(time.Duration(5) * time.Second):
+				// 	fmt.Printf("queue len %d worked %d\n", tm.QueueLen(), tm.RunningWorkers())
+				// 	infoWS := tm.GetWorkersInfo()
+				// 	for _, info := range infoWS {
+				// 		fmt.Printf("w.id %d start %v task %v\n", info.ID, info.StartTime, info.Task)
 				// 	}
 			}
 		}
