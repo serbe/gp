@@ -18,7 +18,7 @@ var (
 
 // Grab - parse url
 func Grab(hostURL interface{}) {
-	fmt.Printf("Start grab %s url\n", hostURL.(string))
+	fmt.Printf("Start grab %s\n", hostURL.(string))
 	host := hostURL.(string)
 	body, err := fetch(host)
 	if err != nil {
@@ -28,7 +28,9 @@ func Grab(hostURL interface{}) {
 	body = cleanBody(body)
 	oldNumIP := numIPs
 	getListIP(body)
-	fmt.Printf("Find %d new ip address\n", numIPs-oldNumIP)
+	if numIPs-oldNumIP > 0 {
+		fmt.Printf("Find %d new ip address in %s\n", numIPs-oldNumIP, hostURL.(string))
+	}
 	getListURL(host, body)
 
 	return
@@ -54,6 +56,10 @@ func main() {
 	}
 
 	func() {
+		// var (
+		// 	temptime  time.Time
+		// 	startWait bool
+		// )
 		for {
 			select {
 			case host := <-resultChan:
@@ -61,6 +67,21 @@ func main() {
 			case <-*tm.Finish:
 				fmt.Println("finish")
 				return
+				// case <-time.After(time.Second):
+				// 	if tm.QueueLen() == 0 {
+				// 		if !startWait {
+				// 			startWait = true
+				// 			temptime = time.Now()
+				// 			fmt.Println("Wait 30 secont to finish all tasks")
+				// 		} else {
+				// 			temptime2 := time.Now()
+				// 			if temptime2.Sub(temptime) > time.Duration(30*time.Second) {
+				// 				*tm.Finish <- true
+				// 				break
+				// 			}
+				// 			fmt.Printf("Len queue %d, have task %d workers\n", tm.QueueLen(), tm.RunningWorkers())
+				// 		}
+				// 	}
 			}
 		}
 	}()
