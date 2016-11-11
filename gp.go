@@ -31,7 +31,6 @@ func grab(args ...interface{}) interface{} {
 		fmt.Printf("Find %d new ip address in %s\n", numIPs-oldNumIP, host)
 	}
 	urls = getListURL(host, body)
-	//	fmt.Printf("return %v urls\n", len(urls))
 
 	return urls
 }
@@ -40,6 +39,7 @@ func main() {
 	flag.IntVar(&numWorkers, "w", numWorkers, "количество рабочих")
 	flag.Parse()
 
+	readDB()
 	initDB()
 	defer db.Close()
 
@@ -74,8 +74,9 @@ loop:
 
 	saveNewIP()
 	saveLinks()
+	saveDB()
 
 	endAppTime := time.Now()
 	fmt.Printf("Add %d ip adress\n", numIPs)
-	fmt.Printf("%v second\n", endAppTime.Sub(startAppTime))
+	fmt.Printf("Total time: %v second\n", endAppTime.Sub(startAppTime))
 }

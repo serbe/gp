@@ -2,7 +2,11 @@ package main
 
 import (
 	"bytes"
+	"compress/zlib"
 	"encoding/gob"
+	"io"
+	"io/ioutil"
+	"os"
 	"regexp"
 	"strconv"
 	"time"
@@ -84,14 +88,6 @@ func (ip *ipType) decode(data []byte) error {
 	return dec.Decode(&ip)
 }
 
-// func newLink(addr, port string) linkType {
-// 	var link linkType
-// 	ip.Addr = addr
-// 	ip.Port = port
-// 	link.UpdateAt = time.Now()
-// 	return link
-// }
-
 func (link linkType) encode() ([]byte, error) {
 	var b bytes.Buffer
 	enc := gob.NewEncoder(&b)
@@ -110,10 +106,45 @@ func isOld(link linkType) bool {
 	return currentTime.Sub(link.CheckAt) > time.Duration(15*time.Minute)
 }
 
-//func compress(b []byte) []byte {
+func compressZlib(in []byte) []byte {
+	var b bytes.Buffer
+	w := zlib.NewWriter(&b)
+	w.Write(in)
+	w.Close()
+	return b.Bytes()
+}
 
-//}
+func decompressZlib(b []byte) []byte {
+	var in bytes.Buffer
+	in.Read(b)
+	var out bytes.Buffer
+	r, _ := zlib.NewReader(&in)
+	io.Copy(&out, r)
+	return out.Bytes()
+}
 
-//func decompress(b []byte) []byte {
+func readDB() error {
+	fb, err := ioutil.ReadFile("db.gz")
+	if err != nil {
+		return err
+	}
+	err = os.Remove("db.gz")
+	if err != nil {
+		return err
+	}
+	dec := decompressZlib(fb)
+	return ioutil.WriteFile("ips.db", dec, 0644)
+}
 
-//}
+func saveDB() error {
+	fb, err := ioutil.ReadFile("ips.db")
+	if err != nil {
+		return err
+	}
+	err = os.Remove("ips.db")
+	if err != nil {
+		return err
+	}
+	comp := compressZlib(fb)
+	return ioutil.WriteFile("db.gz", comp, 0644)
+}
