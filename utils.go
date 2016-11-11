@@ -107,7 +107,7 @@ func (link *linkType) decode(data []byte) error {
 
 func isOld(link linkType) bool {
 	currentTime := time.Now()
-	return currentTime.Sub(link.CheckAt) > time.Duration(15*time.Second)
+	return currentTime.Sub(link.CheckAt) > time.Duration(15*time.Minute)
 }
 
 //func compress(b []byte) []byte {
