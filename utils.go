@@ -18,7 +18,8 @@ func cleanBody(body []byte) []byte {
 	return body
 }
 
-func getListURL(baseURL string, body []byte) error {
+func getListURL(baseURL string, body []byte) []string {
+	var urls []string
 	for i := range reURL {
 		host, err := getHost(baseURL)
 		if err != nil {
@@ -32,12 +33,12 @@ func getListURL(baseURL string, body []byte) error {
 				if isOld(links.get(fullURL)) {
 					links.set(fullURL)
 
-					resultChan <- fullURL
+					urls = append(urls, fullURL)
 				}
 			}
 		}
 	}
-	return nil
+	return urls
 }
 
 func getListIP(body []byte) {
@@ -108,3 +109,11 @@ func isOld(link linkType) bool {
 	currentTime := time.Now()
 	return currentTime.Sub(link.CheckAt) > time.Duration(15*time.Second)
 }
+
+//func compress(b []byte) []byte {
+
+//}
+
+//func decompress(b []byte) []byte {
+
+//}

@@ -5,35 +5,35 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/serbe/tasker"
+	"github.com/serbe/gopool"
 )
 
 var (
-	resultChan   chan string
 	numWorkers   = 5
 	ips          *mapsIP
 	links        *mapsLink
 	startAppTime time.Time
 )
 
-// Grab - parse url
-func Grab(hostURL interface{}) {
-	fmt.Printf("Start grab %s\n", hostURL.(string))
-	host := hostURL.(string)
+func grab(args ...interface{}) interface{} {
+	var urls []string
+	host := args[0].(string)
+	fmt.Printf("Start grab %s\n", host)
 	body, err := fetch(host)
 	if err != nil {
-		return
+		return urls
 	}
 
 	body = cleanBody(body)
 	oldNumIP := numIPs
 	getListIP(body)
 	if numIPs-oldNumIP > 0 {
-		fmt.Printf("Find %d new ip address in %s\n", numIPs-oldNumIP, hostURL.(string))
+		fmt.Printf("Find %d new ip address in %s\n", numIPs-oldNumIP, host)
 	}
-	getListURL(host, body)
+	urls = getListURL(host, body)
+	//	fmt.Printf("return %v urls\n", len(urls))
 
-	return
+	return urls
 }
 
 func main() {
@@ -45,33 +45,32 @@ func main() {
 
 	startAppTime = time.Now()
 
-	tm := tasker.InitTasker(numWorkers, Grab)
-	resultChan = make(chan string)
+	tm := gopool.New(numWorkers)
+	tm.Run()
+
 	links = getAllLinks()
 	ips = getAllIP()
 
 	for _, site := range siteList {
 		links.set(site)
-		tm.Queue(site)
+		tm.Add(grab, site)
 	}
 
-	func() {
-		for {
-			select {
-			case host := <-resultChan:
-				tm.Queue(host)
-			case <-*tm.Finish:
-				fmt.Println("finish")
-				return
-				// case <-time.After(time.Duration(5) * time.Second):
-				// 	fmt.Printf("queue len %d worked %d\n", tm.QueueLen(), tm.RunningWorkers())
-				// 	infoWS := tm.GetWorkersInfo()
-				// 	for _, info := range infoWS {
-				// 		fmt.Printf("w.id %d start %v task %v\n", info.ID, info.StartTime, info.Task)
-				// 	}
+loop:
+	for {
+		task := tm.GetTask()
+
+		if task.Result != nil {
+			urls := task.Result.([]string)
+			for _, u := range urls {
+				tm.Add(grab, u)
 			}
 		}
-	}()
+		added, running, completed := tm.Status()
+		if running == 0 && added > 0 && added == completed {
+			break loop
+		}
+	}
 
 	saveNewIP()
 	saveLinks()
