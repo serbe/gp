@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/zlib"
 	"encoding/gob"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -106,45 +107,91 @@ func isOld(link linkType) bool {
 	return currentTime.Sub(link.CheckAt) > time.Duration(15*time.Minute)
 }
 
-func compressZlib(in []byte) []byte {
+func compressZlib(in []byte) ([]byte, error) {
 	var b bytes.Buffer
 	w := zlib.NewWriter(&b)
-	w.Write(in)
-	w.Close()
-	return b.Bytes()
+	defer w.Close()
+	_, err := w.Write(in)
+	if err != nil {
+		fmt.Println("error w.Write(in)")
+		return nil, err
+	}
+	err = w.Close()
+	return b.Bytes(), err
 }
 
-func decompressZlib(b []byte) []byte {
+func decompressZlib(b []byte) ([]byte, error) {
 	var in bytes.Buffer
-	in.Read(b)
+	_, err := in.Read(b)
+	if err != nil {
+		fmt.Println("error in.Read(b))")
+		return nil, err
+	}
 	var out bytes.Buffer
-	r, _ := zlib.NewReader(&in)
-	io.Copy(&out, r)
-	return out.Bytes()
+	r, err := zlib.NewReader(&in)
+	if err != nil {
+		fmt.Println("error zlib.NewReader(&in)")
+		return nil, err
+	}
+	defer r.Close()
+	_, err = io.Copy(&out, r)
+	if err != nil {
+		fmt.Println("error io.Copy(&out, r)")
+		return nil, err
+	}
+	return out.Bytes(), err
 }
 
 func readDB() error {
-	fb, err := ioutil.ReadFile("db.gz")
-	if err != nil {
+	f, err := os.Open("db.zlib")
+	if err != nil && err != io.EOF {
+		fmt.Println("error os.Open('db.zlib')")
 		return err
 	}
-	err = os.Remove("db.gz")
+	defer f.Close()
+	fb := make([]byte, 5)
+	_, err = f.Read(fb)
 	if err != nil {
+		fmt.Println("error f.Read(fb)")
 		return err
 	}
-	dec := decompressZlib(fb)
-	return ioutil.WriteFile("ips.db", dec, 0644)
+	dec, err := decompressZlib(fb)
+	if err != nil {
+		fmt.Println("error decompressZlib(fb)")
+		return err
+	}
+	err = ioutil.WriteFile("ips.db", dec, 0644)
+	if err != nil {
+		fmt.Println("error ioutil.WriteFile('ips.db')")
+		return err
+	}
+	f.Close()
+	return os.Remove("db.zlib")
 }
 
 func saveDB() error {
-	fb, err := ioutil.ReadFile("ips.db")
+	f, err := os.Open("ips.db")
 	if err != nil {
+		fmt.Println("error os.Open('ips.db')")
 		return err
 	}
-	err = os.Remove("ips.db")
+	defer f.Close()
+	fb := make([]byte, 5)
+	_, err = f.Read(fb)
 	if err != nil {
+		fmt.Println("error f.Read(fb)")
 		return err
 	}
-	comp := compressZlib(fb)
-	return ioutil.WriteFile("db.gz", comp, 0644)
+	comp, err := compressZlib(fb)
+	if err != nil {
+		fmt.Println("error compressZlib(fb)")
+		return err
+	}
+	err = ioutil.WriteFile("db.zlib", comp, 0644)
+	if err != nil {
+		fmt.Println("error ioutil.WriteFile('db.zlib')")
+		return err
+	}
+	f.Close()
+	return os.Remove("ips.db")
 }

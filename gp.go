@@ -39,7 +39,8 @@ func main() {
 	flag.IntVar(&numWorkers, "w", numWorkers, "количество рабочих")
 	flag.Parse()
 
-	readDB()
+	// _ = readDB()
+
 	initDB()
 	defer db.Close()
 
@@ -74,7 +75,13 @@ loop:
 
 	saveNewIP()
 	saveLinks()
-	saveDB()
+
+	db.Close()
+
+	// err := saveDB()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	endAppTime := time.Now()
 	fmt.Printf("Add %d ip adress\n", numIPs)
