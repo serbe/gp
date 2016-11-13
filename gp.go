@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/serbe/gopool"
@@ -39,7 +40,8 @@ func main() {
 	flag.IntVar(&numWorkers, "w", numWorkers, "количество рабочих")
 	flag.Parse()
 
-	// _ = readDB()
+	decompress("ips.gz", "ips.db")
+	os.Remove("ips.gz")
 
 	initDB()
 	defer db.Close()
@@ -76,12 +78,11 @@ loop:
 	saveNewIP()
 	saveLinks()
 
+	db.Sync()
 	db.Close()
 
-	// err := saveDB()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	compress("ips.db", "ips.gz")
+	os.Remove("ips.db")
 
 	endAppTime := time.Now()
 	fmt.Printf("Add %d ip adress\n", numIPs)
