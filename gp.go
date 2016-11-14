@@ -37,11 +37,11 @@ func grab(args ...interface{}) interface{} {
 }
 
 func main() {
-	flag.IntVar(&numWorkers, "w", numWorkers, "количество рабочих")
+	flag.IntVar(&numWorkers, "w", numWorkers, "number of workers")
 	flag.Parse()
 
-	decompress("ips.gz", "ips.db")
-	os.Remove("ips.gz")
+	decompress("gp.gz", "gp.db")
+	os.Remove("gp.gz")
 
 	initDB()
 	defer db.Close()
@@ -81,8 +81,8 @@ loop:
 	db.Sync()
 	db.Close()
 
-	compress("ips.db", "ips.gz")
-	os.Remove("ips.db")
+	compress("gp.db", "gp.gz")
+	os.Remove("gp.db")
 
 	endAppTime := time.Now()
 	fmt.Printf("Add %d ip adress\n", numIPs)

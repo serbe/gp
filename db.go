@@ -9,11 +9,12 @@ import (
 var db *bolt.DB
 
 type ipType struct {
-	Addr     string
-	Port     string
-	Ssl      bool
-	CreateAt time.Time
-	WorkedAt time.Time
+	Addr        string
+	Port        string
+	Ssl         bool
+	ProxyChecks int
+	CreateAt    time.Time
+	WorkedAt    time.Time
 }
 
 type linkType struct {
@@ -22,7 +23,7 @@ type linkType struct {
 }
 
 func initDB() {
-	dbase, err := bolt.Open("ips.db", 0644, &bolt.Options{Timeout: 1 * time.Second})
+	dbase, err := bolt.Open("gp.db", 0644, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		panic(err)
 	}
