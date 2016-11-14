@@ -7,19 +7,34 @@ import (
 	"time"
 )
 
-func fetch(u string) ([]byte, error) {
+func fetchBody(targetURL string, proxy ipType) ([]byte, error) {
 	client := &http.Client{
-		Timeout: time.Duration(10) * time.Second,
+		Timeout: time.Duration(timeout) * time.Second,
 	}
-	resp, err := client.Get(u)
+	if proxy.Addr != "" {
+		var (
+			proxyURL *url.URL
+			err      error
+		)
+		if proxy.Ssl == true {
+			proxyURL, err = url.Parse("https://" + proxy.Addr + ":" + proxy.Port)
+		} else {
+			proxyURL, err = url.Parse("http://" + proxy.Addr + ":" + proxy.Port)
+		}
+		if err != nil {
+			return nil, err
+		}
+		client.Transport = &http.Transport{Proxy: http.ProxyURL(proxyURL)}
+	}
+	resp, err := client.Get(targetURL)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 	return body, err
 }
 
@@ -33,4 +48,12 @@ func getHost(u string) (string, error) {
 		addon = "/proxy"
 	}
 	return uParse.Scheme + "://" + uParse.Host + addon, nil
+}
+
+func getExternalIP() string {
+	body, err := fetchBody("http://myexternalip.com/raw", ipType{})
+	if err != nil {
+		panic(err)
+	}
+	return string(body)
 }

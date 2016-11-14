@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"compress/flate"
 	"encoding/gob"
+	"fmt"
 	"io"
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -35,7 +37,6 @@ func getListURL(baseURL string, body []byte) []string {
 				fullURL := host + "/" + string(result[1])
 				if isOld(links.get(fullURL)) {
 					links.set(fullURL)
-
 					urls = append(urls, fullURL)
 				}
 			}
@@ -102,7 +103,7 @@ func (link *linkType) decode(data []byte) error {
 
 func isOld(link linkType) bool {
 	currentTime := time.Now()
-	return currentTime.Sub(link.CheckAt) > time.Duration(15*time.Minute)
+	return currentTime.Sub(link.CheckAt) > time.Duration(60*12*time.Minute)
 }
 
 func compress(inputFile, outputFile string) error {
@@ -143,4 +144,62 @@ func decompress(inputFile, outputFile string) error {
 	defer o.Close()
 	_, err = io.Copy(o, f)
 	return err
+}
+
+// host string
+func grab(args ...interface{}) interface{} {
+	var urls []string
+	host := args[0].(string)
+	fmt.Printf("Start grab %s\n", host)
+	body, err := fetchBody(host, ipType{})
+	if err != nil {
+		return urls
+	}
+	body = cleanBody(body)
+	oldNumIP := numIPs
+	getListIP(body)
+	if numIPs-oldNumIP > 0 {
+		fmt.Printf("Find %d new ip address in %s\n", numIPs-oldNumIP, host)
+	}
+	urls = getListURL(host, body)
+	return urls
+}
+
+// proxy ipType
+func check(args ...interface{}) interface{} {
+	targetURL := fmt.Sprintf("http://93.170.123.221:%d/", proxyPort)
+	proxy := args[0].(ipType)
+	startTime := time.Now()
+	body, err := fetchBody(targetURL, proxy)
+	endTime := time.Now()
+	duration := endTime.Sub(startTime)
+	if err != nil {
+		proxy.ProxyChecks++
+		proxy.LastCheck = time.Now()
+		proxy.isWork = false
+		proxy.Response = duration
+		proxy.LastCheck = endTime
+		return proxy
+	}
+	strBody := string(body)
+	if reRemoteIP.Match(body) && !strings.Contains(strBody, myIP) {
+		endTime := time.Now()
+		if strings.Count(strBody, "<p>") == 1 {
+			proxy.isWork = true
+			proxy.isAnon = true
+			proxy.Response = duration
+			proxy.LastCheck = endTime
+			return proxy
+		}
+		proxy.isWork = true
+		proxy.isAnon = false
+		proxy.Response = duration
+		proxy.LastCheck = endTime
+		return proxy
+	}
+	proxy.isWork = false
+	proxy.LastCheck = endTime
+	proxy.Response = duration
+	proxy.LastCheck = endTime
+	return proxy
 }

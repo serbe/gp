@@ -9,35 +9,18 @@ import (
 	"github.com/serbe/gopool"
 )
 
-var (
-	numWorkers   = 5
-	ips          *mapsIP
-	links        *mapsLink
-	startAppTime time.Time
-)
-
-func grab(args ...interface{}) interface{} {
-	var urls []string
-	host := args[0].(string)
-	fmt.Printf("Start grab %s\n", host)
-	body, err := fetch(host)
-	if err != nil {
-		return urls
-	}
-
-	body = cleanBody(body)
-	oldNumIP := numIPs
-	getListIP(body)
-	if numIPs-oldNumIP > 0 {
-		fmt.Printf("Find %d new ip address in %s\n", numIPs-oldNumIP, host)
-	}
-	urls = getListURL(host, body)
-
-	return urls
-}
-
 func main() {
+	var (
+		findProxy  = true
+		checkProxy = false
+	)
+
 	flag.IntVar(&numWorkers, "w", numWorkers, "number of workers")
+	flag.IntVar(&timeout, "t", timeout, "timeout")
+	flag.BoolVar(&findProxy, "f", findProxy, "find new proxy")
+	flag.BoolVar(&checkProxy, "c", checkProxy, "check proxy")
+	flag.IntVar(&proxyPort, "p", proxyPort, "proxy port")
+
 	flag.Parse()
 
 	decompress("gp.gz", "gp.db")
@@ -54,29 +37,58 @@ func main() {
 	links = getAllLinks()
 	ips = getAllIP()
 
-	for _, site := range siteList {
-		links.set(site)
-		tm.Add(grab, site)
-	}
+	if findProxy {
+		for _, site := range siteList {
+			links.set(site)
+			tm.Add(grab, site)
+		}
 
-loop:
-	for {
-		task := tm.GetTask()
+	loopFind:
+		for {
+			task := tm.GetTask()
 
-		if task.Result != nil {
-			urls := task.Result.([]string)
-			for _, u := range urls {
-				tm.Add(grab, u)
+			if task.Result != nil {
+				urls := task.Result.([]string)
+				for _, u := range urls {
+					tm.Add(grab, u)
+				}
+			}
+			added, running, completed := tm.Status()
+			if running == 0 && added > 0 && added == completed {
+				break loopFind
 			}
 		}
-		added, running, completed := tm.Status()
-		if running == 0 && added > 0 && added == completed {
-			break loop
-		}
+		saveNewIP()
+		saveLinks()
 	}
 
-	saveNewIP()
-	saveLinks()
+	if checkProxy {
+		go func() {
+			month := time.Duration(30*60*24) * time.Minute
+			for _, v := range ips.values {
+				if time.Now().Sub(v.LastCheck) < time.Duration(v.ProxyChecks)*month {
+					tm.Add(check, v)
+				}
+			}
+		}()
+	loopCheck:
+		for {
+			task := tm.GetTask()
+			if task.Result != nil {
+				ip := task.Result.(ipType)
+				ipString := ip.Addr + ":" + ip.Port
+				ips.set(ipString, ip)
+				if ip.isWork {
+					fmt.Println(ipString)
+				}
+			}
+			added, running, completed := tm.Status()
+			if running == 0 && added > 0 && added == completed {
+				break loopCheck
+			}
+		}
+		saveNewIP()
+	}
 
 	db.Sync()
 	db.Close()

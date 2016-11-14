@@ -1,9 +1,22 @@
 package main
 
-import "sync"
+import (
+	"regexp"
+	"time"
+)
 
 var (
-	mutex  = &sync.Mutex{}
+	numWorkers   = 5
+	timeout      = 10
+	proxyPort    = 9090
+	ips          *mapsIP
+	links        *mapsLink
+	startAppTime time.Time
+
+	myIP       string
+	reRemoteIP = regexp.MustCompile(`<p>RemoteAddr: (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d{1,5}<\/p>`)
+	reProxy    = regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5})`)
+
 	numIPs int
 
 	siteList = []string{

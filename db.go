@@ -12,9 +12,12 @@ type ipType struct {
 	Addr        string
 	Port        string
 	Ssl         bool
+	isWork      bool
+	isAnon      bool
 	ProxyChecks int
 	CreateAt    time.Time
-	WorkedAt    time.Time
+	LastCheck   time.Time
+	Response    time.Duration
 }
 
 type linkType struct {
