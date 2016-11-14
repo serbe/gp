@@ -203,3 +203,19 @@ func check(args ...interface{}) interface{} {
 	proxy.LastCheck = endTime
 	return proxy
 }
+
+func backupBase() error {
+	origFile, err := os.Open("gp.gz")
+	if err != nil {
+		return err
+	}
+	defer origFile.Close()
+	backupName := time.Now().Format("02-01-2006-15:04:05") + ".gz"
+	newFile, err := os.Create(backupName)
+	if err != nil {
+		return err
+	}
+	defer newFile.Close()
+	_, err = io.Copy(origFile, newFile)
+	return err
+}

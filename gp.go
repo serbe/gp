@@ -20,8 +20,13 @@ func main() {
 	flag.BoolVar(&findProxy, "f", findProxy, "find new proxy")
 	flag.BoolVar(&checkProxy, "c", checkProxy, "check proxy")
 	flag.IntVar(&proxyPort, "p", proxyPort, "proxy port")
+	flag.BoolVar(&backup, "b", backup, "backup database")
 
 	flag.Parse()
+
+	if backup {
+		backupBase()
+	}
 
 	decompress("gp.gz", "gp.db")
 	os.Remove("gp.gz")

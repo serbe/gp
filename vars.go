@@ -9,6 +9,7 @@ var (
 	numWorkers   = 5
 	timeout      = 10
 	proxyPort    = 9090
+	backup       = true
 	ips          *mapsIP
 	links        *mapsLink
 	startAppTime time.Time
