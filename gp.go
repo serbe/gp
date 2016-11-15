@@ -6,15 +6,22 @@ import (
 	"os"
 	"time"
 
+	// "net/http"
+	// _ "net/http/pprof"
+
 	"github.com/serbe/gopool"
 )
 
 func main() {
 	var (
 		findProxy  = false
-		checkProxy = true
-		backup     = true
+		checkProxy = false
+		backup     = false
 	)
+
+	// go func() {
+	// log.Println(http.ListenAndServe("localhost:6060", nil))
+	// }()
 
 	flag.IntVar(&numWorkers, "w", numWorkers, "number of workers")
 	flag.IntVar(&timeout, "t", timeout, "timeout")
@@ -81,6 +88,7 @@ func main() {
 	loopCheck:
 		for {
 			task := tm.GetTask()
+			fmt.Printf("get task %v\n", task)
 			if task.Result != nil {
 				ip := task.Result.(ipType)
 				ipString := ip.Addr + ":" + ip.Port
