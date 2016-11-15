@@ -11,8 +11,9 @@ import (
 
 func main() {
 	var (
-		findProxy  = true
-		checkProxy = false
+		findProxy  = false
+		checkProxy = true
+		backup     = true
 	)
 
 	flag.IntVar(&numWorkers, "w", numWorkers, "number of workers")
@@ -70,8 +71,9 @@ func main() {
 	if checkProxy {
 		go func() {
 			month := time.Duration(30*60*24) * time.Minute
+			timeNow := time.Now()
 			for _, v := range ips.values {
-				if time.Now().Sub(v.LastCheck) < time.Duration(v.ProxyChecks)*month {
+				if v.LastCheck.Sub(timeNow) < time.Duration(v.ProxyChecks)*month || v.CreateAt.Sub(timeNow) < time.Duration(v.ProxyChecks)*month {
 					tm.Add(check, v)
 				}
 			}
@@ -100,6 +102,7 @@ func main() {
 
 	compress("gp.db", "gp.gz")
 	os.Remove("gp.db")
+	os.Remove("gp.db.lock")
 
 	endAppTime := time.Now()
 	fmt.Printf("Add %d ip adress\n", numIPs)

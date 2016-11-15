@@ -8,8 +8,7 @@ import (
 var (
 	numWorkers   = 5
 	timeout      = 10
-	proxyPort    = 9090
-	backup       = true
+	proxyPort    = 19091
 	ips          *mapsIP
 	links        *mapsLink
 	startAppTime time.Time
