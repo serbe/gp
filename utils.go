@@ -210,7 +210,7 @@ func backupBase() error {
 		return err
 	}
 	defer origFile.Close()
-	backupName := time.Now().Format("02-01-2006-15:04:05") + ".gz"
+	backupName := time.Now().Format("02-01-2006-15-04-05") + ".gz"
 	newFile, err := os.Create(backupName)
 	if err != nil {
 		return err

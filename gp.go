@@ -85,24 +85,27 @@ func main() {
 				}
 			}
 		}()
-	loopCheck:
-		for {
-			task := tm.GetTask()
-			fmt.Printf("get task %v\n", task)
-			if task.Result != nil {
-				ip := task.Result.(ipType)
-				ipString := ip.Addr + ":" + ip.Port
-				ips.set(ipString, ip)
-				if ip.isWork {
-					fmt.Println(ipString)
+		go func() {
+		loopCheck:
+			for {
+				task := tm.GetTask()
+				fmt.Printf("get task %v\n", task)
+				if task.Result != nil {
+					ip := task.Result.(ipType)
+					ipString := ip.Addr + ":" + ip.Port
+					ips.set(ipString, ip)
+					if ip.isWork {
+						fmt.Println(ipString)
+					}
+				}
+				added, running, completed := tm.Status()
+				if running == 0 && added > 0 && added == completed {
+					break loopCheck
 				}
 			}
-			added, running, completed := tm.Status()
-			if running == 0 && added > 0 && added == completed {
-				break loopCheck
-			}
-		}
-		saveNewIP()
+			saveNewIP()
+		}()
+		tm.Wait()
 	}
 
 	db.Sync()
