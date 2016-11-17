@@ -103,7 +103,7 @@ func (link *linkType) decode(data []byte) error {
 
 func isOld(link linkType) bool {
 	currentTime := time.Now()
-	return currentTime.Sub(link.CheckAt) > time.Duration(60*12*time.Minute)
+	return currentTime.Sub(link.CheckAt) > time.Duration(720)*time.Minute
 }
 
 func compress(inputFile, outputFile string) error {
@@ -169,38 +169,36 @@ func grab(args ...interface{}) interface{} {
 func check(args ...interface{}) interface{} {
 	targetURL := fmt.Sprintf("http://93.170.123.221:%d/", proxyPort)
 	proxy := args[0].(ipType)
-	startTime := time.Now()
+	startTimeCheck := time.Now()
 	body, err := fetchBody(targetURL, proxy)
-	endTime := time.Now()
-	duration := endTime.Sub(startTime)
+	endTimeCheck := time.Now()
+	duration := endTimeCheck.Sub(startTimeCheck)
 	if err != nil {
 		proxy.ProxyChecks++
-		proxy.LastCheck = time.Now()
+		proxy.LastCheck = endTimeCheck
 		proxy.isWork = false
 		proxy.Response = duration
-		proxy.LastCheck = endTime
+		proxy.LastCheck = endTimeCheck
 		return proxy
 	}
 	strBody := string(body)
 	if reRemoteIP.Match(body) && !strings.Contains(strBody, myIP) {
-		endTime := time.Now()
 		if strings.Count(strBody, "<p>") == 1 {
 			proxy.isWork = true
 			proxy.isAnon = true
 			proxy.Response = duration
-			proxy.LastCheck = endTime
+			proxy.LastCheck = endTimeCheck
 			return proxy
 		}
 		proxy.isWork = true
 		proxy.isAnon = false
 		proxy.Response = duration
-		proxy.LastCheck = endTime
+		proxy.LastCheck = endTimeCheck
 		return proxy
 	}
 	proxy.isWork = false
-	proxy.LastCheck = endTime
 	proxy.Response = duration
-	proxy.LastCheck = endTime
+	proxy.LastCheck = endTimeCheck
 	return proxy
 }
 

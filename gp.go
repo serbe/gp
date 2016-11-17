@@ -4,24 +4,18 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"time"
-
-	// "net/http"
-	// _ "net/http/pprof"
 
 	"github.com/serbe/gopool"
 )
 
 func main() {
 	var (
-		findProxy  = false
+		findProxy  = true
 		checkProxy = false
 		backup     = false
 	)
-
-	// go func() {
-	// log.Println(http.ListenAndServe("localhost:6060", nil))
-	// }()
 
 	flag.IntVar(&numWorkers, "w", numWorkers, "number of workers")
 	flag.IntVar(&timeout, "t", timeout, "timeout")
@@ -55,41 +49,44 @@ func main() {
 			links.set(site)
 			tm.Add(grab, site)
 		}
-
-	loopFind:
+		r := tm.ResultChan(true)
+	getResultFindLoop:
 		for {
-			task := tm.GetTask()
-
-			if task.Result != nil {
-				urls := task.Result.([]string)
-				for _, u := range urls {
-					tm.Add(grab, u)
+			select {
+			case task := <-*r:
+				if task.Result != nil {
+					urls := task.Result.([]string)
+					for _, u := range urls {
+						tm.Add(grab, u)
+					}
+				}
+			case <-time.After(time.Duration(100) * time.Millisecond):
+				if tm.Done() {
+					break getResultFindLoop
 				}
 			}
-			added, running, completed := tm.Status()
-			if running == 0 && added > 0 && added == completed {
-				break loopFind
-			}
 		}
+		tm.ResultChan(false)
 		saveNewIP()
 		saveLinks()
 	}
 
 	if checkProxy {
-		go func() {
-			month := time.Duration(30*60*24) * time.Minute
-			timeNow := time.Now()
-			for _, v := range ips.values {
-				if v.LastCheck.Sub(timeNow) < time.Duration(v.ProxyChecks)*month || v.CreateAt.Sub(timeNow) < time.Duration(v.ProxyChecks)*month {
-					tm.Add(check, v)
-				}
+		myIP = getExternalIP()
+		month := time.Duration(30*60*24) * time.Minute
+		timeNow := time.Now()
+		for _, v := range ips.values {
+			if v.LastCheck.Sub(timeNow) < time.Duration(v.ProxyChecks)*month || v.CreateAt.Sub(timeNow) < time.Duration(v.ProxyChecks)*month {
+				tm.Add(check, v)
 			}
-		}()
-		go func() {
-		loopCheck:
-			for {
-				task := tm.GetTask()
-				fmt.Printf("get task %v\n", task)
+		}
+		r := tm.ResultChan(true)
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt)
+	getResultCheckLoop:
+		for {
+			select {
+			case task := <-*r:
 				if task.Result != nil {
 					ip := task.Result.(ipType)
 					ipString := ip.Addr + ":" + ip.Port
@@ -98,14 +95,17 @@ func main() {
 						fmt.Println(ipString)
 					}
 				}
-				added, running, completed := tm.Status()
-				if running == 0 && added > 0 && added == completed {
-					break loopCheck
+			case <-c:
+				tm.Quit()
+				break getResultCheckLoop
+			case <-time.After(time.Duration(100) * time.Millisecond):
+				if tm.Done() {
+					break getResultCheckLoop
 				}
 			}
-			saveNewIP()
-		}()
-		tm.Wait()
+		}
+		saveNewIP()
+		tm.ResultChan(false)
 	}
 
 	db.Sync()

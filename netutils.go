@@ -16,7 +16,7 @@ func fetchBody(targetURL string, proxy ipType) ([]byte, error) {
 			proxyURL *url.URL
 			err      error
 		)
-		if proxy.Ssl == true {
+		if proxy.Ssl {
 			proxyURL, err = url.Parse("https://" + proxy.Addr + ":" + proxy.Port)
 		} else {
 			proxyURL, err = url.Parse("http://" + proxy.Addr + ":" + proxy.Port)
