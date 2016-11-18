@@ -76,6 +76,18 @@ func saveNewIP() error {
 	return err
 }
 
+func saveAllIP() error {
+	err := db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("ips"))
+		for k, v := range ips.values {
+			ipBytes, _ := v.encode()
+			b.Put([]byte(k), ipBytes)
+		}
+		return nil
+	})
+	return err
+}
+
 func getAllLinks() *mapsLink {
 	allLinks := newMapsLink()
 	db.View(func(tx *bolt.Tx) error {

@@ -104,7 +104,7 @@ func main() {
 				}
 			}
 		}
-		saveNewIP()
+		saveAllIP()
 		tm.ResultChan(false)
 	}
 
