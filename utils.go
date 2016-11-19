@@ -184,18 +184,21 @@ func check(args ...interface{}) interface{} {
 	strBody := string(body)
 	if reRemoteIP.Match(body) && !strings.Contains(strBody, myIP) {
 		if strings.Count(strBody, "<p>") == 1 {
+			proxy.ProxyChecks = 0
 			proxy.isWork = true
 			proxy.isAnon = true
 			proxy.Response = duration
 			proxy.LastCheck = endTimeCheck
 			return proxy
 		}
+		proxy.ProxyChecks = 0
 		proxy.isWork = true
 		proxy.isAnon = false
 		proxy.Response = duration
 		proxy.LastCheck = endTimeCheck
 		return proxy
 	}
+	proxy.ProxyChecks++
 	proxy.isWork = false
 	proxy.Response = duration
 	proxy.LastCheck = endTimeCheck

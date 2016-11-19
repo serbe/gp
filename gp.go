@@ -70,15 +70,22 @@ func main() {
 		tm.ResultChan(false)
 		saveNewIP()
 		saveLinks()
+		fmt.Printf("Add %d ip adress\n", numIPs)
 	}
 
 	if checkProxy {
+		var (
+			totalIP    int64
+			totalProxy int64
+			anonProxy  int64
+		)
 		myIP, err = getExternalIP()
 		if err == nil {
 			month := time.Duration(30*60*24) * time.Minute
 			timeNow := time.Now()
 			for _, v := range ips.values {
 				if v.LastCheck.Sub(timeNow) < time.Duration(v.ProxyChecks)*month || v.CreateAt.Sub(timeNow) < time.Duration(v.ProxyChecks)*month {
+					totalIP++
 					tm.Add(check, v)
 				}
 			}
@@ -94,6 +101,10 @@ func main() {
 						ipString := ip.Addr + ":" + ip.Port
 						ips.set(ipString, ip)
 						if ip.isWork {
+							totalProxy++
+							if ip.isAnon {
+								anonProxy++
+							}
 							fmt.Println(ipString)
 						}
 					}
@@ -109,6 +120,9 @@ func main() {
 			saveAllIP()
 			tm.ResultChan(false)
 		}
+		fmt.Printf("checked %d ip\n", totalIP)
+		fmt.Printf("%d is good\n", totalProxy)
+		fmt.Printf("%d is anon\n", anonProxy)
 	}
 
 	db.Sync()
@@ -119,6 +133,5 @@ func main() {
 	os.Remove("gp.db.lock")
 
 	endAppTime := time.Now()
-	fmt.Printf("Add %d ip adress\n", numIPs)
 	fmt.Printf("Total time: %v second\n", endAppTime.Sub(startAppTime))
 }
