@@ -54,7 +54,9 @@ func getAllIP() *mapsIP {
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			var ip ipType
 			ip.decode(v)
-			allIP.set(string(k), ip)
+			if ip.Addr != "" && ip.Port != "" {
+				allIP.set(string(k), ip)
+			}
 		}
 
 		return nil
@@ -66,7 +68,7 @@ func saveNewIP() error {
 	err := db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("ips"))
 		for k, v := range ips.values {
-			if v.CreateAt.Sub(startAppTime) > 0 {
+			if v.Addr != "" && v.Port != "" && v.CreateAt.Sub(startAppTime) > 0 {
 				ipBytes, _ := v.encode()
 				b.Put([]byte(k), ipBytes)
 			}
@@ -80,8 +82,10 @@ func saveAllIP() error {
 	err := db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("ips"))
 		for k, v := range ips.values {
-			ipBytes, _ := v.encode()
-			b.Put([]byte(k), ipBytes)
+			if v.Addr != "" && v.Port != "" {
+				ipBytes, _ := v.encode()
+				b.Put([]byte(k), ipBytes)
+			}
 		}
 		return nil
 	})
@@ -93,13 +97,13 @@ func getAllLinks() *mapsLink {
 	db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("links"))
 		c := b.Cursor()
-
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			var link linkType
 			link.decode(v)
-			allLinks.set(string(k))
+			if link.Host != "" {
+				allLinks.set(string(k))
+			}
 		}
-
 		return nil
 	})
 	return allLinks
@@ -109,8 +113,10 @@ func saveLinks() error {
 	err := db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("links"))
 		for k, v := range links.values {
-			linkBytes, _ := v.encode()
-			b.Put([]byte(k), linkBytes)
+			if v.Host != "" {
+				linkBytes, _ := v.encode()
+				b.Put([]byte(k), linkBytes)
+			}
 		}
 		return nil
 	})

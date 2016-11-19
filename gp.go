@@ -15,6 +15,7 @@ func main() {
 		findProxy  = true
 		checkProxy = false
 		backup     = false
+		err        error
 	)
 
 	flag.IntVar(&numWorkers, "w", numWorkers, "number of workers")
@@ -72,40 +73,42 @@ func main() {
 	}
 
 	if checkProxy {
-		myIP = getExternalIP()
-		month := time.Duration(30*60*24) * time.Minute
-		timeNow := time.Now()
-		for _, v := range ips.values {
-			if v.LastCheck.Sub(timeNow) < time.Duration(v.ProxyChecks)*month || v.CreateAt.Sub(timeNow) < time.Duration(v.ProxyChecks)*month {
-				tm.Add(check, v)
+		myIP, err = getExternalIP()
+		if err == nil {
+			month := time.Duration(30*60*24) * time.Minute
+			timeNow := time.Now()
+			for _, v := range ips.values {
+				if v.LastCheck.Sub(timeNow) < time.Duration(v.ProxyChecks)*month || v.CreateAt.Sub(timeNow) < time.Duration(v.ProxyChecks)*month {
+					tm.Add(check, v)
+				}
 			}
-		}
-		r := tm.ResultChan(true)
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, os.Interrupt)
-	getResultCheckLoop:
-		for {
-			select {
-			case task := <-*r:
-				if task.Result != nil {
-					ip := task.Result.(ipType)
-					ipString := ip.Addr + ":" + ip.Port
-					ips.set(ipString, ip)
-					if ip.isWork {
-						fmt.Println(ipString)
+			r := tm.ResultChan(true)
+			c := make(chan os.Signal, 1)
+			signal.Notify(c, os.Interrupt)
+		getResultCheckLoop:
+			for {
+				select {
+				case task := <-*r:
+					if task.Result != nil {
+						ip := task.Result.(ipType)
+						ipString := ip.Addr + ":" + ip.Port
+						ips.set(ipString, ip)
+						if ip.isWork {
+							fmt.Println(ipString)
+						}
+					}
+				case <-c:
+					tm.Quit()
+					break getResultCheckLoop
+				case <-time.After(time.Duration(100) * time.Millisecond):
+					if tm.Done() {
+						break getResultCheckLoop
 					}
 				}
-			case <-c:
-				tm.Quit()
-				break getResultCheckLoop
-			case <-time.After(time.Duration(100) * time.Millisecond):
-				if tm.Done() {
-					break getResultCheckLoop
-				}
 			}
+			saveAllIP()
+			tm.ResultChan(false)
 		}
-		saveAllIP()
-		tm.ResultChan(false)
 	}
 
 	db.Sync()

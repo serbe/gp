@@ -24,7 +24,10 @@ func fetchBody(targetURL string, proxy ipType) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		client.Transport = &http.Transport{Proxy: http.ProxyURL(proxyURL)}
+		client.Transport = &http.Transport{
+			Proxy:             http.ProxyURL(proxyURL),
+			DisableKeepAlives: true,
+		}
 	}
 	resp, err := client.Get(targetURL)
 	if err != nil {
@@ -50,10 +53,10 @@ func getHost(u string) (string, error) {
 	return uParse.Scheme + "://" + uParse.Host + addon, nil
 }
 
-func getExternalIP() string {
+func getExternalIP() (string, error) {
 	body, err := fetchBody("http://myexternalip.com/raw", ipType{})
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	return string(body)
+	return string(body), nil
 }
