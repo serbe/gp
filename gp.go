@@ -133,5 +133,5 @@ func main() {
 	os.Remove("gp.db.lock")
 
 	endAppTime := time.Now()
-	fmt.Printf("Total time: %v second\n", endAppTime.Sub(startAppTime))
+	fmt.Printf("Total time: %v\n", endAppTime.Sub(startAppTime))
 }
