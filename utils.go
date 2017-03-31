@@ -146,22 +146,14 @@ func decompress(inputFile, outputFile string) error {
 	return err
 }
 
-// host string
-func grab(args ...interface{}) interface{} {
-	var urls []string
-	host := args[0].(string)
-	fmt.Printf("Start grab %s\n", host)
-	body, err := fetchBody(host, ipType{})
-	if err != nil {
-		return urls
-	}
+func grab(address string, body []byte) []string {
 	body = cleanBody(body)
 	oldNumIP := numIPs
 	getListIP(body)
 	if numIPs-oldNumIP > 0 {
-		fmt.Printf("Find %d new ip address in %s\n", numIPs-oldNumIP, host)
+		fmt.Printf("Find %d new ip address in %s\n", numIPs-oldNumIP, address)
 	}
-	urls = getListURL(host, body)
+	urls := getListURL(address, body)
 	return urls
 }
 
@@ -219,4 +211,15 @@ func backupBase() error {
 	defer newFile.Close()
 	_, err = io.Copy(origFile, newFile)
 	return err
+}
+
+func makeAddress(ip ipType) string {
+	var out string
+	if ip.Ssl {
+		out = "https://"
+	} else {
+		out = "http://"
+	}
+	out += ip.Addr + ":" + ip.Port
+	return out
 }

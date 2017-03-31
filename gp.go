@@ -4,10 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/signal"
 	"time"
 
-	"github.com/serbe/gopool"
+	"github.com/serbe/pool"
 )
 
 func main() {
@@ -15,7 +14,7 @@ func main() {
 		findProxy  = true
 		checkProxy = false
 		backup     = false
-		err        error
+		// err        error
 	)
 
 	flag.IntVar(&numWorkers, "w", numWorkers, "number of workers")
@@ -39,8 +38,8 @@ func main() {
 
 	startAppTime = time.Now()
 
-	tm := gopool.New(numWorkers)
-	tm.Run()
+	p := pool.New(numWorkers)
+	p.SetTimeout(timeout)
 
 	links = getAllLinks()
 	ips = getAllIP()
@@ -48,82 +47,73 @@ func main() {
 	if findProxy {
 		for _, site := range siteList {
 			links.set(site)
-			tm.Add(grab, site)
+			p.Add(site, "")
 		}
-		r := tm.ResultChan(true)
-	getResultFindLoop:
-		for {
-			select {
-			case task := <-*r:
-				if task.Result != nil {
-					urls := task.Result.([]string)
-					for _, u := range urls {
-						tm.Add(grab, u)
-					}
-				}
-			case <-time.After(time.Duration(100) * time.Millisecond):
-				if tm.Done() {
-					break getResultFindLoop
-				}
+		for result := range p.ResultChan {
+			urls := grab(result.Address, result.Body)
+			for _, u := range urls {
+				p.Add(u, "")
 			}
 		}
-		tm.ResultChan(false)
 		saveNewIP()
 		saveLinks()
 		fmt.Printf("Add %d ip adress\n", numIPs)
 	}
 
-	if checkProxy {
-		var (
-			totalIP    int64
-			totalProxy int64
-			anonProxy  int64
-		)
-		myIP, err = getExternalIP()
-		if err == nil {
-			month := time.Duration(30*60*24) * time.Minute
-			timeNow := time.Now()
-			for _, v := range ips.values {
-				if v.LastCheck.Sub(timeNow) < time.Duration(v.ProxyChecks)*month || v.CreateAt.Sub(timeNow) < time.Duration(v.ProxyChecks)*month {
-					totalIP++
-					tm.Add(check, v)
-				}
-			}
-			r := tm.ResultChan(true)
-			c := make(chan os.Signal, 1)
-			signal.Notify(c, os.Interrupt)
-		getResultCheckLoop:
-			for {
-				select {
-				case task := <-*r:
-					if task.Result != nil {
-						ip := task.Result.(ipType)
-						ipString := ip.Addr + ":" + ip.Port
-						ips.set(ipString, ip)
-						if ip.isWork {
-							totalProxy++
-							if ip.isAnon {
-								anonProxy++
-							}
-							fmt.Println(ipString)
-						}
-					}
-				case <-c:
-					tm.Quit()
-					break getResultCheckLoop
-				case <-time.After(time.Duration(100) * time.Millisecond):
-					if tm.Done() {
-						break getResultCheckLoop
-					}
-				}
-			}
-			saveAllIP()
-			tm.ResultChan(false)
-		}
-		fmt.Printf("checked %d ip\n", totalIP)
-		fmt.Printf("%d is good\n", totalProxy)
-		fmt.Printf("%d is anon\n", anonProxy)
-	}
+	// if checkProxy {
+	// 	var (
+	// 		totalIP    int64
+	// 		totalProxy int64
+	// 		anonProxy  int64
+	// 	)
+	// 	targetURL := fmt.Sprintf("http://93.170.123.221:%d/", proxyPort)
+	// 	myIP, err := getExternalIP()
+	// 	if err == nil {
+	// 		month := time.Duration(30*60*24) * time.Minute
+	// 		timeNow := time.Now()
+	// 		for _, v := range ips.values {
+	// 			if v.LastCheck.Sub(timeNow) < time.Duration(v.ProxyChecks)*month || v.CreateAt.Sub(timeNow) < time.Duration(v.ProxyChecks)*month {
+	// 				totalIP++
+	// 				p.Add(targetURL, makeAddress(v))
+	// 			}
+	// 		}
+	// 		c := make(chan os.Signal, 1)
+	// 		signal.Notify(c, os.Interrupt)
+	// 	checkProxyLoop:
+	// 		for {
+	// 			select {
+	// 			case result, ok := <-p.ResultChan:
+	// 				if ok {
+	// 					if task.Result != nil {
+	// 						ip := task.Result.(ipType)
+	// 						ipString := ip.Addr + ":" + ip.Port
+	// 						ips.set(ipString, ip)
+	// 						if ip.isWork {
+	// 							totalProxy++
+	// 							if ip.isAnon {
+	// 								anonProxy++
+	// 							}
+	// 							fmt.Println(ipString)
+	// 						}
+	// 					}
+	// 				} else {
+	// 					break checkProxyLoop
+	// 				}
+	// 			case <-c:
+	// 				p.Quit()
+	// 				break checkProxyLoop
+	// 			case <-time.After(time.Duration(100) * time.Millisecond):
+	// 				if p.Done() {
+	// 					break checkProxyLoop
+	// 				}
+	// 			}
+	// 		}
+	// 		saveAllIP()
+	// 	}
+	// 	fmt.Printf("checked %d ip\n", totalIP)
+	// 	fmt.Printf("%d is good\n", totalProxy)
+	// 	fmt.Printf("%d is anon\n", anonProxy)
+	// }
 
 	db.Sync()
 	db.Close()
