@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"time"
 
 	"github.com/serbe/pool"
@@ -30,8 +31,9 @@ func main() {
 		backupBase()
 	}
 
-	decompress("gp.gz", "gp.db")
-	os.Remove("gp.gz")
+	os.Remove("gp.db")
+	decompress("gp.zip")
+	os.Remove("gp.zip")
 
 	initDB()
 	defer db.Close()
@@ -50,7 +52,7 @@ func main() {
 			p.Add(site, "")
 		}
 		for result := range p.ResultChan {
-			urls := grab(result.Address, result.Body)
+			urls := grab(result)
 			for _, u := range urls {
 				p.Add(u, "")
 			}
@@ -60,65 +62,61 @@ func main() {
 		fmt.Printf("Add %d ip adress\n", numIPs)
 	}
 
-	// if checkProxy {
-	// 	var (
-	// 		totalIP    int64
-	// 		totalProxy int64
-	// 		anonProxy  int64
-	// 	)
-	// 	targetURL := fmt.Sprintf("http://93.170.123.221:%d/", proxyPort)
-	// 	myIP, err := getExternalIP()
-	// 	if err == nil {
-	// 		month := time.Duration(30*60*24) * time.Minute
-	// 		timeNow := time.Now()
-	// 		for _, v := range ips.values {
-	// 			if v.LastCheck.Sub(timeNow) < time.Duration(v.ProxyChecks)*month || v.CreateAt.Sub(timeNow) < time.Duration(v.ProxyChecks)*month {
-	// 				totalIP++
-	// 				p.Add(targetURL, makeAddress(v))
-	// 			}
-	// 		}
-	// 		c := make(chan os.Signal, 1)
-	// 		signal.Notify(c, os.Interrupt)
-	// 	checkProxyLoop:
-	// 		for {
-	// 			select {
-	// 			case result, ok := <-p.ResultChan:
-	// 				if ok {
-	// 					if task.Result != nil {
-	// 						ip := task.Result.(ipType)
-	// 						ipString := ip.Addr + ":" + ip.Port
-	// 						ips.set(ipString, ip)
-	// 						if ip.isWork {
-	// 							totalProxy++
-	// 							if ip.isAnon {
-	// 								anonProxy++
-	// 							}
-	// 							fmt.Println(ipString)
-	// 						}
-	// 					}
-	// 				} else {
-	// 					break checkProxyLoop
-	// 				}
-	// 			case <-c:
-	// 				p.Quit()
-	// 				break checkProxyLoop
-	// 			case <-time.After(time.Duration(100) * time.Millisecond):
-	// 				if p.Done() {
-	// 					break checkProxyLoop
-	// 				}
-	// 			}
-	// 		}
-	// 		saveAllIP()
-	// 	}
-	// 	fmt.Printf("checked %d ip\n", totalIP)
-	// 	fmt.Printf("%d is good\n", totalProxy)
-	// 	fmt.Printf("%d is anon\n", anonProxy)
-	// }
+	if checkProxy {
+		var (
+			totalIP    int64
+			totalProxy int64
+			anonProxy  int64
+			err        error
+		)
+		targetURL := fmt.Sprintf("http://93.170.123.221:%d/", proxyPort)
+		myIP, err = getExternalIP()
+		if err == nil {
+			month := time.Duration(30*60*24) * time.Minute
+			startTime := time.Now()
+			for _, v := range ips.values {
+				if v.LastCheck.Sub(startTime) < time.Duration(v.ProxyChecks)*month || v.CreateAt.Sub(startTime) < time.Duration(v.ProxyChecks)*month {
+					totalIP++
+					p.Add(targetURL, makeAddress(v))
+				}
+			}
+			c := make(chan os.Signal, 1)
+			signal.Notify(c, os.Interrupt)
+		checkProxyLoop:
+			for {
+				select {
+				case result, ok := <-p.ResultChan:
+					if ok {
+						if result.Error == nil {
+							proxy := check(result)
+							ipString := proxy.Addr + ":" + proxy.Port
+							ips.set(ipString, proxy)
+							if proxy.isWork {
+								totalProxy++
+								if proxy.isAnon {
+									anonProxy++
+								}
+								fmt.Println(ipString)
+							}
+						}
+					} else {
+						break checkProxyLoop
+					}
+				case <-c:
+					break checkProxyLoop
+				}
+			}
+			saveAllIP()
+		}
+		fmt.Printf("checked %d ip\n", totalIP)
+		fmt.Printf("%d is good\n", totalProxy)
+		fmt.Printf("%d is anon\n", anonProxy)
+	}
 
 	db.Sync()
 	db.Close()
 
-	compress("gp.db", "gp.gz")
+	compress("gp.db", "gp.zip")
 	os.Remove("gp.db")
 	os.Remove("gp.db.lock")
 

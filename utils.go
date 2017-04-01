@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"compress/flate"
 	"encoding/gob"
 	"fmt"
 	"io"
@@ -11,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/serbe/pool"
 )
 
 func cleanBody(body []byte) []byte {
@@ -23,16 +24,16 @@ func cleanBody(body []byte) []byte {
 	return body
 }
 
-func getListURL(baseURL string, body []byte) []string {
+func getListURL(task pool.Task) []string {
 	var urls []string
 	for i := range reURL {
-		host, err := getHost(baseURL)
+		host, err := getHost(task.Target.String())
 		if err != nil {
 			continue
 		}
 		re := regexp.MustCompile(reURL[i])
-		if re.Match(body) {
-			allResults := re.FindAllSubmatch(body, -1)
+		if re.Match(task.Body) {
+			allResults := re.FindAllSubmatch(task.Body, -1)
 			for _, result := range allResults {
 				fullURL := host + "/" + string(result[1])
 				if isOld(links.get(fullURL)) {
@@ -58,7 +59,8 @@ func getListIP(body []byte) {
 					ipWithPort := ip + ":" + port
 					if ips.get(ipWithPort).Addr == "" {
 						numIPs++
-						ips.set(ipWithPort, newIP(ip, port))
+						ips.set(ipWithPort, newIP(ip, port, true))
+						ips.set(ipWithPort, newIP(ip, port, false))
 					}
 				}
 			}
@@ -67,10 +69,11 @@ func getListIP(body []byte) {
 	return
 }
 
-func newIP(addr, port string) ipType {
+func newIP(addr, port string, ssl bool) ipType {
 	var ip ipType
 	ip.Addr = addr
 	ip.Port = port
+	ip.Ssl = ssl
 	ip.CreateAt = time.Now()
 	return ip
 }
@@ -106,66 +109,23 @@ func isOld(link linkType) bool {
 	return currentTime.Sub(link.CheckAt) > time.Duration(720)*time.Minute
 }
 
-func compress(inputFile, outputFile string) error {
-	i, err := os.Open(inputFile)
-	if err != nil {
-		return err
-	}
-	defer i.Close()
-	o, err := os.Create(outputFile)
-	if err != nil {
-		return err
-	}
-	defer o.Close()
-	f, err := flate.NewWriter(o, flate.BestCompression)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	_, err = io.Copy(f, i)
-	return err
-}
-
-func decompress(inputFile, outputFile string) error {
-	i, err := os.Open(inputFile)
-	if err != nil {
-		return err
-	}
-	defer i.Close()
-	f := flate.NewReader(i)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	o, err := os.Create(outputFile)
-	if err != nil {
-		return err
-	}
-	defer o.Close()
-	_, err = io.Copy(o, f)
-	return err
-}
-
-func grab(address string, body []byte) []string {
-	body = cleanBody(body)
+func grab(task pool.Task) []string {
+	task.Body = cleanBody(task.Body)
 	oldNumIP := numIPs
-	getListIP(body)
+	getListIP(task.Body)
 	if numIPs-oldNumIP > 0 {
-		fmt.Printf("Find %d new ip address in %s\n", numIPs-oldNumIP, address)
+		fmt.Printf("Find %d new ip address in %s\n", numIPs-oldNumIP, task.Target.String())
 	}
-	urls := getListURL(address, body)
+	urls := getListURL(task)
 	return urls
 }
 
-// proxy ipType
-func check(args ...interface{}) interface{} {
-	targetURL := fmt.Sprintf("http://93.170.123.221:%d/", proxyPort)
-	proxy := args[0].(ipType)
+func check(task pool.Task) ipType {
+	var proxy ipType
 	startTimeCheck := time.Now()
-	body, err := fetchBody(targetURL, proxy)
 	endTimeCheck := time.Now()
 	duration := endTimeCheck.Sub(startTimeCheck)
-	if err != nil {
+	if task.Error != nil {
 		proxy.ProxyChecks++
 		proxy.LastCheck = endTimeCheck
 		proxy.isWork = false
@@ -173,8 +133,8 @@ func check(args ...interface{}) interface{} {
 		proxy.LastCheck = endTimeCheck
 		return proxy
 	}
-	strBody := string(body)
-	if reRemoteIP.Match(body) && !strings.Contains(strBody, myIP) {
+	strBody := string(task.Body)
+	if reRemoteIP.Match(task.Body) && !strings.Contains(strBody, myIP) {
 		if strings.Count(strBody, "<p>") == 1 {
 			proxy.ProxyChecks = 0
 			proxy.isWork = true
@@ -198,12 +158,12 @@ func check(args ...interface{}) interface{} {
 }
 
 func backupBase() error {
-	origFile, err := os.Open("gp.gz")
+	origFile, err := os.Open("gp.zip")
 	if err != nil {
 		return err
 	}
 	defer origFile.Close()
-	backupName := time.Now().Format("02-01-2006-15-04-05") + ".gz"
+	backupName := time.Now().Format("02-01-2006-15-04-05") + ".zip"
 	newFile, err := os.Create(backupName)
 	if err != nil {
 		return err
