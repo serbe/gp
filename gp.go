@@ -22,7 +22,7 @@ func main() {
 	flag.IntVar(&timeout, "t", timeout, "timeout")
 	flag.BoolVar(&findProxy, "f", findProxy, "find new proxy")
 	flag.BoolVar(&checkProxy, "c", checkProxy, "check proxy")
-	flag.IntVar(&proxyPort, "p", proxyPort, "proxy port")
+	flag.IntVar(&serverPort, "p", serverPort, "server port")
 	flag.BoolVar(&backup, "b", backup, "backup database")
 
 	flag.Parse()
@@ -69,7 +69,7 @@ func main() {
 			anonProxy  int64
 			err        error
 		)
-		targetURL := fmt.Sprintf("http://93.170.123.221:%d/", proxyPort)
+		targetURL := fmt.Sprintf("http://93.170.123.221:%d/", serverPort)
 		myIP, err = getExternalIP()
 		if err == nil {
 			month := time.Duration(30*60*24) * time.Minute

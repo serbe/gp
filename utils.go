@@ -59,7 +59,6 @@ func getListIP(body []byte) {
 					ipWithPort := ip + ":" + port
 					if ips.get(ipWithPort).Addr == "" {
 						numIPs++
-						ips.set(ipWithPort, newIP(ip, port, true))
 						ips.set(ipWithPort, newIP(ip, port, false))
 					}
 				}
@@ -124,6 +123,8 @@ func check(task pool.Task) ipType {
 	var proxy ipType
 	startTimeCheck := time.Now()
 	endTimeCheck := time.Now()
+	proxy.Addr = task.Proxy.Hostname()
+	proxy.Port = task.Proxy.Port()
 	duration := endTimeCheck.Sub(startTimeCheck)
 	if task.Error != nil {
 		proxy.ProxyChecks++
