@@ -16,7 +16,6 @@ func main() {
 		findProxy  = true
 		checkProxy = false
 		backup     = false
-		// err        error
 	)
 
 	flag.IntVar(&numWorkers, "w", numWorkers, "number of workers")
@@ -74,10 +73,10 @@ func main() {
 		targetURL := fmt.Sprintf("http://93.170.123.221:%d/", serverPort)
 		myIP, err = getExternalIP()
 		if err == nil {
-			month := time.Duration(30*60*24) * time.Minute
+			week := time.Duration(60*24*7) * time.Minute
 			startTime := time.Now()
 			for _, v := range ips.values {
-				if v.LastCheck.Sub(startTime) < time.Duration(v.ProxyChecks)*month || v.CreateAt.Sub(startTime) < time.Duration(v.ProxyChecks)*month {
+				if (v.LastCheck == time.Time{} || v.LastCheck != time.Time{} && startTime.Sub(v.LastCheck) > time.Duration(v.ProxyChecks)*week) {
 					totalIP++
 					p.Add(targetURL, makeAddress(v))
 				}
@@ -98,7 +97,7 @@ func main() {
 							ipString := proxy.Addr + ":" + proxy.Port
 							ips.set(ipString, proxy)
 							if proxy.isWork {
-								log.Printf("%d/%d %v %v is work=%v is anon=%v\n", checked, totalIP, result.Proxy.Host, result.ResponceTime, proxy.isWork, proxy.isAnon)
+								log.Printf("%d/%d %-15v %-5v %-10v anon=%v\n", checked, totalIP, result.Proxy.Hostname(), result.Proxy.Port(), result.ResponceTime, proxy.isAnon)
 								totalProxy++
 								if proxy.isAnon {
 									anonProxy++
@@ -118,7 +117,6 @@ func main() {
 		log.Printf("%d is good\n", totalProxy)
 		log.Printf("%d is anon\n", anonProxy)
 	}
-
 	db.Sync()
 	db.Close()
 
