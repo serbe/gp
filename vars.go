@@ -31,6 +31,7 @@ var (
 		`http://www.proxynova.com/proxy-server-list/`,
 		`http://proxyserverlist-24.blogspot.ru/`,
 		`http://gatherproxy.com/`,
+		`https://hidemy.name/ru/proxy-list/`,
 
 		`https://www.sslproxies.org/`,
 
@@ -54,6 +55,7 @@ var (
 		`<a href='http://proxyserverlist-24.blogspot.ru/(\d{4}/\d{1,2}/\d{1,2}-\d{1,2}-\d{1,2}-free-proxy-server-list-\d{1,6}.html#more)'`,
 		`<a href=(?:'|")((?:anon|elite)/\d{1,12}.html)(?:'|")>(?:anon|elite)`,
 		`href=(?:'|")/(proxylist\.php\?.+?\#table)`,
+		`href=(?:'|")/(ru/proxy-list/\?start=\d{1,4}#list)`,
 	}
 	reIP        = `((?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))`
 	reCommaList = []string{
