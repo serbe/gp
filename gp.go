@@ -16,6 +16,7 @@ func main() {
 		findProxy  = true
 		checkProxy = false
 		backup     = false
+		server     = false
 	)
 
 	flag.IntVar(&numWorkers, "w", numWorkers, "number of workers")
@@ -24,6 +25,7 @@ func main() {
 	flag.BoolVar(&checkProxy, "c", checkProxy, "check proxy")
 	flag.IntVar(&serverPort, "p", serverPort, "server port")
 	flag.BoolVar(&backup, "b", backup, "backup database")
+	flag.BoolVar(&server, "s", server, "start server")
 
 	flag.Parse()
 
@@ -39,6 +41,10 @@ func main() {
 	defer db.Close()
 
 	startAppTime = time.Now()
+
+	if server {
+		go startServer()
+	}
 
 	if findProxy {
 		p := pool.New(numWorkers)
