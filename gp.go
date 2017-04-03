@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"time"
@@ -57,7 +58,7 @@ func main() {
 		}
 		saveNewIP()
 		saveLinks()
-		fmt.Printf("Add %d ip adress\n", numIPs)
+		log.Printf("Add %d ip adress\n", numIPs)
 	}
 
 	if checkProxy {
@@ -81,7 +82,7 @@ func main() {
 					p.Add(targetURL, makeAddress(v))
 				}
 			}
-			fmt.Println("Start check", totalIP, "proxyes")
+			log.Println("Start check", totalIP, "proxyes")
 			if totalIP > 0 {
 				c := make(chan os.Signal, 1)
 				signal.Notify(c, os.Interrupt)
@@ -97,7 +98,7 @@ func main() {
 							ipString := proxy.Addr + ":" + proxy.Port
 							ips.set(ipString, proxy)
 							if proxy.isWork {
-								fmt.Printf("%d/%d %v %v is work=%v is anon=%v\n", checked, totalIP, result.Proxy.Host, result.ResponceTime, proxy.isWork, proxy.isAnon)
+								log.Printf("%d/%d %v %v is work=%v is anon=%v\n", checked, totalIP, result.Proxy.Host, result.ResponceTime, proxy.isWork, proxy.isAnon)
 								totalProxy++
 								if proxy.isAnon {
 									anonProxy++
@@ -113,9 +114,9 @@ func main() {
 				saveAllIP()
 			}
 		}
-		fmt.Printf("checked %d ip\n", totalIP)
-		fmt.Printf("%d is good\n", totalProxy)
-		fmt.Printf("%d is anon\n", anonProxy)
+		log.Printf("checked %d ip\n", totalIP)
+		log.Printf("%d is good\n", totalProxy)
+		log.Printf("%d is anon\n", anonProxy)
 	}
 
 	db.Sync()
@@ -126,5 +127,5 @@ func main() {
 	os.Remove("gp.db.lock")
 
 	endAppTime := time.Now()
-	fmt.Printf("Total time: %v\n", endAppTime.Sub(startAppTime))
+	log.Printf("Total time: %v\n", endAppTime.Sub(startAppTime))
 }
