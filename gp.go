@@ -117,6 +117,7 @@ func main() {
 		log.Printf("%d is good\n", totalProxy)
 		log.Printf("%d is anon\n", anonProxy)
 	}
+
 	db.Sync()
 	db.Close()
 

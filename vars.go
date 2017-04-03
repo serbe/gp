@@ -74,6 +74,7 @@ var (
 		{`(?:'|")\,(?:'|")PROXY_LAST_UPDATE(?:'|"):(?:'|")\d{1,3} \d{1,3}(?:'|"),(?:'|")PROXY_PORT(?:'|"):(?:'|")270F(?:'|")`, ":9999"},
 		{`(?:'|")\,(?:'|")PROXY_LAST_UPDATE(?:'|"):(?:'|")\d{1,3} \d{1,3}(?:'|"),(?:'|")PROXY_PORT(?:'|"):(?:'|")50(?:'|")`, ":80"},
 		{`<script type=(?:'|")text/javascript(?:'|")>document\.write\((?:'|")<font class=spy2>`, ""},
+		{`<span style=(?:'|")display:none(?:'|")>\d{1,3}</span>`, ""},
 		{`</font>(?:'|")`, ""},
 		{`<span>`, ""},
 		{`</span>`, ""},
