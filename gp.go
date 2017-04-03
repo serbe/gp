@@ -40,13 +40,11 @@ func main() {
 
 	startAppTime = time.Now()
 
-	p := pool.New(numWorkers)
-	p.SetTimeout(timeout)
-
-	links = getAllLinks()
-	ips = getAllIP()
-
 	if findProxy {
+		p := pool.New(numWorkers)
+		p.SetTimeout(timeout)
+		links = getAllLinks()
+		ips = getAllIP()
 		for _, site := range siteList {
 			links.set(site)
 			p.Add(site, "")
@@ -69,6 +67,9 @@ func main() {
 			anonProxy  int64
 			err        error
 		)
+		ips = getAllIP()
+		p := pool.New(numWorkers)
+		p.SetTimeout(timeout)
 		targetURL := fmt.Sprintf("http://93.170.123.221:%d/", serverPort)
 		myIP, err = getExternalIP()
 		if err == nil {
@@ -80,33 +81,37 @@ func main() {
 					p.Add(targetURL, makeAddress(v))
 				}
 			}
-			c := make(chan os.Signal, 1)
-			signal.Notify(c, os.Interrupt)
-		checkProxyLoop:
-			for {
-				select {
-				case result, ok := <-p.ResultChan:
-					if ok {
-						if result.Error == nil {
+			fmt.Println("Start check", totalIP, "proxyes")
+			if totalIP > 0 {
+				c := make(chan os.Signal, 1)
+				signal.Notify(c, os.Interrupt)
+				var checked int
+			checkProxyLoop:
+				for {
+					select {
+					case result, ok := <-p.ResultChan:
+						checked++
+						if ok {
 							proxy := check(result)
+							proxy.Response = result.ResponceTime
 							ipString := proxy.Addr + ":" + proxy.Port
 							ips.set(ipString, proxy)
 							if proxy.isWork {
+								fmt.Printf("%d/%d %v %v is work=%v is anon=%v\n", checked, totalIP, result.Proxy.Host, result.ResponceTime, proxy.isWork, proxy.isAnon)
 								totalProxy++
 								if proxy.isAnon {
 									anonProxy++
 								}
-								fmt.Println(ipString)
 							}
+						} else {
+							break checkProxyLoop
 						}
-					} else {
+					case <-c:
 						break checkProxyLoop
 					}
-				case <-c:
-					break checkProxyLoop
 				}
+				saveAllIP()
 			}
-			saveAllIP()
 		}
 		fmt.Printf("checked %d ip\n", totalIP)
 		fmt.Printf("%d is good\n", totalProxy)
