@@ -121,16 +121,12 @@ func grab(task pool.Task) []string {
 
 func check(task pool.Task) ipType {
 	var proxy ipType
-	startTimeCheck := time.Now()
 	endTimeCheck := time.Now()
 	proxy.Addr = task.Proxy.Hostname()
 	proxy.Port = task.Proxy.Port()
-	duration := endTimeCheck.Sub(startTimeCheck)
 	if task.Error != nil {
 		proxy.ProxyChecks++
-		proxy.LastCheck = endTimeCheck
 		proxy.isWork = false
-		proxy.Response = duration
 		proxy.LastCheck = endTimeCheck
 		return proxy
 	}
@@ -140,20 +136,17 @@ func check(task pool.Task) ipType {
 			proxy.ProxyChecks = 0
 			proxy.isWork = true
 			proxy.isAnon = true
-			proxy.Response = duration
 			proxy.LastCheck = endTimeCheck
 			return proxy
 		}
 		proxy.ProxyChecks = 0
 		proxy.isWork = true
 		proxy.isAnon = false
-		proxy.Response = duration
 		proxy.LastCheck = endTimeCheck
 		return proxy
 	}
 	proxy.ProxyChecks++
 	proxy.isWork = false
-	proxy.Response = duration
 	proxy.LastCheck = endTimeCheck
 	return proxy
 }
