@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
-	"fmt"
 	"io"
+	"log"
 	"os"
 	"regexp"
 	"strconv"
@@ -113,7 +113,7 @@ func grab(task pool.Task) []string {
 	oldNumIP := numIPs
 	getListIP(task.Body)
 	if numIPs-oldNumIP > 0 {
-		fmt.Printf("Find %d new ip address in %s\n", numIPs-oldNumIP, task.Target.String())
+		log.Printf("Find %d new ip address in %s\n", numIPs-oldNumIP, task.Target.String())
 	}
 	urls := getListURL(task)
 	return urls
@@ -121,33 +121,23 @@ func grab(task pool.Task) []string {
 
 func check(task pool.Task) ipType {
 	var proxy ipType
-	endTimeCheck := time.Now()
 	proxy.Addr = task.Proxy.Hostname()
 	proxy.Port = task.Proxy.Port()
-	if task.Error != nil {
-		proxy.ProxyChecks++
-		proxy.isWork = false
-		proxy.LastCheck = endTimeCheck
-		return proxy
-	}
-	strBody := string(task.Body)
-	if reRemoteIP.Match(task.Body) && !strings.Contains(strBody, myIP) {
-		if strings.Count(strBody, "<p>") == 1 {
-			proxy.ProxyChecks = 0
+	proxy.LastCheck = time.Now()
+	proxy.isWork = false
+	proxy.isAnon = false
+	if task.Error == nil {
+		strBody := string(task.Body)
+		if reRemoteIP.Match(task.Body) && !strings.Contains(strBody, myIP) {
 			proxy.isWork = true
-			proxy.isAnon = true
-			proxy.LastCheck = endTimeCheck
+			proxy.ProxyChecks = 0
+			if strings.Count(strBody, "<p>") == 1 {
+				proxy.isAnon = true
+			}
 			return proxy
 		}
-		proxy.ProxyChecks = 0
-		proxy.isWork = true
-		proxy.isAnon = false
-		proxy.LastCheck = endTimeCheck
-		return proxy
 	}
 	proxy.ProxyChecks++
-	proxy.isWork = false
-	proxy.LastCheck = endTimeCheck
 	return proxy
 }
 
