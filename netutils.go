@@ -37,7 +37,12 @@ func fetchBody(targetURL string, proxy ipType) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+		if err != nil {
+			errmsg("fetchBody resp.Body.Close", err)
+		}
+	}()
 	return body, err
 }
 

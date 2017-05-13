@@ -26,19 +26,37 @@ func main() {
 	flag.IntVar(&serverPort, "p", serverPort, "server port")
 	flag.BoolVar(&backup, "b", backup, "backup database")
 	flag.BoolVar(&server, "s", server, "start server")
+	flag.BoolVar(&logErrors, "e", logErrors, "logging all errors")
 
 	flag.Parse()
 
 	if backup {
-		backupBase()
+		err := backupBase()
+		if err != nil {
+			errmsg("backupBase", err)
+		}
 	}
 
-	os.Remove("gp.db")
-	decompress("gp.zip")
-	os.Remove("gp.zip")
+	err := os.Remove("gp.db")
+	if err != nil {
+		errmsg("os.remove", err)
+	}
+	err = decompress("gp.zip")
+	if err != nil {
+		errmsg("decompress", err)
+	}
+	err = os.Remove("gp.zip")
+	if err != nil {
+		errmsg("os.Remove", err)
+	}
 
 	initDB()
-	defer db.Close()
+	defer func() {
+		err = db.Close()
+		if err != nil {
+			errmsg("db.Close", err)
+		}
+	}()
 
 	startAppTime = time.Now()
 
@@ -61,8 +79,14 @@ func main() {
 				p.Add(u, "")
 			}
 		}
-		saveNewIP()
-		saveLinks()
+		err = saveNewIP()
+		if err != nil {
+			errmsg("saveNewIP", err)
+		}
+		err = saveLinks()
+		if err != nil {
+			errmsg("saveLinks", err)
+		}
 		log.Printf("Add %d ip adress\n", numIPs)
 	}
 
@@ -71,7 +95,6 @@ func main() {
 			totalIP    int64
 			totalProxy int64
 			anonProxy  int64
-			err        error
 		)
 		ips = getAllIP()
 		p := pool.New(numWorkers)
@@ -116,7 +139,10 @@ func main() {
 						break checkProxyLoop
 					}
 				}
-				saveAllIP()
+				err = saveAllIP()
+				if err != nil {
+					errmsg("saveAllIP", err)
+				}
 			}
 		}
 		log.Printf("checked %d ip\n", totalIP)
@@ -124,13 +150,28 @@ func main() {
 		log.Printf("%d is anon\n", anonProxy)
 	}
 
-	db.Sync()
-	db.Close()
+	err = db.Sync()
+	if err != nil {
+		errmsg("db.Sync", err)
+	}
+	err = db.Close()
+	if err != nil {
+		errmsg("db.Close", err)
+	}
 
-	compress("gp.db", "gp.zip")
-	os.Remove("gp.db")
-	os.Remove("gp.db.lock")
+	err = compress("gp.db", "gp.zip")
+	if err != nil {
+		errmsg("compress", err)
+	}
 
-	endAppTime := time.Now()
-	log.Printf("Total time: %v\n", endAppTime.Sub(startAppTime))
+	err = os.Remove("gp.db")
+	if err != nil {
+		errmsg("os.Remove", err)
+	}
+	err = os.Remove("gp.db.lock")
+	if err != nil {
+		errmsg("os.Remove", err)
+	}
+
+	log.Printf("Total time: %v\n", time.Since(startAppTime))
 }

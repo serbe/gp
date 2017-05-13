@@ -17,12 +17,22 @@ func decompress(archive string) error {
 		if err != nil {
 			return err
 		}
-		defer fileReader.Close()
+		defer func() {
+			err = fileReader.Close()
+			if err != nil {
+				errmsg("decompress fileReader.Close", err)
+			}
+		}()
 		targetFile, err := os.OpenFile(file.Name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
 		if err != nil {
 			return err
 		}
-		defer targetFile.Close()
+		defer func() {
+			err := targetFile.Close()
+			if err != nil {
+				errmsg("decompress targetFile.Close", err)
+			}
+		}()
 		if _, err := io.Copy(targetFile, fileReader); err != nil {
 			return err
 		}
@@ -35,9 +45,19 @@ func compress(source, target string) error {
 	if err != nil {
 		return err
 	}
-	defer zipfile.Close()
+	defer func() {
+		err = zipfile.Close()
+		if err != nil {
+			errmsg("compress zipfile.Close", err)
+		}
+	}()
 	archive := zip.NewWriter(zipfile)
-	defer archive.Close()
+	defer func() {
+		err = archive.Close()
+		if err != nil {
+			errmsg("compress archive.Close", err)
+		}
+	}()
 	info, err := os.Stat(source)
 	if err != nil {
 		return err
@@ -58,7 +78,12 @@ func compress(source, target string) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			errmsg("compress file.Close", err)
+		}
+	}()
 	_, err = io.Copy(writer, file)
 	return err
 }

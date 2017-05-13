@@ -9,6 +9,7 @@ var (
 	numWorkers   = 5
 	timeout      = 10
 	serverPort   = 19091
+	logErrors    = false
 	ips          *mapsIP
 	links        *mapsLink
 	startAppTime time.Time

@@ -8,11 +8,17 @@ import (
 
 func startServer() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "<p>RemoteAddr: %s</p>", r.RemoteAddr)
+		_, err := fmt.Fprintf(w, "<p>RemoteAddr: %s</p>", r.RemoteAddr)
+		if err != nil {
+			errmsg("startServer fmt.Fprintf", err)
+		}
 		for _, header := range headers {
 			str := r.Header.Get(header)
 			if str != "" {
-				fmt.Fprintf(w, "<p>%s: %s</p>", header, str)
+				_, err = fmt.Fprintf(w, "<p>%s: %s</p>", header, str)
+				if err != nil {
+					errmsg("startServer fmt.Fprintf", err)
+				}
 			}
 		}
 	})

@@ -47,13 +47,16 @@ func createBucket(b []byte) {
 
 func getAllIP() *mapsIP {
 	allIP := newMapsIP()
-	db.View(func(tx *bolt.Tx) error {
+	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("ips"))
 		c := b.Cursor()
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			var ip ipType
-			ip.decode(v)
+			err := ip.decode(v)
+			if err != nil {
+				return err
+			}
 			if ip.Addr != "" && ip.Port != "" {
 				allIP.set(string(k), ip)
 			}
@@ -61,6 +64,9 @@ func getAllIP() *mapsIP {
 
 		return nil
 	})
+	if err != nil {
+		errmsg("getAllIP db.View", err)
+	}
 	return allIP
 }
 
@@ -70,7 +76,10 @@ func saveNewIP() error {
 		for k, v := range ips.values {
 			if v.Addr != "" && v.Port != "" && v.CreateAt.Sub(startAppTime) > 0 {
 				ipBytes, _ := v.encode()
-				b.Put([]byte(k), ipBytes)
+				err := b.Put([]byte(k), ipBytes)
+				if err != nil {
+					errmsg("saveNewIP b.Put", err)
+				}
 			}
 		}
 		return nil
@@ -84,7 +93,10 @@ func saveAllIP() error {
 		for k, v := range ips.values {
 			if v.Addr != "" && v.Port != "" {
 				ipBytes, _ := v.encode()
-				b.Put([]byte(k), ipBytes)
+				err := b.Put([]byte(k), ipBytes)
+				if err != nil {
+					errmsg("saveAllIP b.Put", err)
+				}
 			}
 		}
 		return nil
@@ -94,18 +106,24 @@ func saveAllIP() error {
 
 func getAllLinks() *mapsLink {
 	allLinks := newMapsLink()
-	db.View(func(tx *bolt.Tx) error {
+	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("links"))
 		c := b.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			var link linkType
-			link.decode(v)
+			err := link.decode(v)
+			if err != nil {
+				errmsg("getAllLinks link.decode", err)
+			}
 			if link.Host != "" {
 				allLinks.set(string(k))
 			}
 		}
 		return nil
 	})
+	if err != nil {
+		errmsg("getAllLinks db.View", err)
+	}
 	return allLinks
 }
 
@@ -115,7 +133,10 @@ func saveLinks() error {
 		for k, v := range links.values {
 			if v.Host != "" {
 				linkBytes, _ := v.encode()
-				b.Put([]byte(k), linkBytes)
+				err := b.Put([]byte(k), linkBytes)
+				if err != nil {
+					errmsg("saveLinks b.Put", err)
+				}
 			}
 		}
 		return nil

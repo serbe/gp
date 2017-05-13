@@ -146,13 +146,23 @@ func backupBase() error {
 	if err != nil {
 		return err
 	}
-	defer origFile.Close()
+	defer func() {
+		err = origFile.Close()
+		if err != nil {
+			errmsg("backupBase origFile.Close", err)
+		}
+	}()
 	backupName := time.Now().Format("02-01-2006-15-04-05") + ".zip"
 	newFile, err := os.Create(backupName)
 	if err != nil {
 		return err
 	}
-	defer newFile.Close()
+	defer func() {
+		err = newFile.Close()
+		if err != nil {
+			errmsg("backupBase newFile.Close", err)
+		}
+	}()
 	_, err = io.Copy(origFile, newFile)
 	return err
 }
@@ -166,4 +176,10 @@ func makeAddress(ip ipType) string {
 	}
 	out += ip.Addr + ":" + ip.Port
 	return out
+}
+
+func errmsg(str string, err error) {
+	if logErrors {
+		log.Println("Error in", str, err)
+	}
 }
