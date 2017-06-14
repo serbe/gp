@@ -163,7 +163,11 @@ func backupBase() error {
 			errmsg("backupBase newFile.Close", err)
 		}
 	}()
-	_, err = io.Copy(origFile, newFile)
+	_, err = io.Copy(newFile, origFile)
+	if err != nil {
+		errmsg("backupBase io.Copy", err)
+	}
+	err = newFile.Sync()
 	return err
 }
 
