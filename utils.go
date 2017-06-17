@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/gob"
 	"io"
 	"log"
@@ -46,22 +47,66 @@ func getListURL(task pool.Task) []string {
 	return urls
 }
 
+func setIP(ip string, port string, base int) {
+	portInt, err := strconv.ParseInt(port, base, 32)
+	if err != nil {
+		return
+	}
+	var portStr string
+	if base == 10 {
+		portStr = port
+	} else {
+		portStr = strconv.Itoa(int(portInt))
+	}
+	if ip != "0.0.0.0" && portInt < 65535 {
+		ipWithPort := ip + ":" + portStr
+		if ips.get(ipWithPort).Addr == "" {
+			numIPs++
+			ips.set(ipWithPort, newIP(ip, port, false))
+		}
+	}
+}
+
+func decodeIP(src []byte) (string, string, error) {
+	out, err := base64.StdEncoding.DecodeString(string(src))
+	if err != nil {
+		return "", "", err
+	}
+	split := strings.Split(string(out), ":")
+	if len(split) == 2 {
+		return split[0], split[1], nil
+	}
+	return "", "", err
+}
+
 func getListIP(body []byte) {
+	for i := range baseDecode {
+		re := regexp.MustCompile(baseDecode[i])
+		if re.Match(body) {
+			results := re.FindAllSubmatch(body, -1)
+			for _, res := range results {
+				ip, port, err := decodeIP(res[1])
+				if err == nil {
+					setIP(ip, port, 10)
+				}
+			}
+		}
+	}
+	for i := range base16 {
+		re := regexp.MustCompile(base16[i])
+		if re.Match(body) {
+			results := re.FindAllSubmatch(body, -1)
+			for _, res := range results {
+				setIP(string(res[1]), string(res[2]), 16)
+			}
+		}
+	}
 	for i := range reCommaList {
 		re := regexp.MustCompile(reIP + reCommaList[i] + rePort)
 		if re.Match(body) {
 			results := re.FindAllSubmatch(body, -1)
 			for _, res := range results {
-				ip := string(res[1])
-				port := string(res[2])
-				portInt, _ := strconv.Atoi(port)
-				if ip != "0.0.0.0" && portInt < 65535 {
-					ipWithPort := ip + ":" + port
-					if ips.get(ipWithPort).Addr == "" {
-						numIPs++
-						ips.set(ipWithPort, newIP(ip, port, false))
-					}
-				}
+				setIP(string(res[1]), string(res[2]), 10)
 			}
 		}
 	}

@@ -33,6 +33,12 @@ var (
 		`http://proxyserverlist-24.blogspot.ru/`,
 		`http://gatherproxy.com/`,
 		`https://hidemy.name/ru/proxy-list/`,
+		`https://hidemy.name/en/proxy-list/?type=hs&anon=34#list`,
+		`https://free-proxy-list.com`,
+		`https://free-proxy-list.com/?search=1&page=&port=&type%5B%5D=http&type%5B%5D=https&level%5B%5D=anonymous&level%5B%5D=high-anonymous&speed%5B%5D=2&speed%5B%5D=3&connect_time%5B%5D=2&connect_time%5B%5D=3&up_time=40&search=Search`,
+		`http://www.idcloak.com/proxylist/free-proxy-servers-list.html`,
+		`https://premproxy.com/list/`,
+		`https://proxy-list.org/english/index.php`,
 
 		`https://www.sslproxies.org/`,
 
@@ -47,7 +53,7 @@ var (
 	}
 
 	reURL = []string{
-		`href=(?:'|")/(publ/\d{1,3}-\d{1,3})(?:'|")\s`,
+		`href=(?:'|")/publ/(\d{1,3}-\d{1,3})(?:'|")\s`,
 		`href=(?:'|")/(freeproxylist/proxylist.*?\.txt)(?:'|")`,
 		`value=(?:'|")http://awmproxy.com/(freeproxy_\d{3,12}\.txt)(?:'|")`,
 		`<a href=(?:'|")/(proxies/\d{1,3}/)(?:'|")>`,
@@ -56,7 +62,9 @@ var (
 		`<a href='http://proxyserverlist-24.blogspot.ru/(\d{4}/\d{1,2}/\d{1,2}-\d{1,2}-\d{1,2}-free-proxy-server-list-\d{1,6}.html#more)'`,
 		`<a href=(?:'|")((?:anon|elite)/\d{1,12}.html)(?:'|")>(?:anon|elite)`,
 		`href=(?:'|")/(proxylist\.php\?.+?\#table)`,
-		`href=(?:'|")/(ru/proxy-list/\?start=\d{1,4}#list)`,
+		`href=(?:'|")/(\w\w/proxy-list/\?.*?#list)`,
+		`<a class=(?:'|")page(?:'|") href=(?:'|")(\d{1,3}.htm)(?:'|")>`,
+		`href=(?:'|")\./(index\.php\?p=\d{1,3})(?:'|")>`,
 	}
 	reIP        = `((?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))`
 	reCommaList = []string{
@@ -81,7 +89,12 @@ var (
 		{`</span>`, ""},
 		{`\n`, ""},
 	}
-
+	baseDecode = []string{
+		`text/javascript(?:'|")>Proxy\((?:'|")(.*?)(?:'|")\)</script>`,
+	}
+	base16 = []string{
+		`PROXY_IP(?:'|"):(?:'|")((?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))(?:'|"),.*?,(?:'|")PROXY_PORT(?:'|"):(?:'|")([a-fA-F0-9]{1,4})(?:'|")`,
+	}
 	headers = []string{
 		"HTTP_VIA",
 		"HTTP_X_FORWARDED_FOR",

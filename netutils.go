@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -47,15 +48,11 @@ func fetchBody(targetURL string, proxy ipType) ([]byte, error) {
 }
 
 func getHost(u string) (string, error) {
-	uParse, err := url.Parse(u)
+	_, err := url.Parse(u)
 	if err != nil {
 		return "", err
 	}
-	addon := ""
-	if uParse.Host == "www.samair.ru" {
-		addon = "/proxy"
-	}
-	return uParse.Scheme + "://" + uParse.Host + addon, nil
+	return u[:strings.LastIndex(u, "/")], nil
 }
 
 func getExternalIP() (string, error) {
