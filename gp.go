@@ -72,13 +72,11 @@ func main() {
 		for _, site := range siteList {
 			links.set(site)
 			p.Add(site, "")
-			log.Println(site)
 		}
 		for result := range p.ResultChan {
 			urls := grab(result)
 			for _, u := range urls {
 				p.Add(u, "")
-				log.Println(u)
 			}
 		}
 		err = saveNewIP()
