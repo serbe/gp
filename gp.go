@@ -66,13 +66,14 @@ func main() {
 
 	if findProxy {
 		p := pool.New(numWorkers)
-		p.SetTimeout(timeout)
+		p.SetHTTPTimeout(timeout)
 		links = getAllLinks()
 		ips = getAllIP()
 		for _, site := range siteList {
 			links.set(site)
 			p.Add(site, "")
 		}
+		p.SetTaskTimeout(timeout + 5)
 		for result := range p.ResultChan {
 			urls := grab(result)
 			for _, u := range urls {
@@ -98,7 +99,7 @@ func main() {
 		)
 		ips = getAllIP()
 		p := pool.New(numWorkers)
-		p.SetTimeout(timeout)
+		p.SetHTTPTimeout(timeout)
 		targetURL := fmt.Sprintf("http://93.170.123.221:%d/", serverPort)
 		myIP, err = getExternalIP()
 		if err == nil {
@@ -114,6 +115,7 @@ func main() {
 			if totalIP > 0 {
 				c := make(chan os.Signal, 1)
 				signal.Notify(c, os.Interrupt)
+				p.SetTaskTimeout(timeout + 5)
 				var checked int
 			checkProxyLoop:
 				for {
