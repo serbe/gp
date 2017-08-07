@@ -6,12 +6,15 @@ import (
 )
 
 var (
+	user         = ""
+	pass         = ""
+	dbname       = ""
 	numWorkers   = 5
 	timeout      = 10
 	serverPort   = 19091
 	logErrors    = false
-	ips          *mapsIP
-	links        *mapsLink
+	ips          []IP
+	links        []Link
 	startAppTime time.Time
 
 	myIP       string

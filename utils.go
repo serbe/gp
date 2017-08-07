@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"encoding/base64"
-	"encoding/gob"
 	"io"
 	"log"
 	"os"
@@ -113,42 +111,16 @@ func getListIP(body []byte) {
 	return
 }
 
-func newIP(addr, port string, ssl bool) ipType {
-	var ip ipType
-	ip.Addr = addr
+func newIP(addr, port string, ssl bool) IP {
+	var ip IP
+	ip.Address = addr
 	ip.Port = port
 	ip.Ssl = ssl
 	ip.CreateAt = time.Now()
 	return ip
 }
 
-func (ip ipType) encode() ([]byte, error) {
-	var b bytes.Buffer
-	enc := gob.NewEncoder(&b)
-	err := enc.Encode(ip)
-	return b.Bytes(), err
-}
-
-func (ip *ipType) decode(data []byte) error {
-	b := bytes.NewBuffer(data)
-	dec := gob.NewDecoder(b)
-	return dec.Decode(&ip)
-}
-
-func (link linkType) encode() ([]byte, error) {
-	var b bytes.Buffer
-	enc := gob.NewEncoder(&b)
-	err := enc.Encode(link)
-	return b.Bytes(), err
-}
-
-func (link *linkType) decode(data []byte) error {
-	b := bytes.NewBuffer(data)
-	dec := gob.NewDecoder(b)
-	return dec.Decode(&link)
-}
-
-func isOld(link linkType) bool {
+func isOld(link Link) bool {
 	currentTime := time.Now()
 	return currentTime.Sub(link.CheckAt) > time.Duration(720)*time.Minute
 }
@@ -164,25 +136,25 @@ func grab(task pool.Task) []string {
 	return urls
 }
 
-func check(task pool.Task) ipType {
-	var proxy ipType
-	proxy.Addr = task.Proxy.Hostname()
+func check(task pool.Task) IP {
+	var proxy IP
+	proxy.Address = task.Proxy.Hostname()
 	proxy.Port = task.Proxy.Port()
-	proxy.LastCheck = time.Now()
-	proxy.isWork = false
-	proxy.isAnon = false
+	proxy.UpdateAt = time.Now()
+	proxy.IsWork = false
+	proxy.IsAnon = false
 	if task.Error == nil {
 		strBody := string(task.Body)
 		if reRemoteIP.Match(task.Body) && !strings.Contains(strBody, myIP) {
-			proxy.isWork = true
-			proxy.ProxyChecks = 0
+			proxy.IsWork = true
+			proxy.Checks = 0
 			if strings.Count(strBody, "<p>") == 1 {
-				proxy.isAnon = true
+				proxy.IsAnon = true
 			}
 			return proxy
 		}
 	}
-	proxy.ProxyChecks++
+	proxy.Checks++
 	return proxy
 }
 
@@ -216,14 +188,14 @@ func backupBase() error {
 	return err
 }
 
-func makeAddress(ip ipType) string {
+func makeAddress(ip IP) string {
 	var out string
 	if ip.Ssl {
 		out = "https://"
 	} else {
 		out = "http://"
 	}
-	out += ip.Addr + ":" + ip.Port
+	out += ip.Address + ":" + ip.Port
 	return out
 }
 
