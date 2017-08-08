@@ -13,8 +13,8 @@ var (
 	timeout      = 10
 	serverPort   = 19091
 	logErrors    = false
-	ips          []IP
-	links        []Link
+	ips          *mapProxy
+	links        *mapLink
 	startAppTime time.Time
 
 	myIP       string
