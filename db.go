@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/url"
 	"time"
 
 	"github.com/go-pg/pg"
@@ -9,22 +10,28 @@ import (
 var db *pg.DB
 
 type IP struct {
-	ID       int64         `sql:"id"        json:"-"`
-	Address  string        `sql:"address"   json:"address"`
-	Port     string        `sql:"port"      json:"port"`
-	Ssl      bool          `sql:"ssl"       json:"ssl"`
+	Hostname string        `sql:"hostname"  json:"hostname"`
 	IsWork   bool          `sql:"work"      json:"-"`
-	IsAnon   bool          `sql:"anon"      json:"anon"`
-	Checks   int64         `sql:"checks"    json:"-"`
+	IsAnon   bool          `sql:"anon"      json:"-"`
+	Checks   int           `sql:"checks"    json:"-"`
 	CreateAt time.Time     `sql:"create_at" json:"-"`
 	UpdateAt time.Time     `sql:"update_at" json:"-"`
 	Response time.Duration `sql:"response"  json:"-"`
 }
 
 type Link struct {
-	ID      int64     `sql:"id"`
 	Host    string    `sql:"host"`
 	CheckAt time.Time `sql:"check_at"`
+}
+
+type Proxy struct {
+	URL      *url.URL      `json:"url"`
+	IsWork   bool          `json:"-"`
+	IsAnon   bool          `json:"-"`
+	Checks   int           `json:"-"`
+	CreateAt time.Time     `json:"-"`
+	UpdateAt time.Time     `json:"-"`
+	Response time.Duration `json:"-"`
 }
 
 func initDB() {
@@ -35,71 +42,67 @@ func initDB() {
 	})
 }
 
-func getAllIP() ([]IP, error) {
-	var ips []IP
-	err := db.Model(&IP{}).Select(&ips)
+func getAllProxy() *mapProxy {
+	var i []IP
+	err := db.Model(&IP{}).Select(&i)
 	if err != nil {
 		errmsg("getAllIP select", err)
 	}
-	return ips, err
+	mProxy := newMapProxy()
+	for _, ip := range i {
+		var proxy Proxy
+		proxy, err = proxyFromIP(ip)
+		if err == nil {
+			mProxy.set(proxy)
+		}
+	}
+	return mProxy
 }
 
-// func saveNewIP() error {
-// 	err := db.Update(func(tx *bolt.Tx) error {
-// 		b := tx.Bucket([]byte("ips"))
-// 		for k, v := range ips.values {
-// 			if v.Addr != "" && v.Port != "" && v.CreateAt.Sub(startAppTime) > 0 {
-// 				ipBytes, _ := v.encode()
-// 				err := b.Put([]byte(k), ipBytes)
-// 				if err != nil {
-// 					errmsg("saveNewIP b.Put", err)
-// 				}
-// 			}
-// 		}
-// 		return nil
-// 	})
-// 	return err
-// }
+func existIP(ip IP) bool {
+	var result bool
+	_, _ = db.Query(&result, "select exists(select 1 from ips where hostname = ?)", ip.Hostname)
+	return result
+}
 
-// func saveAllIP() error {
-// 	err := db.Update(func(tx *bolt.Tx) error {
-// 		b := tx.Bucket([]byte("ips"))
-// 		for k, v := range ips.values {
-// 			if v.Addr != "" && v.Port != "" {
-// 				ipBytes, _ := v.encode()
-// 				err := b.Put([]byte(k), ipBytes)
-// 				if err != nil {
-// 					errmsg("saveAllIP b.Put", err)
-// 				}
-// 			}
-// 		}
-// 		return nil
-// 	})
-// 	return err
-// }
+func existLink(link Link) bool {
+	var result bool
+	_, _ = db.Query(&result, "select exists(select 1 from links where host = ?)", link.Host)
+	return result
+}
 
-func getAllLinks() ([]Link, error) {
-	var links []Link
-	err := db.Model(&Link{}).Select(&links)
+func saveAllProxy(mProxy *mapProxy) {
+	for _, v := range ips.values {
+		ip, err := ipFromProxy(v)
+		if err == nil {
+			if existIP(ip) {
+				_ = db.Update(&ip)
+			} else {
+				_ = db.Insert(&ip)
+			}
+		}
+	}
+}
+
+func getAllLinks() *mapLink {
+	var ls []Link
+	err := db.Model(&Link{}).Select(&ls)
 	if err != nil {
 		errmsg("getAllLinks select", err)
 	}
-	return links, err
+	mlink := newMapLink()
+	for _, link := range ls {
+		mlink.set(link.Host)
+	}
+	return mlink
 }
 
-// func saveLinks() error {
-// 	err := db.Update(func(tx *bolt.Tx) error {
-// 		b := tx.Bucket([]byte("links"))
-// 		for k, v := range links.values {
-// 			if v.Host != "" {
-// 				linkBytes, _ := v.encode()
-// 				err := b.Put([]byte(k), linkBytes)
-// 				if err != nil {
-// 					errmsg("saveLinks b.Put", err)
-// 				}
-// 			}
-// 		}
-// 		return nil
-// 	})
-// 	return err
-// }
+func saveLinks() {
+	for _, link := range links.values {
+		if existLink(link) {
+			_ = db.Update(&link)
+		} else {
+			_ = db.Insert(&link)
+		}
+	}
+}

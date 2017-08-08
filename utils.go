@@ -2,9 +2,8 @@ package main
 
 import (
 	"encoding/base64"
-	"io"
 	"log"
-	"os"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -45,7 +44,7 @@ func getListURL(task pool.Task) []string {
 	return urls
 }
 
-func setIP(ip string, port string, base int) {
+func setProxy(host string, port string, base int, ssl bool) {
 	portInt, err := strconv.ParseInt(port, base, 32)
 	if err != nil {
 		return
@@ -56,13 +55,27 @@ func setIP(ip string, port string, base int) {
 	} else {
 		portStr = strconv.Itoa(int(portInt))
 	}
-	if ip != "0.0.0.0" && portInt < 65535 {
-		ipWithPort := ip + ":" + portStr
-		if ips.get(ipWithPort).Addr == "" {
-			numIPs++
-			ips.set(ipWithPort, newIP(ip, port, false))
-		}
+	proxy, err := newProxy(host, portStr, false)
+	if err == nil {
+		numIPs++
+		ips.set(proxy)
 	}
+}
+
+func newProxy(host, port string, ssl bool) (Proxy, error) {
+	var (
+		proxy  Proxy
+		schema string
+	)
+	if ssl {
+		schema = "https://"
+	} else {
+		schema = "http://"
+	}
+	URL, err := url.Parse(schema + host + ":" + port)
+	proxy.URL = URL
+	proxy.CreateAt = time.Now()
+	return proxy, err
 }
 
 func decodeIP(src []byte) (string, string, error) {
@@ -85,7 +98,7 @@ func getListIP(body []byte) {
 			for _, res := range results {
 				ip, port, err := decodeIP(res[1])
 				if err == nil {
-					setIP(ip, port, 10)
+					setProxy(ip, port, 10, false)
 				}
 			}
 		}
@@ -95,7 +108,7 @@ func getListIP(body []byte) {
 		if re.Match(body) {
 			results := re.FindAllSubmatch(body, -1)
 			for _, res := range results {
-				setIP(string(res[1]), string(res[2]), 16)
+				setProxy(string(res[1]), string(res[2]), 16, false)
 			}
 		}
 	}
@@ -104,20 +117,41 @@ func getListIP(body []byte) {
 		if re.Match(body) {
 			results := re.FindAllSubmatch(body, -1)
 			for _, res := range results {
-				setIP(string(res[1]), string(res[2]), 10)
+				setProxy(string(res[1]), string(res[2]), 10, false)
 			}
 		}
 	}
 	return
 }
 
-func newIP(addr, port string, ssl bool) IP {
-	var ip IP
-	ip.Address = addr
-	ip.Port = port
-	ip.Ssl = ssl
-	ip.CreateAt = time.Now()
-	return ip
+func ipFromProxy(proxy Proxy) (IP, error) {
+	var (
+		ip  IP
+		err error
+	)
+	ip.Hostname = proxy.URL.Hostname()
+	ip.Checks = proxy.Checks
+	ip.IsAnon = proxy.IsAnon
+	ip.IsWork = proxy.IsWork
+	ip.Response = proxy.Response
+	ip.CreateAt = proxy.CreateAt
+	ip.UpdateAt = proxy.UpdateAt
+	return ip, err
+}
+
+func proxyFromIP(ip IP) (Proxy, error) {
+	var (
+		proxy Proxy
+		err   error
+	)
+	proxy.URL, err = url.Parse(ip.Hostname)
+	proxy.Checks = ip.Checks
+	proxy.IsAnon = ip.IsAnon
+	proxy.IsWork = ip.IsWork
+	proxy.Response = ip.Response
+	proxy.CreateAt = ip.CreateAt
+	proxy.UpdateAt = ip.UpdateAt
+	return proxy, err
 }
 
 func isOld(link Link) bool {
@@ -136,13 +170,11 @@ func grab(task pool.Task) []string {
 	return urls
 }
 
-func check(task pool.Task) IP {
-	var proxy IP
-	proxy.Address = task.Proxy.Hostname()
-	proxy.Port = task.Proxy.Port()
-	proxy.UpdateAt = time.Now()
-	proxy.IsWork = false
-	proxy.IsAnon = false
+func check(task pool.Task) Proxy {
+	proxy := Proxy{
+		URL:      task.Proxy,
+		UpdateAt: time.Now(),
+	}
 	if task.Error == nil {
 		strBody := string(task.Body)
 		if reRemoteIP.Match(task.Body) && !strings.Contains(strBody, myIP) {
@@ -158,46 +190,16 @@ func check(task pool.Task) IP {
 	return proxy
 }
 
-func backupBase() error {
-	origFile, err := os.Open("gp.zip")
-	if err != nil {
-		return err
-	}
-	defer func() {
-		err = origFile.Close()
-		if err != nil {
-			errmsg("backupBase origFile.Close", err)
-		}
-	}()
-	backupName := time.Now().Format("02-01-2006-15-04-05") + ".zip"
-	newFile, err := os.Create(backupName)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		err = newFile.Close()
-		if err != nil {
-			errmsg("backupBase newFile.Close", err)
-		}
-	}()
-	_, err = io.Copy(newFile, origFile)
-	if err != nil {
-		errmsg("backupBase io.Copy", err)
-	}
-	err = newFile.Sync()
-	return err
-}
-
-func makeAddress(ip IP) string {
-	var out string
-	if ip.Ssl {
-		out = "https://"
-	} else {
-		out = "http://"
-	}
-	out += ip.Address + ":" + ip.Port
-	return out
-}
+// func makeAddress(ip IP) string {
+// 	var out string
+// 	if ip.Ssl {
+// 		out = "https://"
+// 	} else {
+// 		out = "http://"
+// 	}
+// 	out += ip.Address + ":" + ip.Port
+// 	return out
+// }
 
 func errmsg(str string, err error) {
 	if logErrors {

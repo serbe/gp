@@ -5,61 +5,61 @@ import (
 	"time"
 )
 
-type mapsIP struct {
-	m      sync.Mutex
-	values map[string]ipType
+type mapProxy struct {
+	m      sync.RWMutex
+	values map[string]Proxy
 }
 
-type mapsLink struct {
-	m      sync.Mutex
-	values map[string]linkType
+type mapLink struct {
+	m      sync.RWMutex
+	values map[string]Link
 }
 
-func newMapsIP() *mapsIP {
-	return &mapsIP{values: make(map[string]ipType)}
+func newMapProxy() *mapProxy {
+	return &mapProxy{values: make(map[string]Proxy)}
 }
 
-func (mIP *mapsIP) get(s string) ipType {
-	mIP.m.Lock()
-	defer mIP.m.Unlock()
-	return mIP.values[s]
+func (mProxy *mapProxy) get(hostname string) Proxy {
+	mProxy.m.RLock()
+	proxy := mProxy.values[hostname]
+	mProxy.m.RUnlock()
+	return proxy
 }
 
-func (mIP *mapsIP) set(s string, value ipType) {
-	mIP.m.Lock()
-	defer mIP.m.Unlock()
-	mIP.values[s] = value
-	return
+func (mProxy *mapProxy) set(proxy Proxy) {
+	mProxy.m.Lock()
+	mProxy.values[proxy.URL.Hostname()] = proxy
+	mProxy.m.Unlock()
 }
 
-func (mIP *mapsIP) len() int {
-	mIP.m.Lock()
-	defer mIP.m.Unlock()
-	return len(mIP.values)
+// func (mProxy *mapProxy) len() int {
+// 	mProxy.m.Lock()
+// 	defer mProxy.m.Unlock()
+// 	return len(mProxy.values)
+// }
+
+func newMapLink() *mapLink {
+	return &mapLink{values: make(map[string]Link)}
 }
 
-func newMapsLink() *mapsLink {
-	return &mapsLink{values: make(map[string]linkType)}
+func (mLink *mapLink) get(s string) Link {
+	mLink.m.RLock()
+	link := mLink.values[s]
+	mLink.m.RUnlock()
+	return link
 }
 
-func (mLink *mapsLink) get(s string) linkType {
+func (mLink *mapLink) set(s string) {
 	mLink.m.Lock()
-	defer mLink.m.Unlock()
-	return mLink.values[s]
-}
-
-func (mLink *mapsLink) set(s string) {
-	mLink.m.Lock()
-	defer mLink.m.Unlock()
-	var value linkType
+	var value Link
 	value.Host = s
 	value.CheckAt = time.Now()
 	mLink.values[s] = value
-	return
+	mLink.m.Unlock()
 }
 
-func (mLink *mapsLink) len() int {
-	mLink.m.Lock()
-	defer mLink.m.Unlock()
-	return len(mLink.values)
-}
+// func (mLink *mapLink) len() int {
+// 	mLink.m.Lock()
+// 	defer mLink.m.Unlock()
+// 	return len(mLink.values)
+// }
