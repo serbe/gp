@@ -6,13 +6,17 @@ import (
 )
 
 var (
-	user         = ""
-	pass         = ""
-	dbname       = ""
+	user         = "pr"
+	pass         = "pr"
+	dbname       = "pr"
 	numWorkers   = 5
 	timeout      = 10
 	serverPort   = 19091
 	logErrors    = false
+	useFind      = false
+	useCheck     = false
+	useServer    = false
+	createTables = false
 	ips          *mapProxy
 	links        *mapLink
 	startAppTime time.Time

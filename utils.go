@@ -2,8 +2,12 @@ package main
 
 import (
 	"encoding/base64"
+	"flag"
+	"fmt"
 	"log"
 	"net/url"
+	"os"
+	"os/signal"
 	"regexp"
 	"strconv"
 	"strings"
@@ -11,6 +15,18 @@ import (
 
 	"github.com/serbe/pool"
 )
+
+func checkFlags() {
+	flag.IntVar(&numWorkers, "w", numWorkers, "number of workers")
+	flag.IntVar(&timeout, "t", timeout, "timeout")
+	flag.IntVar(&serverPort, "p", serverPort, "server port")
+	flag.BoolVar(&useFind, "f", useFind, "find new proxy")
+	flag.BoolVar(&useCheck, "c", useCheck, "check proxy")
+	flag.BoolVar(&useServer, "s", useServer, "start server")
+	flag.BoolVar(&logErrors, "e", logErrors, "logging all errors")
+	flag.BoolVar(&createTables, "m", createTables, "create tables in new database")
+	flag.Parse()
+}
 
 func cleanBody(body []byte) []byte {
 	for i := range replace {
@@ -121,7 +137,6 @@ func getListIP(body []byte) {
 			}
 		}
 	}
-	return
 }
 
 func ipFromProxy(proxy Proxy) (IP, error) {
@@ -190,19 +205,87 @@ func check(task pool.Task) Proxy {
 	return proxy
 }
 
-// func makeAddress(ip IP) string {
-// 	var out string
-// 	if ip.Ssl {
-// 		out = "https://"
-// 	} else {
-// 		out = "http://"
-// 	}
-// 	out += ip.Address + ":" + ip.Port
-// 	return out
-// }
-
 func errmsg(str string, err error) {
 	if logErrors {
 		log.Println("Error in", str, err)
+	}
+}
+
+func findProxy() {
+	p := pool.New(numWorkers)
+	p.SetHTTPTimeout(timeout)
+	links = getAllLinks()
+	ips = getAllProxy()
+	for _, link := range links.values {
+		if time.Since(link.CheckAt) > time.Duration(5)*time.Minute {
+			p.Add(link.Host, new(url.URL))
+		}
+	}
+	p.SetTaskTimeout(3)
+	for result := range p.ResultChan {
+		urls := grab(result)
+		for _, u := range urls {
+			p.Add(u, new(url.URL))
+		}
+	}
+	saveAllProxy(ips)
+	saveAllLinks(links)
+	log.Printf("Add %d ip adress\n", numIPs)
+}
+
+func checkProxy() {
+	var (
+		totalIP    int64
+		totalProxy int64
+		anonProxy  int64
+		err        error
+	)
+	ips = getAllProxy()
+	p := pool.New(numWorkers)
+	p.SetHTTPTimeout(timeout)
+	targetURL := fmt.Sprintf("http://93.170.123.221:%d/", serverPort)
+	myIP, err = getExternalIP()
+	if err == nil {
+		week := time.Duration(60*24*7) * time.Minute
+		startTime := time.Now()
+		for _, proxy := range ips.values {
+			if (proxy.UpdateAt == time.Time{} || proxy.UpdateAt != time.Time{} && startTime.Sub(proxy.UpdateAt) > time.Duration(proxy.Checks)*week) {
+				totalIP++
+				p.Add(targetURL, proxy.URL)
+			}
+		}
+		log.Println("Start check", totalIP, "proxyes")
+		if totalIP > 0 {
+			c := make(chan os.Signal, 1)
+			signal.Notify(c, os.Interrupt)
+			p.SetTaskTimeout(2)
+			var checked int
+		checkProxyLoop:
+			for {
+				select {
+				case result, ok := <-p.ResultChan:
+					checked++
+					if ok {
+						proxy := check(result)
+						proxy.Response = result.ResponceTime
+						ips.set(proxy)
+						if proxy.IsWork {
+							log.Printf("%d/%d %-15v %-5v %-10v anon=%v\n", checked, totalIP, result.Proxy.Hostname(), result.Proxy.Port(), result.ResponceTime, proxy.IsAnon)
+							totalProxy++
+							if proxy.IsAnon {
+								anonProxy++
+							}
+						}
+					} else {
+						break checkProxyLoop
+					}
+				case <-c:
+					break checkProxyLoop
+				}
+			}
+			log.Printf("checked %d ip\n", totalIP)
+			log.Printf("%d is good\n", totalProxy)
+			log.Printf("%d is anon\n", anonProxy)
+		}
 	}
 }

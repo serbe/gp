@@ -19,24 +19,18 @@ func newMapProxy() *mapProxy {
 	return &mapProxy{values: make(map[string]Proxy)}
 }
 
-func (mProxy *mapProxy) get(hostname string) Proxy {
-	mProxy.m.RLock()
-	proxy := mProxy.values[hostname]
-	mProxy.m.RUnlock()
-	return proxy
-}
+// func (mProxy *mapProxy) get(hostname string) Proxy {
+// 	mProxy.m.RLock()
+// 	proxy := mProxy.values[hostname]
+// 	mProxy.m.RUnlock()
+// 	return proxy
+// }
 
 func (mProxy *mapProxy) set(proxy Proxy) {
 	mProxy.m.Lock()
 	mProxy.values[proxy.URL.Hostname()] = proxy
 	mProxy.m.Unlock()
 }
-
-// func (mProxy *mapProxy) len() int {
-// 	mProxy.m.Lock()
-// 	defer mProxy.m.Unlock()
-// 	return len(mProxy.values)
-// }
 
 func newMapLink() *mapLink {
 	return &mapLink{values: make(map[string]Link)}
@@ -57,9 +51,3 @@ func (mLink *mapLink) set(s string) {
 	mLink.values[s] = value
 	mLink.m.Unlock()
 }
-
-// func (mLink *mapLink) len() int {
-// 	mLink.m.Lock()
-// 	defer mLink.m.Unlock()
-// 	return len(mLink.values)
-// }

@@ -97,12 +97,16 @@ func getAllLinks() *mapLink {
 	return mlink
 }
 
-func saveLinks() {
-	for _, link := range links.values {
+func saveAllLinks(ls *mapLink) {
+	for _, link := range ls.values {
 		if existLink(link) {
 			_ = db.Update(&link)
 		} else {
 			_ = db.Insert(&link)
 		}
 	}
+}
+
+func makeTables() {
+
 }
