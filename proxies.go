@@ -34,12 +34,12 @@ func newMapProxy() *mapProxy {
 	return &mapProxy{values: make(map[string]Proxy)}
 }
 
-func (mProxy *mapProxy) get(hostname string) Proxy {
-	mProxy.m.RLock()
-	proxy := mProxy.values[hostname]
-	mProxy.m.RUnlock()
-	return proxy
-}
+// func (mProxy *mapProxy) get(hostname string) Proxy {
+// 	mProxy.m.RLock()
+// 	proxy := mProxy.values[hostname]
+// 	mProxy.m.RUnlock()
+// 	return proxy
+// }
 
 func (mProxy *mapProxy) set(proxy Proxy) {
 	mProxy.m.Lock()

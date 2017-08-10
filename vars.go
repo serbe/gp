@@ -28,37 +28,37 @@ var (
 
 	numIPs int
 
-	siteList = []string{
-		`https://hidester.com/proxydata/php/data.php?mykey=data&offset=0&limit=1000&orderBy=latest_check&sortOrder=DESC&country=&port=&type=undefined&anonymity=undefined&ping=undefined&gproxy=2`,
-		`http://gatherproxy.com/embed/`,
-		`http://txt.proxyspy.net/proxy.txt`,
-		`http://webanetlabs.net/publ/24`,
-		`http://awmproxy.com/freeproxy.php`,
-		`http://www.samair.ru/proxy/type-01.htm`,
-		`https://www.us-proxy.org/`,
-		`http://free-proxy-list.net/`,
-		`http://www.proxynova.com/proxy-server-list/`,
-		`http://proxyserverlist-24.blogspot.ru/`,
-		`http://gatherproxy.com/`,
-		`https://hidemy.name/ru/proxy-list/`,
-		`https://hidemy.name/en/proxy-list/?type=hs&anon=34#list`,
-		`https://free-proxy-list.com`,
-		`https://free-proxy-list.com/?search=1&page=&port=&type%5B%5D=http&type%5B%5D=https&level%5B%5D=anonymous&level%5B%5D=high-anonymous&speed%5B%5D=2&speed%5B%5D=3&connect_time%5B%5D=2&connect_time%5B%5D=3&up_time=40&search=Search`,
-		`http://www.idcloak.com/proxylist/free-proxy-servers-list.html`,
-		`https://premproxy.com/list/`,
-		`https://proxy-list.org/english/index.php`,
+	// siteList = []string{
+	// 	`https://hidester.com/proxydata/php/data.php?mykey=data&offset=0&limit=1000&orderBy=latest_check&sortOrder=DESC&country=&port=&type=undefined&anonymity=undefined&ping=undefined&gproxy=2`,
+	// 	`http://gatherproxy.com/embed/`,
+	// 	`http://txt.proxyspy.net/proxy.txt`,
+	// 	`http://webanetlabs.net/publ/24`,
+	// 	`http://awmproxy.com/freeproxy.php`,
+	// 	`http://www.samair.ru/proxy/type-01.htm`,
+	// 	`https://www.us-proxy.org/`,
+	// 	`http://free-proxy-list.net/`,
+	// 	`http://www.proxynova.com/proxy-server-list/`,
+	// 	`http://proxyserverlist-24.blogspot.ru/`,
+	// 	`http://gatherproxy.com/`,
+	// 	`https://hidemy.name/ru/proxy-list/`,
+	// 	`https://hidemy.name/en/proxy-list/?type=hs&anon=34#list`,
+	// 	`https://free-proxy-list.com`,
+	// 	`https://free-proxy-list.com/?search=1&page=&port=&type%5B%5D=http&type%5B%5D=https&level%5B%5D=anonymous&level%5B%5D=high-anonymous&speed%5B%5D=2&speed%5B%5D=3&connect_time%5B%5D=2&connect_time%5B%5D=3&up_time=40&search=Search`,
+	// 	`http://www.idcloak.com/proxylist/free-proxy-servers-list.html`,
+	// 	`https://premproxy.com/list/`,
+	// 	`https://proxy-list.org/english/index.php`,
 
-		`https://www.sslproxies.org/`,
+	// 	`https://www.sslproxies.org/`,
 
-		// `https://best-proxies.ru/proxylist/free/`,
-		// `http://spys.ru/proxies/`,
+	// 	// `https://best-proxies.ru/proxylist/free/`,
+	// 	// `http://spys.ru/proxies/`,
 
-		// `http://www.freeproxylists.com/elite.html`,
-		// `http://www.freeproxylists.com/anonymous.html`,
-		// `http://www.xroxy.com/proxylist.php?port=Standard&type=All_http&ssl=&country=&latency=1000&reliability=9000#table`,
-		// `http://www.prime-speed.ru/proxy/free-proxy-list/all-working-proxies.php`,
-		// `http://proxyservers.pro/`,
-	}
+	// 	// `http://www.freeproxylists.com/elite.html`,
+	// 	// `http://www.freeproxylists.com/anonymous.html`,
+	// 	// `http://www.xroxy.com/proxylist.php?port=Standard&type=All_http&ssl=&country=&latency=1000&reliability=9000#table`,
+	// 	// `http://www.prime-speed.ru/proxy/free-proxy-list/all-working-proxies.php`,
+	// 	// `http://proxyservers.pro/`,
+	// }
 
 	reURL = []string{
 		`href=(?:'|")/publ/(\d{1,3}-\d{1,3})(?:'|")\s`,
