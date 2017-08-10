@@ -23,9 +23,9 @@ func findProxy() {
 	if len(links) > 0 {
 		debugmsg("start add to pool")
 		p.SetTaskTimeout(5)
-		for _, link := range links {
+		for i, link := range links {
 			p.Add(link.Hostname, new(url.URL))
-			debugmsg("add to pool", link.Hostname)
+			debugmsg("add to pool", i, link.Hostname)
 		}
 		debugmsg("end add to pool")
 		debugmsg("get from chan")
