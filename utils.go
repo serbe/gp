@@ -19,7 +19,7 @@ func checkFlags() {
 	flag.BoolVar(&useCheck, "c", useCheck, "check proxy")
 	flag.BoolVar(&useServer, "s", useServer, "start server")
 	flag.BoolVar(&logErrors, "e", logErrors, "logging all errors")
-	flag.BoolVar(&createTables, "m", createTables, "create tables in new database")
+	// flag.BoolVar(&createTables, "m", createTables, "create tables in new database")
 	flag.BoolVar(&useDebug, "d", useDebug, "show debug messages")
 	flag.Parse()
 }

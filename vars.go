@@ -6,18 +6,18 @@ import (
 )
 
 var (
-	user         = "pr"
-	pass         = "pr"
-	dbname       = "pr"
-	numWorkers   = 5
-	timeout      = 10
-	serverPort   = 19091
-	logErrors    = false
-	useFind      = false
-	useCheck     = false
-	useServer    = false
-	useDebug     = false
-	createTables = false
+	user       = "pr"
+	pass       = "pr"
+	dbname     = "pr"
+	numWorkers = 5
+	timeout    = 10
+	serverPort = 19091
+	logErrors  = false
+	useFind    = false
+	useCheck   = false
+	useServer  = false
+	useDebug   = false
+	// createTables = false
 	mP           *mapProxy
 	mL           *mapLink
 	startAppTime time.Time
