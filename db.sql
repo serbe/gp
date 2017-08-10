@@ -8,7 +8,9 @@ CREATE DATABASE pr
        TABLESPACE = pg_default
        CONNECTION LIMIT = -1;
 
-CREATE TABLE public.links
+\connect pr
+
+CREATE TABLE links
 (
     hostname text NOT NULL,
     update_at timestamp with time zone DEFAULT now(),
@@ -17,10 +19,10 @@ CREATE TABLE public.links
 WITH (
     OIDS=FALSE
 );
-ALTER TABLE public.links
+ALTER TABLE links
     OWNER TO pr;
 
-CREATE TABLE public.proxies
+CREATE TABLE proxies
 (
     hostname text NOT NULL,
     host text,
@@ -36,7 +38,7 @@ CREATE TABLE public.proxies
 WITH (
     OIDS=FALSE
 );
-ALTER TABLE public.proxies
+ALTER TABLE proxies
     OWNER TO pr;
 
 INSERT INTO links (hostname) VALUES 
