@@ -16,9 +16,10 @@ var (
 	useFind      = false
 	useCheck     = false
 	useServer    = false
+	useDebug     = false
 	createTables = false
-	ips          *mapProxy
-	links        *mapLink
+	mP           *mapProxy
+	mL           *mapLink
 	startAppTime time.Time
 
 	myIP       string

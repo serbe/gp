@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -46,6 +47,7 @@ func getHost(u string) (string, error) {
 }
 
 func getExternalIP() (string, error) {
+	debugmsg("Get External IP")
 	body, err := fetchBody("http://myexternalip.com/raw", Proxy{})
 	if err != nil {
 		return "", err
@@ -54,6 +56,7 @@ func getExternalIP() (string, error) {
 }
 
 func startServer() {
+	debugmsg("Start server")
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := fmt.Fprintf(w, "<p>RemoteAddr: %s</p>", r.RemoteAddr)
 		if err != nil {
@@ -70,4 +73,9 @@ func startServer() {
 		}
 	})
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", serverPort), nil))
+}
+
+func convPort(port string, base int) string {
+	portInt, _ := strconv.ParseInt(port, base, 32)
+	return strconv.Itoa(int(portInt))
 }

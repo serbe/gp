@@ -2,37 +2,11 @@ package main
 
 import (
 	"net/url"
-	"time"
 
 	"github.com/go-pg/pg"
 )
 
 var db *pg.DB
-
-type IP struct {
-	Hostname string        `sql:"hostname"  json:"hostname"`
-	IsWork   bool          `sql:"work"      json:"-"`
-	IsAnon   bool          `sql:"anon"      json:"-"`
-	Checks   int           `sql:"checks"    json:"-"`
-	CreateAt time.Time     `sql:"create_at" json:"-"`
-	UpdateAt time.Time     `sql:"update_at" json:"-"`
-	Response time.Duration `sql:"response"  json:"-"`
-}
-
-type Link struct {
-	Host    string    `sql:"host"`
-	CheckAt time.Time `sql:"check_at"`
-}
-
-type Proxy struct {
-	URL      *url.URL      `json:"url"`
-	IsWork   bool          `json:"-"`
-	IsAnon   bool          `json:"-"`
-	Checks   int           `json:"-"`
-	CreateAt time.Time     `json:"-"`
-	UpdateAt time.Time     `json:"-"`
-	Response time.Duration `json:"-"`
-}
 
 func initDB() {
 	db = pg.Connect(&pg.Options{
@@ -43,45 +17,38 @@ func initDB() {
 }
 
 func getAllProxy() *mapProxy {
-	var i []IP
-	err := db.Model(&IP{}).Select(&i)
+	var proxies []Proxy
+	err := db.Model(&Proxy{}).Select(&proxies)
 	if err != nil {
-		errmsg("getAllIP select", err)
+		errmsg("getAllProxy select", err)
 	}
 	mProxy := newMapProxy()
-	for _, ip := range i {
-		var proxy Proxy
-		proxy, err = proxyFromIP(ip)
-		if err == nil {
-			mProxy.set(proxy)
+	debugmsg("load proxy from db", len(proxies))
+	for _, proxy := range proxies {
+		proxy.URL, err = url.Parse(proxy.Hostname)
+		if err != nil {
+			errmsg("getAllProxy url.Parse", err)
 		}
+		mProxy.set(proxy)
 	}
+	debugmsg("load proxy", len(mProxy.values))
 	return mProxy
 }
 
-func existIP(ip IP) bool {
-	var result bool
-	_, _ = db.Query(&result, "select exists(select 1 from ips where hostname = ?)", ip.Hostname)
-	return result
-}
-
-func existLink(link Link) bool {
-	var result bool
-	_, _ = db.Query(&result, "select exists(select 1 from links where host = ?)", link.Host)
-	return result
-}
-
 func saveAllProxy(mProxy *mapProxy) {
-	for _, v := range ips.values {
-		ip, err := ipFromProxy(v)
-		if err == nil {
-			if existIP(ip) {
-				_ = db.Update(&ip)
-			} else {
-				_ = db.Insert(&ip)
-			}
+	var u, i int64
+	for _, proxy := range mP.values {
+		if proxy.Update {
+			u++
+			_ = db.Update(&proxy)
+		}
+		if proxy.Insert {
+			i++
+			_ = db.Insert(&proxy)
 		}
 	}
+	debugmsg("update proxy", u)
+	debugmsg("insert proxy", i)
 }
 
 func getAllLinks() *mapLink {
@@ -92,21 +59,70 @@ func getAllLinks() *mapLink {
 	}
 	mlink := newMapLink()
 	for _, link := range ls {
-		mlink.set(link.Host)
+		mlink.set(link)
 	}
+	debugmsg("load links", len(mlink.values))
 	return mlink
 }
 
 func saveAllLinks(ls *mapLink) {
+	var (
+		u, i int64
+	)
 	for _, link := range ls.values {
-		if existLink(link) {
-			_ = db.Update(&link)
-		} else {
+		if link.Insert {
+			i++
 			_ = db.Insert(&link)
+		} else {
+			u++
+			_ = db.Update(&link)
 		}
 	}
+	debugmsg("update links", u)
+	debugmsg("insert links", i)
 }
 
 func makeTables() {
+	db.ExecOne(`
+		CREATE TABLE IF NOT EXISTS proxies (
+			hostname  text PRIMARY KEY,
+			host      text,
+			port      text,
+			work      boolean,
+			anon      boolean,
+			checks    integer,
+			create_at timestamptz DEFAULT now(),
+			update_at timestamptz,
+			response  integer,
+			UNIQUE(hostname)
+		);
+	
+		CREATE TABLE IF NOT EXISTS links (
+			hostname  text PRIMARY KEY,
+			update_at timestamptz DEFAULT now(),
+			UNIQUE(hostname)
+		);
 
+		INSERT INTO links (hostname) VALUES 
+			('https://hidester.com/proxydata/php/data.php?mykey=data&offset=0&limit=1000&orderBy=latest_check&sortOrder=DESC&country=&port=&type=undefined&anonymity=undefined&ping=undefined&gproxy=2'),
+			('http://gatherproxy.com/embed/'),
+			('http://txt.proxyspy.net/proxy.txt'),
+			('http://webanetlabs.net/publ/24'),
+			('http://awmproxy.com/freeproxy.php'),
+			('http://www.samair.ru/proxy/type-01.htm'),
+			('https://www.us-proxy.org/'),
+			('http://free-proxy-list.net/'),
+			('http://www.proxynova.com/proxy-server-list/'),
+			('http://proxyserverlist-24.blogspot.ru/'),
+			('http://gatherproxy.com/'),
+			('https://hidemy.name/ru/proxy-list/'),
+			('https://hidemy.name/en/proxy-list/?type=hs&anon=34#list'),
+			('https://free-proxy-list.com'),
+			('https://free-proxy-list.com/?search=1&page=&port=&type%5B%5D=http&type%5B%5D=https&level%5B%5D=anonymous&level%5B%5D=high-anonymous&speed%5B%5D=2&speed%5B%5D=3&connect_time%5B%5D=2&connect_time%5B%5D=3&up_time=40&search=Search'),
+			('http://www.idcloak.com/proxylist/free-proxy-servers-list.html'),
+			('https://premproxy.com/list/'),
+			('https://proxy-list.org/english/index.php'),
+			('https://www.sslproxies.org/')
+		ON CONFLICT (hostname) DO NOTHING;
+	`)
 }
