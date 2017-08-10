@@ -40,11 +40,17 @@ func saveAllProxy(mProxy *mapProxy) {
 	for _, proxy := range mP.values {
 		if proxy.Update {
 			u++
-			_ = db.Update(&proxy)
+			err := db.Update(&proxy)
+			if err != nil {
+				errmsg("saveAllProxy Update", err)
+			}
 		}
 		if proxy.Insert {
 			i++
-			_ = db.Insert(&proxy)
+			err := db.Insert(&proxy)
+			if err != nil {
+				errmsg("saveAllLinks Insert", err)
+			}
 		}
 	}
 	debugmsg("update proxy", u)
@@ -72,10 +78,16 @@ func saveAllLinks(ls *mapLink) {
 	for _, link := range ls.values {
 		if link.Insert {
 			i++
-			_ = db.Insert(&link)
+			err := db.Insert(&link)
+			if err != nil {
+				errmsg("saveAllLinks Insert", err)
+			}
 		} else {
 			u++
-			_ = db.Update(&link)
+			err := db.Update(&link)
+			if err != nil {
+				errmsg("saveAllLinks Update", err)
+			}
 		}
 	}
 	debugmsg("update links", u)
@@ -96,14 +108,14 @@ func saveAllLinks(ls *mapLink) {
 // 			response  integer,
 // 			UNIQUE(hostname)
 // 		);
-	
+
 // 		CREATE TABLE IF NOT EXISTS links (
 // 			hostname  text PRIMARY KEY,
 // 			update_at timestamptz DEFAULT now(),
 // 			UNIQUE(hostname)
 // 		);
 
-// 		INSERT INTO links (hostname) VALUES 
+// 		INSERT INTO links (hostname) VALUES
 // 			('https://hidester.com/proxydata/php/data.php?mykey=data&offset=0&limit=1000&orderBy=latest_check&sortOrder=DESC&country=&port=&type=undefined&anonymity=undefined&ping=undefined&gproxy=2'),
 // 			('http://gatherproxy.com/embed/'),
 // 			('http://txt.proxyspy.net/proxy.txt'),
