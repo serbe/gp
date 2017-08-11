@@ -11,13 +11,13 @@ import (
 	"time"
 )
 
-func fetchBody(targetURL string, proxy Proxy) ([]byte, error) {
+func fetchBody(targetURL string, URL *url.URL) ([]byte, error) {
 	client := &http.Client{
 		Timeout: time.Duration(timeout) * time.Second,
 	}
-	if proxy.URL.Host != "" {
+	if URL != nil {
 		client.Transport = &http.Transport{
-			Proxy:             http.ProxyURL(proxy.URL),
+			Proxy:             http.ProxyURL(URL),
 			DisableKeepAlives: true,
 		}
 	}
@@ -48,7 +48,7 @@ func getHost(u string) (string, error) {
 
 func getExternalIP() (string, error) {
 	debugmsg("Get External IP")
-	body, err := fetchBody("http://myexternalip.com/raw", Proxy{})
+	body, err := fetchBody("http://myexternalip.com/raw", nil)
 	if err != nil {
 		return "", err
 	}
