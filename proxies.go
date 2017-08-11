@@ -40,6 +40,13 @@ func (mProxy *mapProxy) set(proxy Proxy) {
 	mProxy.m.Unlock()
 }
 
+func (mProxy *mapProxy) get(hostname string) (Proxy, bool) {
+	mProxy.m.Lock()
+	proxy, ok := mProxy.values[hostname]
+	mProxy.m.Unlock()
+	return proxy, ok
+}
+
 func newProxy(host, port string, ssl bool) (Proxy, error) {
 	var (
 		proxy  Proxy
@@ -82,11 +89,11 @@ func (mProxy *mapProxy) existProxy(hostname string) bool {
 }
 
 func taskToProxy(task pool.Task) Proxy {
-	proxy := Proxy{
-		URL:      task.Proxy,
-		UpdateAt: time.Now(),
-	}
+	proxy, _ := mP.get(task.Hostname)
+	proxy.Update = true
+	proxy.UpdateAt = time.Now()
 	if task.Error == nil {
+		proxy.Response = task.ResponceTime
 		strBody := string(task.Body)
 		if reRemoteIP.Match(task.Body) && !strings.Contains(strBody, myIP) {
 			proxy.IsWork = true
