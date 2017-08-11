@@ -98,6 +98,7 @@ func checkProxy() {
 					break checkProxyLoop
 				}
 			}
+			saveAllProxy(mP)
 			log.Printf("checked %d ip\n", totalIP)
 			log.Printf("%d is good\n", totalProxy)
 			log.Printf("%d is anon\n", anonProxy)
