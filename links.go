@@ -7,10 +7,10 @@ import (
 
 // Link - link unit
 type Link struct {
-	Insert   bool      `sql:"-"         json:"-"`
-	Update   bool      `sql:"-"         json:"-"`
-	Hostname string    `sql:"hostname"  json:"hostname"`
-	UpdateAt time.Time `sql:"update_at" json:"-"`
+	Insert   bool      `sql:"-"           json:"-"`
+	Update   bool      `sql:"-"           json:"-"`
+	Hostname string    `sql:"hostname,pk" json:"hostname"`
+	UpdateAt time.Time `sql:"update_at"   json:"-"`
 }
 
 type mapLink struct {

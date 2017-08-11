@@ -11,18 +11,18 @@ import (
 
 // Proxy - proxy unit
 type Proxy struct {
-	Insert   bool          `sql:"-"         json:"-"`
-	Update   bool          `sql:"-"         json:"-"`
-	Hostname string        `sql:"hostname"  json:"hostname"`
-	URL      *url.URL      `sql:"-"         json:"-"`
-	Host     string        `sql:"host"      json:"-"`
-	Port     string        `sql:"port"      json:"-"`
-	IsWork   bool          `sql:"work"      json:"-"`
-	IsAnon   bool          `sql:"anon"      json:"-"`
-	Checks   int           `sql:"checks"    json:"-"`
-	CreateAt time.Time     `sql:"create_at" json:"-"`
-	UpdateAt time.Time     `sql:"update_at" json:"-"`
-	Response time.Duration `sql:"response"  json:"-"`
+	Insert   bool          `sql:"-"           json:"-"`
+	Update   bool          `sql:"-"           json:"-"`
+	Hostname string        `sql:"hostname,pk" json:"hostname"`
+	URL      *url.URL      `sql:"-"           json:"-"`
+	Host     string        `sql:"host"        json:"-"`
+	Port     string        `sql:"port"        json:"-"`
+	IsWork   bool          `sql:"work"        json:"-"`
+	IsAnon   bool          `sql:"anon"        json:"-"`
+	Checks   int           `sql:"checks"      json:"-"`
+	CreateAt time.Time     `sql:"create_at"   json:"-"`
+	UpdateAt time.Time     `sql:"update_at"   json:"-"`
+	Response time.Duration `sql:"response"    json:"-"`
 }
 
 type mapProxy struct {
