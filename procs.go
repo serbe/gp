@@ -80,10 +80,9 @@ func checkProxy() {
 			for {
 				select {
 				case task, ok := <-p.ResultChan:
-					checked++
 					if ok {
+						checked++
 						proxy := taskToProxy(task)
-						proxy.Response = task.ResponceTime
 						mP.set(proxy)
 						if proxy.IsWork {
 							log.Printf("%d/%d %-15v %-5v %-10v anon=%v\n", checked, totalIP, task.Proxy.Hostname(), task.Proxy.Port(), task.ResponceTime, proxy.IsAnon)
