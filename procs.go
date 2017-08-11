@@ -24,7 +24,10 @@ func findProxy() {
 		debugmsg("start add to pool")
 		p.SetTaskTimeout(5)
 		for i, link := range links {
-			p.Add(link.Hostname, new(url.URL))
+			err := p.Add(link.Hostname, new(url.URL))
+			if err != nil {
+				errmsg("findProxy p.Add", err)
+			}
 			debugmsg("add to pool", i, link.Hostname)
 		}
 		debugmsg("end add to pool")
