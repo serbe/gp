@@ -19,7 +19,6 @@ func checkFlags() {
 	flag.BoolVar(&useCheck, "c", useCheck, "check proxy")
 	flag.BoolVar(&useServer, "s", useServer, "start server")
 	flag.BoolVar(&logErrors, "e", logErrors, "logging all errors")
-	// flag.BoolVar(&createTables, "m", createTables, "create tables in new database")
 	flag.BoolVar(&useDebug, "d", useDebug, "show debug messages")
 	flag.Parse()
 }
@@ -115,7 +114,7 @@ func grab(task pool.Task) []string {
 	oldNumIP := numIPs
 	getListIP(task.Body)
 	if numIPs-oldNumIP > 0 {
-		log.Printf("Find %d new ip address in %s\n", numIPs-oldNumIP, task.Hostname)
+		debugmsg("Find", numIPs-oldNumIP, "new ip address in", task.Hostname)
 	}
 	urls := getListURL(task)
 	return urls
