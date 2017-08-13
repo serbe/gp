@@ -1,4 +1,4 @@
-ALTER TABLE proxies ALTER COLUMN host SET DEFAULT '';
+﻿ALTER TABLE proxies ALTER COLUMN host SET DEFAULT '';
 UPDATE proxies SET host = '' WHERE host IS NULL;
 ALTER TABLE proxies ALTER COLUMN host SET NOT NULL;
 
@@ -29,3 +29,5 @@ ALTER TABLE proxies ALTER COLUMN update_at SET NOT NULL;
 ALTER TABLE proxies ALTER COLUMN response SET DEFAULT 0;
 UPDATE proxies SET response = 0 WHERE response IS NULL;
 ALTER TABLE proxies ALTER COLUMN response SET NOT NULL;
+
+ALTER TABLE proxies ALTER COLUMN response SET DATA TYPE bigint;
