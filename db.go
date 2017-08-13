@@ -69,7 +69,14 @@ func getAllProxy(db *sql.DB) *mapProxy {
 func getOldProxy(db *sql.DB) *mapProxy {
 	debugmsg("start getOldProxy")
 	mProxy := newMapProxy()
-	rows, err := db.Query("SELECT * from proxies WHERE update_at < NOW() - (INTERVAL '3 days') * checks")
+	rows, err := db.Query(`
+		SELECT
+			*
+		FROM
+			proxies
+		WHERE
+			update_at < NOW() - (INTERVAL '3 days') * checks
+	`)
 	if err != nil {
 		errmsg("getOldProxy Query select", err)
 	}
