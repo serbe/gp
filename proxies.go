@@ -9,22 +9,6 @@ import (
 	"github.com/serbe/pool"
 )
 
-// Proxy - proxy unit
-type Proxy struct {
-	Insert   bool          `sql:"-"           json:"-"`
-	Update   bool          `sql:"-"           json:"-"`
-	Hostname string        `sql:"hostname,pk" json:"hostname"`
-	URL      *url.URL      `sql:"-"           json:"-"`
-	Host     string        `sql:"host"        json:"-"`
-	Port     string        `sql:"port"        json:"-"`
-	IsWork   bool          `sql:"work"        json:"-"`
-	IsAnon   bool          `sql:"anon"        json:"-"`
-	Checks   int           `sql:"checks"      json:"-"`
-	CreateAt time.Time     `sql:"create_at"   json:"-"`
-	UpdateAt time.Time     `sql:"update_at"   json:"-"`
-	Response time.Duration `sql:"response"    json:"-"`
-}
-
 type mapProxy struct {
 	m      sync.RWMutex
 	values map[string]Proxy
@@ -71,12 +55,12 @@ func newProxy(host, port string, ssl bool) (Proxy, error) {
 	return proxy, err
 }
 
-func setProxy(host string, port string, ssl bool) {
+func (mProxy *mapProxy) setProxy(host string, port string, ssl bool) {
 	proxy, err := newProxy(host, port, false)
 	if err == nil {
-		if !mP.existProxy(proxy.Hostname) {
+		if !mProxy.existProxy(proxy.Hostname) {
 			numIPs++
-			mP.set(proxy)
+			mProxy.set(proxy)
 		}
 	}
 }
@@ -88,11 +72,11 @@ func (mProxy *mapProxy) existProxy(hostname string) bool {
 	return ok
 }
 
-func taskToProxy(task pool.Task) Proxy {
-	proxy, _ := mP.get(task.Hostname)
-	proxy.Update = true
-	proxy.UpdateAt = time.Now()
-	if task.Error == nil {
+func (mProxy *mapProxy) taskToProxy(task pool.Task) (Proxy, bool) {
+	proxy, ok := mProxy.get(task.Proxy.String())
+	if ok {
+		proxy.Update = true
+		proxy.UpdateAt = time.Now()
 		proxy.Response = task.ResponceTime
 		strBody := string(task.Body)
 		if reRemoteIP.Match(task.Body) && !strings.Contains(strBody, myIP) {
@@ -101,9 +85,15 @@ func taskToProxy(task pool.Task) Proxy {
 			if strings.Count(strBody, "<p>") == 1 {
 				proxy.IsAnon = true
 			}
-			return proxy
+			return proxy, ok
 		}
+		proxy.Checks++
 	}
-	proxy.Checks++
-	return proxy
+	return proxy, ok
+}
+
+func proxyIsOld(proxy Proxy) bool {
+	return proxy.UpdateAt == time.Time{} ||
+		proxy.UpdateAt != time.Time{} &&
+			time.Since(proxy.UpdateAt) > time.Duration(proxy.Checks)*time.Duration(60*24*7)*time.Minute
 }

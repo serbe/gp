@@ -2,7 +2,6 @@ package main
 
 import (
 	"regexp"
-	"time"
 )
 
 var (
@@ -18,9 +17,9 @@ var (
 	useServer  = false
 	useDebug   = false
 	// createTables = false
-	mP           *mapProxy
-	mL           *mapLink
-	startAppTime time.Time
+	// mP           *mapProxy
+	// mL           *mapLink
+	// startAppTime time.Time
 
 	myIP       string
 	reRemoteIP = regexp.MustCompile(`<p>RemoteAddr: (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d{1,5}<\/p>`)

@@ -1,53 +1,177 @@
 package main
 
 import (
+	"database/sql"
 	"net/url"
+	"time"
 
-	"github.com/go-pg/pg"
+	_ "github.com/lib/pq"
 )
 
-var db *pg.DB
-
-func initDB() {
-	db = pg.Connect(&pg.Options{
-		User:     user,
-		Password: pass,
-		Database: dbname,
-	})
+// Proxy - proxy unit
+type Proxy struct {
+	Insert   bool          `sql:"-"           json:"-"`
+	Update   bool          `sql:"-"           json:"-"`
+	Hostname string        `sql:"hostname,pk" json:"hostname"`
+	URL      *url.URL      `sql:"-"           json:"-"`
+	Host     string        `sql:"host"        json:"-"`
+	Port     string        `sql:"port"        json:"-"`
+	IsWork   bool          `sql:"work"        json:"-"`
+	IsAnon   bool          `sql:"anon"        json:"-"`
+	Checks   int           `sql:"checks"      json:"-"`
+	CreateAt time.Time     `sql:"create_at"   json:"-"`
+	UpdateAt time.Time     `sql:"update_at"   json:"-"`
+	Response time.Duration `sql:"response"    json:"-"`
 }
 
-func getAllProxy() *mapProxy {
-	var proxies []Proxy
-	err := db.Model(&Proxy{}).Select(&proxies)
-	if err != nil {
-		errmsg("getAllProxy select", err)
-	}
+func initDB() (*sql.DB, error) {
+	return sql.Open("postgres", "user="+user+" password="+pass+" dbname="+dbname+" sslmode=disable")
+}
+
+func getAllProxy(db *sql.DB) *mapProxy {
+	debugmsg("start getAllProxy")
 	mProxy := newMapProxy()
-	debugmsg("load proxy from db", len(proxies))
-	for _, proxy := range proxies {
-		proxy.URL, err = url.Parse(proxy.Hostname)
+	rows, err := db.Query("SELECT * FROM proxies")
+	if err != nil {
+		errmsg("getAllProxy Query select", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var p Proxy
+		err := rows.Scan(
+			&p.Hostname,
+			&p.Host,
+			&p.Port,
+			&p.IsWork,
+			&p.IsAnon,
+			&p.Checks,
+			&p.CreateAt,
+			&p.UpdateAt,
+			&p.Response,
+		)
+		if err != nil {
+			errmsg("getAllProxy rows.Scan", err)
+		}
+		p.URL, err = url.Parse(p.Hostname)
 		if err != nil {
 			errmsg("getAllProxy url.Parse", err)
 		}
-		mProxy.set(proxy)
+		mProxy.set(p)
 	}
-	debugmsg("load proxy", len(mProxy.values))
+	err = rows.Err()
+	if err != nil {
+		errmsg("getAllProxy rows.Err", err)
+	}
+	debugmsg("end getAllProxy, load proxy", len(mProxy.values))
 	return mProxy
 }
 
-func saveAllProxy(mProxy *mapProxy) {
+func getOldProxy(db *sql.DB) *mapProxy {
+	debugmsg("start getOldProxy")
+	mProxy := newMapProxy()
+	rows, err := db.Query("SELECT * from proxies WHERE update_at < NOW() - (INTERVAL '3 days') * checks")
+	if err != nil {
+		errmsg("getOldProxy Query select", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var p Proxy
+		err := rows.Scan(
+			&p.Hostname,
+			&p.Host,
+			&p.Port,
+			&p.IsWork,
+			&p.IsAnon,
+			&p.Checks,
+			&p.CreateAt,
+			&p.UpdateAt,
+			&p.Response,
+		)
+		if err != nil {
+			errmsg("getOldProxy rows.Scan", err)
+		}
+		p.URL, err = url.Parse(p.Hostname)
+		if err != nil {
+			errmsg("getOldProxy url.Parse", err)
+		}
+		mProxy.set(p)
+	}
+	err = rows.Err()
+	if err != nil {
+		errmsg("getOldProxy rows.Err", err)
+	}
+	debugmsg("end get100Proxy, load proxy", len(mProxy.values))
+	return mProxy
+}
+
+func saveAllProxy(db *sql.DB, mProxy *mapProxy) {
+	debugmsg("start saveAllProxy")
 	var u, i int64
-	for _, proxy := range mP.values {
-		if proxy.Update {
+	for _, p := range mProxy.values {
+		if p.Update {
 			u++
-			err := db.Update(&proxy)
+			_, err := db.Exec(`
+				UPDATE proxies SET
+					host       = $2,
+					port       = $3,
+					work       = $4,
+					anon       = $5,
+					checks     = $6,
+					create_at  = $7,
+					update_at  = $8,
+					response   = $9
+				WHERE
+					hostname = $1
+			`,
+				&p.Hostname,
+				&p.Host,
+				&p.Port,
+				&p.IsWork,
+				&p.IsAnon,
+				&p.Checks,
+				&p.CreateAt,
+				&p.UpdateAt,
+				&p.Response,
+			)
 			if err != nil {
 				errmsg("saveAllProxy Update", err)
 			}
 		}
-		if proxy.Insert {
+		if p.Insert {
 			i++
-			err := db.Insert(&proxy)
+			_, err := db.Exec(`
+				INSERT INTO proxies (
+					hostname,
+					host,    
+					port,    
+					work,  
+					anon,  
+					checks,  
+					create_at,
+					update_at,
+					response
+				) VALUES (
+					$1,
+					$2,
+					$3,
+					$4,
+					$5,
+					$6,
+					$7,
+					$8,
+					$9
+				)
+			`,
+				&p.Hostname,
+				&p.Host,
+				&p.Port,
+				&p.IsWork,
+				&p.IsAnon,
+				&p.Checks,
+				&p.CreateAt,
+				&p.UpdateAt,
+				&p.Response,
+			)
 			if err != nil {
 				errmsg("saveAllLinks Insert", err)
 			}
@@ -55,36 +179,103 @@ func saveAllProxy(mProxy *mapProxy) {
 	}
 	debugmsg("update proxy", u)
 	debugmsg("insert proxy", i)
+	debugmsg("end getAllProxy")
 }
 
-func getAllLinks() *mapLink {
-	var ls []Link
-	err := db.Model(&Link{}).Select(&ls)
+func updateAllProxy(db *sql.DB, mProxy *mapProxy) {
+	debugmsg("start updateAllProxy")
+	for _, p := range mProxy.values {
+		_, err := db.Exec(`
+			UPDATE proxies SET
+				host       = $2,
+				port       = $3,
+				work       = $4,
+				anon       = $5,
+				checks     = $6,
+				create_at  = $7,
+				update_at  = $8,
+				response   = $9
+			WHERE
+				hostname = $1
+		`,
+			&p.Hostname,
+			&p.Host,
+			&p.Port,
+			&p.IsWork,
+			&p.IsAnon,
+			&p.Checks,
+			&p.CreateAt,
+			&p.UpdateAt,
+			&p.Response,
+		)
+		if err != nil {
+			errmsg("updateAllProxy update", err)
+		}
+	}
+	debugmsg("end updateAllProxy, update proxy", len(mProxy.values))
+}
+
+func getAllLinks(db *sql.DB) *mapLink {
+	debugmsg("start getAllLinks")
+	mLink := newMapLink()
+	rows, err := db.Query("SELECT * FROM links")
 	if err != nil {
-		errmsg("getAllLinks select", err)
+		errmsg("getAllLinks Query select", err)
 	}
-	mlink := newMapLink()
-	for _, link := range ls {
-		mlink.set(link)
+	defer rows.Close()
+	for rows.Next() {
+		var p Link
+		err := rows.Scan(
+			&p.Hostname,
+			&p.UpdateAt,
+		)
+		if err != nil {
+			errmsg("getAllLinks rows.Scan", err)
+		}
+		mLink.set(p)
 	}
-	debugmsg("load links", len(mlink.values))
-	return mlink
+	err = rows.Err()
+	if err != nil {
+		errmsg("getAllProxy rows.Err", err)
+	}
+	debugmsg("end getAllLinks, load links", len(mLink.values))
+	return mLink
 }
 
-func saveAllLinks(ls *mapLink) {
+func saveAllLinks(db *sql.DB, mL *mapLink) {
+	debugmsg("start saveAllLinks")
 	var (
 		u, i int64
 	)
-	for _, link := range ls.values {
-		if link.Insert {
+	for _, l := range mL.values {
+		if l.Insert {
 			i++
-			err := db.Insert(&link)
+			_, err := db.Exec(`
+				INSERT INTO links (
+					hostname,
+					update_at
+				) VALUES (
+					$1,
+					$2
+				)
+			`,
+				&l.Hostname,
+				&l.UpdateAt,
+			)
 			if err != nil {
 				errmsg("saveAllLinks Insert", err)
 			}
 		} else {
 			u++
-			err := db.Update(&link)
+			_, err := db.Exec(`
+				UPDATE links SET
+					update_at = $2
+				WHERE
+					hostname = $1
+			`,
+				&l.Hostname,
+				&l.UpdateAt,
+			)
 			if err != nil {
 				errmsg("saveAllLinks Update", err)
 			}
@@ -92,6 +283,7 @@ func saveAllLinks(ls *mapLink) {
 	}
 	debugmsg("update links", u)
 	debugmsg("insert links", i)
+	debugmsg("end saveAllLinks")
 }
 
 // func makeTables() {

@@ -47,11 +47,12 @@ func getHost(u string) (string, error) {
 }
 
 func getExternalIP() (string, error) {
-	debugmsg("Get External IP")
+	debugmsg("start getExternalIP")
 	body, err := fetchBody("http://myexternalip.com/raw", nil)
 	if err != nil {
 		return "", err
 	}
+	debugmsg("end getExternalIP")
 	return string(body), nil
 }
 

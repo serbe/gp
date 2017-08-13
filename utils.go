@@ -33,7 +33,7 @@ func cleanBody(body []byte) []byte {
 	return body
 }
 
-func getListURL(task pool.Task) []string {
+func getListURL(mL *mapLink, task pool.Task) []string {
 	var urls []string
 	for i := range reURL {
 		host, err := getHost(task.Hostname)
@@ -75,7 +75,7 @@ func decodeIP(src []byte) (string, string, error) {
 	return "", "", err
 }
 
-func getListIP(body []byte) {
+func getListIP(mP *mapProxy, body []byte) {
 	for i := range baseDecode {
 		re := regexp.MustCompile(baseDecode[i])
 		if re.Match(body) {
@@ -83,7 +83,7 @@ func getListIP(body []byte) {
 			for _, res := range results {
 				ip, port, err := decodeIP(res[1])
 				if err == nil {
-					setProxy(ip, port, false)
+					mP.setProxy(ip, port, false)
 				}
 			}
 		}
@@ -94,7 +94,7 @@ func getListIP(body []byte) {
 			results := re.FindAllSubmatch(body, -1)
 			for _, res := range results {
 				port := convPort(string(res[2]), 16)
-				setProxy(string(res[1]), port, false)
+				mP.setProxy(string(res[1]), port, false)
 			}
 		}
 	}
@@ -103,20 +103,20 @@ func getListIP(body []byte) {
 		if re.Match(body) {
 			results := re.FindAllSubmatch(body, -1)
 			for _, res := range results {
-				setProxy(string(res[1]), string(res[2]), false)
+				mP.setProxy(string(res[1]), string(res[2]), false)
 			}
 		}
 	}
 }
 
-func grab(task pool.Task) []string {
+func grab(mP *mapProxy, mL *mapLink, task pool.Task) []string {
 	task.Body = cleanBody(task.Body)
 	oldNumIP := numIPs
-	getListIP(task.Body)
+	getListIP(mP, task.Body)
 	if numIPs-oldNumIP > 0 {
 		debugmsg("Find", numIPs-oldNumIP, "new ip address in", task.Hostname)
 	}
-	urls := getListURL(task)
+	urls := getListURL(mL, task)
 	return urls
 }
 

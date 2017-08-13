@@ -7,20 +7,23 @@ import (
 
 func main() {
 	checkFlags()
-	initDB()
+	db, err := initDB()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	startAppTime = time.Now()
+	startAppTime := time.Now()
 
 	if useServer {
 		go startServer()
 	}
 
 	if useFind {
-		findProxy()
+		findProxy(db)
 	}
 
 	if useCheck {
-		checkProxy()
+		checkProxy(db)
 	}
 
 	log.Printf("Total time: %v\n", time.Since(startAppTime))
