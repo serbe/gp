@@ -2,12 +2,10 @@ ALTER TABLE links ALTER COLUMN update_at SET DEFAULT now();
 UPDATE links SET update_at = now() WHERE update_at IS NULL;
 ALTER TABLE links ALTER COLUMN update_at SET NOT NULL;
 
-ALTER TABLE links ADD COLUMN iterate boolean;
 ALTER TABLE links ALTER COLUMN iterate SET DEFAULT false;
 UPDATE links SET iterate = FALSE WHERE iterate IS NULL;
 ALTER TABLE links ALTER COLUMN iterate SET NOT NULL;
 
-ALTER TABLE links ADD COLUMN num bigint;
 ALTER TABLE links ALTER COLUMN num SET DEFAULT 0;
 UPDATE links SET num = 0 WHERE num IS NULL;
 ALTER TABLE links ALTER COLUMN num SET NOT NULL;
