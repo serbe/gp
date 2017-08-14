@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/serbe/pool"
 )
@@ -18,16 +19,21 @@ func findProxy(db *sql.DB) {
 	mL := getAllLinks(db)
 	mP := getAllProxy(db)
 
-	if len(mL.values) > 0 {
-		debugmsg("start add to pool")
-		p.SetTaskTimeout(5)
-		for _, link := range mL.values {
+	debugmsg("start add to pool")
+	p.SetTaskTimeout(5)
+	var addedLink int64
+	for _, link := range mL.values {
+		if link.Iterate && time.Since(link.UpdateAt) > time.Duration(1)*time.Hour {
 			err := p.Add(link.Hostname, new(url.URL))
 			if err != nil {
 				errmsg("findProxy p.Add", err)
+			} else {
+				addedLink++
 			}
 		}
-		debugmsg("end add to pool")
+	}
+	debugmsg("end add to pool")
+	if addedLink > 0 {
 		debugmsg("get from chan")
 		for result := range p.ResultChan {
 			if result.Error == nil {
@@ -42,8 +48,8 @@ func findProxy(db *sql.DB) {
 		debugmsg("save proxy")
 		saveAllProxy(db, mP)
 		saveAllLinks(db, mL)
+		log.Printf("Add %d ip adress\n", numIPs)
 	}
-	log.Printf("Add %d ip adress\n", numIPs)
 	debugmsg("end findProxy")
 }
 

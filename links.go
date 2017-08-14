@@ -30,6 +30,7 @@ func (mLink *mapLink) set(link Link) {
 func (mLink *mapLink) update(hostname string) {
 	mLink.m.Lock()
 	link := mLink.values[hostname]
+	link.Update = true
 	link.UpdateAt = time.Now()
 	mLink.values[hostname] = link
 	mLink.m.Unlock()

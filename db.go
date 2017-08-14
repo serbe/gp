@@ -216,9 +216,9 @@ func getAllLinks(db *sql.DB) *mapLink {
 			num
 		FROM
 			links
-		WHERE
-			update_at < NOW() - (INTERVAL '1 hours') AND iterate = true
 	`)
+	// WHERE
+	// update_at < NOW() - (INTERVAL '1 hours') AND iterate = true
 	if err != nil {
 		errmsg("getAllLinks Query select", err)
 	}
@@ -341,9 +341,7 @@ func insertLink(db *sql.DB, l Link) (sql.Result, error) {
 			$1,
 			$2,
 			$3
-		) ON CONFLICT
-			(hostname) 
-		DO NOTHING
+		)
 	`,
 		&l.Hostname,
 		&l.UpdateAt,

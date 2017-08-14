@@ -83,7 +83,5 @@ func (mProxy *mapProxy) taskToProxy(task pool.Task) (Proxy, bool) {
 }
 
 func proxyIsOld(proxy Proxy) bool {
-	return proxy.UpdateAt == time.Time{} ||
-		proxy.UpdateAt != time.Time{} &&
-			time.Since(proxy.UpdateAt) > time.Duration(proxy.Checks)*time.Duration(60*24*7)*time.Minute
+	return time.Since(proxy.UpdateAt) > time.Duration(proxy.Checks)*time.Duration(60*24*7)*time.Minute
 }
