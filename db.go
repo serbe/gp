@@ -256,7 +256,8 @@ func saveAllLinks(db *sql.DB, mL *mapLink) {
 			if err != nil {
 				errmsg("saveAllLinks Insert", err)
 			}
-		} else {
+		}
+		if l.Update {
 			u++
 			_, err := updateLink(db, l)
 			if err != nil {
