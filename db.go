@@ -117,68 +117,14 @@ func saveAllProxy(db *sql.DB, mProxy *mapProxy) {
 	for _, p := range mProxy.values {
 		if p.Update {
 			u++
-			_, err := db.Exec(`
-				UPDATE proxies SET
-					host       = $2,
-					port       = $3,
-					work       = $4,
-					anon       = $5,
-					checks     = $6,
-					create_at  = $7,
-					update_at  = $8,
-					response   = $9
-				WHERE
-					hostname = $1
-			`,
-				&p.Hostname,
-				&p.Host,
-				&p.Port,
-				&p.IsWork,
-				&p.IsAnon,
-				&p.Checks,
-				&p.CreateAt,
-				&p.UpdateAt,
-				&p.Response,
-			)
+			_, err := updateProxy(db, p)
 			if err != nil {
 				errmsg("saveAllProxy Update", err)
 			}
 		}
 		if p.Insert {
 			i++
-			_, err := db.Exec(`
-				INSERT INTO proxies (
-					hostname,
-					host,    
-					port,    
-					work,  
-					anon,  
-					checks,  
-					create_at,
-					update_at,
-					response
-				) VALUES (
-					$1,
-					$2,
-					$3,
-					$4,
-					$5,
-					$6,
-					$7,
-					$8,
-					$9
-				)
-			`,
-				&p.Hostname,
-				&p.Host,
-				&p.Port,
-				&p.IsWork,
-				&p.IsAnon,
-				&p.Checks,
-				&p.CreateAt,
-				&p.UpdateAt,
-				&p.Response,
-			)
+			_, err := insertProxy(db, p)
 			if err != nil {
 				errmsg("saveAllLinks Insert", err)
 			}
@@ -285,6 +231,68 @@ func saveAllLinks(db *sql.DB, mL *mapLink) {
 	debugmsg("update links", u)
 	debugmsg("insert links", i)
 	debugmsg("end saveAllLinks")
+}
+
+func insertProxy(db *sql.DB, p Proxy) (sql.Result, error) {
+	return db.Exec(`
+		INSERT INTO proxies (
+			hostname,
+			host,    
+			port,    
+			work,  
+			anon,  
+			checks,  
+			create_at,
+			update_at,
+			response
+		) VALUES (
+			$1,
+			$2,
+			$3,
+			$4,
+			$5,
+			$6,
+			$7,
+			$8,
+			$9
+		)
+		`,
+		&p.Hostname,
+		&p.Host,
+		&p.Port,
+		&p.IsWork,
+		&p.IsAnon,
+		&p.Checks,
+		&p.CreateAt,
+		&p.UpdateAt,
+		&p.Response,
+	)
+}
+
+func updateProxy(db *sql.DB, p Proxy) (sql.Result, error) {
+	return db.Exec(`
+		UPDATE proxies SET
+			host       = $2,
+			port       = $3,
+			work       = $4,
+			anon       = $5,
+			checks     = $6,
+			create_at  = $7,
+			update_at  = $8,
+			response   = $9
+		WHERE
+			hostname = $1
+	`,
+		&p.Hostname,
+		&p.Host,
+		&p.Port,
+		&p.IsWork,
+		&p.IsAnon,
+		&p.Checks,
+		&p.CreateAt,
+		&p.UpdateAt,
+		&p.Response,
+	)
 }
 
 func insertLink(db *sql.DB, l Link) (sql.Result, error) {
