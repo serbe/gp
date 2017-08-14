@@ -341,7 +341,9 @@ func insertLink(db *sql.DB, l Link) (sql.Result, error) {
 			$1,
 			$2,
 			$3
-		)
+		) ON CONFLICT
+			(hostname) 
+		DO NOTHING
 	`,
 		&l.Hostname,
 		&l.UpdateAt,

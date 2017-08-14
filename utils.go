@@ -45,7 +45,7 @@ func getLinkList(mL *mapLink, task pool.Task) []Link {
 			allResults := re.FindAllSubmatch(task.Body, -1)
 			for _, result := range allResults {
 				hostname := host + "/" + string(result[1])
-				if mL.existLink(hostname) {
+				if !mL.existLink(hostname) {
 					link := mL.newLink(hostname)
 					link.Insert = true
 					link.UpdateAt = time.Now()
