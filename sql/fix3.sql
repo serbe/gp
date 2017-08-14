@@ -17,8 +17,8 @@ UPDATE links SET iterate = TRUE WHERE hostname IN (
 	'http://www.idcloak.com/proxylist/free-proxy-servers-list.html',
 	'https://premproxy.com/list/',
 	'https://proxy-list.org/english/index.php',
-    'https://hidemy.name/en/proxy-list/en/proxy-list/?type=hs&anon=34#list',
-    'https://www.sslproxies.org/'
+	'https://hidemy.name/en/proxy-list/en/proxy-list/?type=hs&anon=34#list',
+	'https://www.sslproxies.org/'
 )
 
 
