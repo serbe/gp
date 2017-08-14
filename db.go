@@ -191,20 +191,26 @@ func saveAllProxy(db *sql.DB, mProxy *mapProxy) {
 
 func updateAllProxy(db *sql.DB, mProxy *mapProxy) {
 	debugmsg("start updateAllProxy")
+	stmt, err := db.Prepare(`
+		UPDATE proxies SET
+			host       = $2,
+			port       = $3,
+			work       = $4,
+			anon       = $5,
+			checks     = $6,
+			create_at  = $7,
+			update_at  = $8,
+			response   = $9
+		WHERE
+			hostname = $1
+	`)
+	if err != nil {
+		errmsg("updateAllProxy Prepare", err)
+		return
+	}
+	defer stmt.Close()
 	for _, p := range mProxy.values {
-		_, err := db.Exec(`
-			UPDATE proxies SET
-				host       = $2,
-				port       = $3,
-				work       = $4,
-				anon       = $5,
-				checks     = $6,
-				create_at  = $7,
-				update_at  = $8,
-				response   = $9
-			WHERE
-				hostname = $1
-		`,
+		_, err := stmt.Exec(
 			&p.Hostname,
 			&p.Host,
 			&p.Port,
@@ -216,7 +222,7 @@ func updateAllProxy(db *sql.DB, mProxy *mapProxy) {
 			&p.Response,
 		)
 		if err != nil {
-			errmsg("updateAllProxy update", err)
+			errmsg("updateAllProxy Exec", err)
 		}
 	}
 	debugmsg("end updateAllProxy, update proxy", len(mProxy.values))
@@ -225,7 +231,14 @@ func updateAllProxy(db *sql.DB, mProxy *mapProxy) {
 func getAllLinks(db *sql.DB) *mapLink {
 	debugmsg("start getAllLinks")
 	mLink := newMapLink()
-	rows, err := db.Query("SELECT * FROM links")
+	rows, err := db.Query(`
+		SELECT
+			*
+		FROM
+			links
+		WHERE
+			update_at < NOW() - (INTERVAL '6 hours')
+	`)
 	if err != nil {
 		errmsg("getAllLinks Query select", err)
 	}
@@ -257,32 +270,13 @@ func saveAllLinks(db *sql.DB, mL *mapLink) {
 	for _, l := range mL.values {
 		if l.Insert {
 			i++
-			_, err := db.Exec(`
-				INSERT INTO links (
-					hostname,
-					update_at
-				) VALUES (
-					$1,
-					$2
-				)
-			`,
-				&l.Hostname,
-				&l.UpdateAt,
-			)
+			_, err := insertLink(db, l)
 			if err != nil {
 				errmsg("saveAllLinks Insert", err)
 			}
 		} else {
 			u++
-			_, err := db.Exec(`
-				UPDATE links SET
-					update_at = $2
-				WHERE
-					hostname = $1
-			`,
-				&l.Hostname,
-				&l.UpdateAt,
-			)
+			_, err := updateLink(db, l)
 			if err != nil {
 				errmsg("saveAllLinks Update", err)
 			}
@@ -291,6 +285,33 @@ func saveAllLinks(db *sql.DB, mL *mapLink) {
 	debugmsg("update links", u)
 	debugmsg("insert links", i)
 	debugmsg("end saveAllLinks")
+}
+
+func insertLink(db *sql.DB, l Link) (sql.Result, error) {
+	return db.Exec(`
+		INSERT INTO links (
+			hostname,
+			update_at
+		) VALUES (
+			$1,
+			$2
+		)
+	`,
+		&l.Hostname,
+		&l.UpdateAt,
+	)
+}
+
+func updateLink(db *sql.DB, l Link) (sql.Result, error) {
+	return db.Exec(`
+		UPDATE links SET
+			update_at = $2
+		WHERE
+			hostname = $1
+	`,
+		&l.Hostname,
+		&l.UpdateAt,
+	)
 }
 
 // func makeTables() {
