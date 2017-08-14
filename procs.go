@@ -18,12 +18,10 @@ func findProxy(db *sql.DB) {
 	mL := getAllLinks(db)
 	mP := getAllProxy(db)
 
-	links := mL.oldLinks()
-
-	if len(links) > 0 {
+	if len(mL.values) > 0 {
 		debugmsg("start add to pool")
 		p.SetTaskTimeout(5)
-		for i, link := range links {
+		for i, link := range mL.values {
 			err := p.Add(link.Hostname, new(url.URL))
 			if err != nil {
 				errmsg("findProxy p.Add", err)

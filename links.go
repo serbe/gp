@@ -5,14 +5,6 @@ import (
 	"time"
 )
 
-// Link - link unit
-type Link struct {
-	Insert   bool      `sql:"-"           json:"-"`
-	Update   bool      `sql:"-"           json:"-"`
-	Hostname string    `sql:"hostname,pk" json:"hostname"`
-	UpdateAt time.Time `sql:"update_at"   json:"-"`
-}
-
 type mapLink struct {
 	m      sync.RWMutex
 	values map[string]Link
@@ -52,18 +44,6 @@ func (mLink *mapLink) newLink(hostname string) Link {
 func (mLink *mapLink) isOldLink(hostname string) bool {
 	link := mLink.get(hostname)
 	return time.Since(link.UpdateAt) > time.Duration(10)*time.Minute
-}
-
-func (mLink *mapLink) oldLinks() []Link {
-	debugmsg("create list of old Link")
-	var links []Link
-	for _, link := range mLink.values {
-		if time.Since(link.UpdateAt) > time.Duration(10)*time.Minute {
-			links = append(links, link)
-		}
-	}
-	debugmsg("old links len is", len(links))
-	return links
 }
 
 func (mLink *mapLink) existLink(hostname string) bool {
