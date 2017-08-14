@@ -33,8 +33,8 @@ func cleanBody(body []byte) []byte {
 	return body
 }
 
-func getListURL(mL *mapLink, task pool.Task) []string {
-	var urls []string
+func getLinkList(mL *mapLink, task pool.Task) []Link {
+	var links []Link
 	for i := range reURL {
 		host, err := getHost(task.Hostname)
 		if err != nil {
@@ -46,21 +46,16 @@ func getListURL(mL *mapLink, task pool.Task) []string {
 			for _, result := range allResults {
 				hostname := host + "/" + string(result[1])
 				if mL.existLink(hostname) {
-					if mL.isOldLink(hostname) {
-						mL.update(hostname)
-						urls = append(urls, hostname)
-					}
-				} else {
 					link := mL.newLink(hostname)
 					link.Insert = true
 					link.UpdateAt = time.Now()
 					mL.set(link)
-					urls = append(urls, hostname)
+					links = append(links, link)
 				}
 			}
 		}
 	}
-	return urls
+	return links
 }
 
 func decodeIP(src []byte) (string, string, error) {
@@ -75,15 +70,24 @@ func decodeIP(src []byte) (string, string, error) {
 	return "", "", err
 }
 
-func getListIP(mP *mapProxy, body []byte) {
+func getProxyList(body []byte) []Proxy {
+	var (
+		pList []Proxy
+		err   error
+	)
 	for i := range baseDecode {
 		re := regexp.MustCompile(baseDecode[i])
 		if re.Match(body) {
 			results := re.FindAllSubmatch(body, -1)
 			for _, res := range results {
-				ip, port, err := decodeIP(res[1])
+				var ip, port string
+				ip, port, err = decodeIP(res[1])
 				if err == nil {
-					mP.setProxy(ip, port, false)
+					var proxy Proxy
+					proxy, err = newProxy(ip, port, false)
+					if err == nil {
+						pList = append(pList, proxy)
+					}
 				}
 			}
 		}
@@ -93,8 +97,12 @@ func getListIP(mP *mapProxy, body []byte) {
 		if re.Match(body) {
 			results := re.FindAllSubmatch(body, -1)
 			for _, res := range results {
+				var proxy Proxy
 				port := convPort(string(res[2]), 16)
-				mP.setProxy(string(res[1]), port, false)
+				proxy, err = newProxy(string(res[1]), port, false)
+				if err == nil {
+					pList = append(pList, proxy)
+				}
 			}
 		}
 	}
@@ -103,21 +111,35 @@ func getListIP(mP *mapProxy, body []byte) {
 		if re.Match(body) {
 			results := re.FindAllSubmatch(body, -1)
 			for _, res := range results {
-				mP.setProxy(string(res[1]), string(res[2]), false)
+				var proxy Proxy
+				proxy, err = newProxy(string(res[1]), string(res[2]), false)
+				if err == nil {
+					pList = append(pList, proxy)
+				}
 			}
 		}
 	}
+	return pList
 }
 
-func grab(mP *mapProxy, mL *mapLink, task pool.Task) []string {
+func grab(mP *mapProxy, mL *mapLink, task pool.Task) []Link {
+	var numProxy int64
 	task.Body = cleanBody(task.Body)
-	oldNumIP := numIPs
-	getListIP(mP, task.Body)
-	if numIPs-oldNumIP > 0 {
-		debugmsg("Find", numIPs-oldNumIP, "new ip address in", task.Hostname)
+	pList := getProxyList(task.Body)
+	lList := getLinkList(mL, task)
+	for _, p := range pList {
+		if !mP.existProxy(p.Hostname) {
+			mP.set(p)
+			numProxy++
+		}
 	}
-	urls := getListURL(mL, task)
-	return urls
+	if numProxy > 0 {
+		link := mL.get(task.Hostname)
+		link.Num = link.Num + numProxy
+		mL.set(link)
+		debugmsg("find", numProxy, "in", task.Hostname)
+	}
+	return lList
 }
 
 func errmsg(str string, err error) {

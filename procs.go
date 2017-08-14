@@ -21,22 +21,22 @@ func findProxy(db *sql.DB) {
 	if len(mL.values) > 0 {
 		debugmsg("start add to pool")
 		p.SetTaskTimeout(5)
-		for i, link := range mL.values {
+		for _, link := range mL.values {
 			err := p.Add(link.Hostname, new(url.URL))
 			if err != nil {
 				errmsg("findProxy p.Add", err)
 			}
-			debugmsg("add to pool", i, link.Hostname)
+			// debugmsg("add to pool", i, link.Hostname)
 		}
 		debugmsg("end add to pool")
 		debugmsg("get from chan")
 		for result := range p.ResultChan {
 			if result.Error == nil {
 				mL.update(result.Hostname)
-				urls := grab(mP, mL, result)
-				for _, u := range urls {
-					p.Add(u, new(url.URL))
-					debugmsg("add to pool", u)
+				links := grab(mP, mL, result)
+				for _, l := range links {
+					p.Add(l.Hostname, new(url.URL))
+					debugmsg("add to pool", l.Hostname)
 				}
 			}
 		}

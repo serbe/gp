@@ -41,11 +41,6 @@ func (mLink *mapLink) newLink(hostname string) Link {
 	return link
 }
 
-func (mLink *mapLink) isOldLink(hostname string) bool {
-	link := mLink.get(hostname)
-	return time.Since(link.UpdateAt) > time.Duration(10)*time.Minute
-}
-
 func (mLink *mapLink) existLink(hostname string) bool {
 	mLink.m.RLock()
 	_, ok := mLink.values[hostname]

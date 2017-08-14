@@ -55,16 +55,6 @@ func newProxy(host, port string, ssl bool) (Proxy, error) {
 	return proxy, err
 }
 
-func (mProxy *mapProxy) setProxy(host string, port string, ssl bool) {
-	proxy, err := newProxy(host, port, false)
-	if err == nil {
-		if !mProxy.existProxy(proxy.Hostname) {
-			numIPs++
-			mProxy.set(proxy)
-		}
-	}
-}
-
 func (mProxy *mapProxy) existProxy(hostname string) bool {
 	mProxy.m.RLock()
 	_, ok := mProxy.values[hostname]
