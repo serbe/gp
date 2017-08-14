@@ -31,6 +31,7 @@ type Link struct {
 	Hostname string    `sql:"hostname,pk" json:"hostname"`
 	UpdateAt time.Time `sql:"update_at"   json:"-"`
 	Iterate  bool      `sql:"iterate"     json:"-"`
+	Num      int64     `sql:"num"         json:"-"`
 }
 
 func initDB() (*sql.DB, error) {
@@ -40,14 +41,27 @@ func initDB() (*sql.DB, error) {
 func getAllProxy(db *sql.DB) *mapProxy {
 	debugmsg("start getAllProxy")
 	mProxy := newMapProxy()
-	rows, err := db.Query("SELECT * FROM proxies")
+	rows, err := db.Query(`
+		SELECT
+			hostname,
+			host,
+			port,
+			work,
+			anon,
+			checks,
+			create_at,
+			update_at,
+			response		
+		FROM
+			proxies
+	`)
 	if err != nil {
 		errmsg("getAllProxy Query select", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var p Proxy
-		err := rows.Scan(
+		err = rows.Scan(
 			&p.Hostname,
 			&p.Host,
 			&p.Port,
@@ -80,7 +94,15 @@ func getOldProxy(db *sql.DB) *mapProxy {
 	mProxy := newMapProxy()
 	rows, err := db.Query(`
 		SELECT
-			*
+			hostname,
+			host,
+			port,
+			work,
+			anon,
+			checks,
+			create_at,
+			update_at,
+			response
 		FROM
 			proxies
 		WHERE
@@ -92,7 +114,7 @@ func getOldProxy(db *sql.DB) *mapProxy {
 	defer rows.Close()
 	for rows.Next() {
 		var p Proxy
-		err := rows.Scan(
+		err = rows.Scan(
 			&p.Hostname,
 			&p.Host,
 			&p.Port,
@@ -188,27 +210,31 @@ func getAllLinks(db *sql.DB) *mapLink {
 	mLink := newMapLink()
 	rows, err := db.Query(`
 		SELECT
-			*
+			hostname,
+			update_at,
+			iterate,
+			num
 		FROM
 			links
 		WHERE
-			update_at < NOW() - (INTERVAL '1 hours')
+			update_at < NOW() - (INTERVAL '1 hours') AND iterate = true
 	`)
-	//  AND iterate = true
 	if err != nil {
 		errmsg("getAllLinks Query select", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var p Link
-		err := rows.Scan(
-			&p.Hostname,
-			&p.UpdateAt,
+		var l Link
+		err = rows.Scan(
+			&l.Hostname,
+			&l.UpdateAt,
+			&l.Iterate,
+			&l.Num,
 		)
 		if err != nil {
 			errmsg("getAllLinks rows.Scan", err)
 		}
-		mLink.set(p)
+		mLink.set(l)
 	}
 	err = rows.Err()
 	if err != nil {
@@ -309,26 +335,31 @@ func insertLink(db *sql.DB, l Link) (sql.Result, error) {
 	return db.Exec(`
 		INSERT INTO links (
 			hostname,
-			update_at
+			update_at,
+			num
 		) VALUES (
 			$1,
-			$2
+			$2,
+			$3
 		)
 	`,
 		&l.Hostname,
 		&l.UpdateAt,
+		&l.Num,
 	)
 }
 
 func updateLink(db *sql.DB, l Link) (sql.Result, error) {
 	return db.Exec(`
 		UPDATE links SET
-			update_at = $2
+			update_at = $2,
+			num = $3
 		WHERE
 			hostname = $1
 	`,
 		&l.Hostname,
 		&l.UpdateAt,
+		&l.Num,
 	)
 }
 
