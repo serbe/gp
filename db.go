@@ -24,6 +24,15 @@ type Proxy struct {
 	Response time.Duration `sql:"response"    json:"-"`
 }
 
+// Link - link unit
+type Link struct {
+	Insert   bool      `sql:"-"           json:"-"`
+	Update   bool      `sql:"-"           json:"-"`
+	Hostname string    `sql:"hostname,pk" json:"hostname"`
+	UpdateAt time.Time `sql:"update_at"   json:"-"`
+	Iterate  bool      `sql:"iterate"     json:"-"`
+}
+
 func initDB() (*sql.DB, error) {
 	return sql.Open("postgres", "user="+user+" password="+pass+" dbname="+dbname+" sslmode=disable")
 }
@@ -183,8 +192,9 @@ func getAllLinks(db *sql.DB) *mapLink {
 		FROM
 			links
 		WHERE
-			update_at < NOW() - (INTERVAL '6 hours')
+			update_at < NOW() - (INTERVAL '1 hours')
 	`)
+	//  AND iterate = true
 	if err != nil {
 		errmsg("getAllLinks Query select", err)
 	}
