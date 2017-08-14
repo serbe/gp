@@ -26,7 +26,6 @@ func findProxy(db *sql.DB) {
 			if err != nil {
 				errmsg("findProxy p.Add", err)
 			}
-			// debugmsg("add to pool", i, link.Hostname)
 		}
 		debugmsg("end add to pool")
 		debugmsg("get from chan")

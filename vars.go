@@ -16,14 +16,9 @@ var (
 	useCheck   = false
 	useServer  = false
 	useDebug   = false
-	// createTables = false
-	// mP           *mapProxy
-	// mL           *mapLink
-	// startAppTime time.Time
 
 	myIP       string
 	reRemoteIP = regexp.MustCompile(`<p>RemoteAddr: (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d{1,5}<\/p>`)
-	// reProxy    = regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5})`)
 
 	numIPs int
 
@@ -72,6 +67,7 @@ var (
 		`href=(?:'|")/(\w\w/proxy-list/\?.*?#list)`,
 		`<a class=(?:'|")page(?:'|") href=(?:'|")(\d{1,3}.htm)(?:'|")>`,
 		`href=(?:'|")\./(index\.php\?p=\d{1,3})(?:'|")>`,
+		`<a href=(?:'|")(\d{1,3}\.htm)(?:'|")>`,
 	}
 	reIP        = `((?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))`
 	reCommaList = []string{
