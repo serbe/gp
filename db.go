@@ -150,17 +150,39 @@ func saveAllProxy(db *sql.DB, mProxy *mapProxy) {
 		errmsg("saveAllProxy db.Begin", err)
 		return
 	}
+	prepareInsert, _ := insertProxy(tx)
+	prepareUpdate, _ := updateProxy(tx)
 	for _, p := range mProxy.values {
 		if p.Update {
 			u++
-			_, err := updateProxy(tx, p)
+			_, err := tx.Stmt(prepareUpdate).Exec(
+				&p.Hostname,
+				&p.Host,
+				&p.Port,
+				&p.IsWork,
+				&p.IsAnon,
+				&p.Checks,
+				&p.CreateAt,
+				&p.UpdateAt,
+				&p.Response,
+			)
 			if err != nil {
 				errmsg("saveAllProxy Update", err)
 			}
 		}
 		if p.Insert {
 			i++
-			_, err := insertProxy(tx, p)
+			_, err := tx.Stmt(prepareInsert).Exec(
+				&p.Hostname,
+				&p.Host,
+				&p.Port,
+				&p.IsWork,
+				&p.IsAnon,
+				&p.Checks,
+				&p.CreateAt,
+				&p.UpdateAt,
+				&p.Response,
+			)
 			if err != nil {
 				errmsg("saveAllLinks Insert", err)
 			}
@@ -259,6 +281,8 @@ func saveAllLinks(db *sql.DB, mL *mapLink) {
 		u, i int64
 	)
 	tx, err := db.Begin()
+	prepareInsert, _ := insertLink(tx)
+	prepareUpdate, _ := updateLink(tx)
 	if err != nil {
 		errmsg("saveAllLinks db.Begin", err)
 		return
@@ -266,14 +290,22 @@ func saveAllLinks(db *sql.DB, mL *mapLink) {
 	for _, l := range mL.values {
 		if l.Insert {
 			i++
-			_, err := insertLink(tx, l)
+			_, err := tx.Stmt(prepareInsert).Exec(
+				&l.Hostname,
+				&l.UpdateAt,
+				&l.Num,
+			)
 			if err != nil {
 				errmsg("saveAllLinks Insert", err)
 			}
 		}
 		if l.Update {
 			u++
-			_, err := updateLink(tx, l)
+			_, err := tx.Stmt(prepareUpdate).Exec(
+				&l.Hostname,
+				&l.UpdateAt,
+				&l.Num,
+			)
 			if err != nil {
 				errmsg("saveAllLinks Update", err)
 			}
@@ -288,8 +320,8 @@ func saveAllLinks(db *sql.DB, mL *mapLink) {
 	debugmsg("end saveAllLinks")
 }
 
-func insertProxy(tx *sql.Tx, p Proxy) (sql.Result, error) {
-	return tx.Exec(`
+func insertProxy(tx *sql.Tx) (*sql.Stmt, error) {
+	return tx.Prepare(`
 		INSERT INTO proxies (
 			hostname,
 			host,    
@@ -311,21 +343,11 @@ func insertProxy(tx *sql.Tx, p Proxy) (sql.Result, error) {
 			$8,
 			$9
 		)
-		`,
-		&p.Hostname,
-		&p.Host,
-		&p.Port,
-		&p.IsWork,
-		&p.IsAnon,
-		&p.Checks,
-		&p.CreateAt,
-		&p.UpdateAt,
-		&p.Response,
-	)
+	`)
 }
 
-func updateProxy(tx *sql.Tx, p Proxy) (sql.Result, error) {
-	return tx.Exec(`
+func updateProxy(tx *sql.Tx) (*sql.Stmt, error) {
+	return tx.Prepare(`
 		UPDATE proxies SET
 			host       = $2,
 			port       = $3,
@@ -337,21 +359,11 @@ func updateProxy(tx *sql.Tx, p Proxy) (sql.Result, error) {
 			response   = $9
 		WHERE
 			hostname = $1
-	`,
-		&p.Hostname,
-		&p.Host,
-		&p.Port,
-		&p.IsWork,
-		&p.IsAnon,
-		&p.Checks,
-		&p.CreateAt,
-		&p.UpdateAt,
-		&p.Response,
-	)
+	`)
 }
 
-func insertLink(tx *sql.Tx, l Link) (sql.Result, error) {
-	return tx.Exec(`
+func insertLink(tx *sql.Tx) (*sql.Stmt, error) {
+	return tx.Prepare(`
 		INSERT INTO links (
 			hostname,
 			update_at,
@@ -361,25 +373,17 @@ func insertLink(tx *sql.Tx, l Link) (sql.Result, error) {
 			$2,
 			$3
 		)
-	`,
-		&l.Hostname,
-		&l.UpdateAt,
-		&l.Num,
-	)
+	`)
 }
 
-func updateLink(tx *sql.Tx, l Link) (sql.Result, error) {
-	return tx.Exec(`
+func updateLink(tx *sql.Tx) (*sql.Stmt, error) {
+	return tx.Prepare(`
 		UPDATE links SET
 			update_at = $2,
 			num = $3
 		WHERE
 			hostname = $1
-	`,
-		&l.Hostname,
-		&l.UpdateAt,
-		&l.Num,
-	)
+	`)
 }
 
 // func makeTables() {
