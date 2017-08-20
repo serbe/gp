@@ -20,8 +20,6 @@ var (
 	myIP       string
 	reRemoteIP = regexp.MustCompile(`<p>RemoteAddr: (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d{1,5}<\/p>`)
 
-	numIPs int
-
 	// siteList = []string{
 	// 	`https://hidester.com/proxydata/php/data.php?mykey=data&offset=0&limit=1000&orderBy=latest_check&sortOrder=DESC&country=&port=&type=undefined&anonymity=undefined&ping=undefined&gproxy=2`,
 	// 	`http://gatherproxy.com/embed/`,

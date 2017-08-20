@@ -48,7 +48,6 @@ func findProxy(db *sql.DB) {
 		debugmsg("save proxy")
 		saveAllProxy(db, mP)
 		saveAllLinks(db, mL)
-		log.Printf("Add %d ip adress\n", numIPs)
 	}
 	debugmsg("end findProxy")
 }

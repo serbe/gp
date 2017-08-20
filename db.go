@@ -145,21 +145,30 @@ func getOldProxy(db *sql.DB) *mapProxy {
 func saveAllProxy(db *sql.DB, mProxy *mapProxy) {
 	debugmsg("start saveAllProxy")
 	var u, i int64
+	tx, err := db.Begin()
+	if err != nil {
+		errmsg("saveAllProxy db.Begin", err)
+		return
+	}
 	for _, p := range mProxy.values {
 		if p.Update {
 			u++
-			_, err := updateProxy(db, p)
+			_, err := updateProxy(tx, p)
 			if err != nil {
 				errmsg("saveAllProxy Update", err)
 			}
 		}
 		if p.Insert {
 			i++
-			_, err := insertProxy(db, p)
+			_, err := insertProxy(tx, p)
 			if err != nil {
 				errmsg("saveAllLinks Insert", err)
 			}
 		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		errmsg("saveAllProxy tx.Commit", err)
 	}
 	debugmsg("update proxy", u)
 	debugmsg("insert proxy", i)
@@ -249,29 +258,38 @@ func saveAllLinks(db *sql.DB, mL *mapLink) {
 	var (
 		u, i int64
 	)
+	tx, err := db.Begin()
+	if err != nil {
+		errmsg("saveAllLinks db.Begin", err)
+		return
+	}
 	for _, l := range mL.values {
 		if l.Insert {
 			i++
-			_, err := insertLink(db, l)
+			_, err := insertLink(tx, l)
 			if err != nil {
 				errmsg("saveAllLinks Insert", err)
 			}
 		}
 		if l.Update {
 			u++
-			_, err := updateLink(db, l)
+			_, err := updateLink(tx, l)
 			if err != nil {
 				errmsg("saveAllLinks Update", err)
 			}
 		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		errmsg("saveAllLinks tx.Commit", err)
 	}
 	debugmsg("update links", u)
 	debugmsg("insert links", i)
 	debugmsg("end saveAllLinks")
 }
 
-func insertProxy(db *sql.DB, p Proxy) (sql.Result, error) {
-	return db.Exec(`
+func insertProxy(tx *sql.Tx, p Proxy) (sql.Result, error) {
+	return tx.Exec(`
 		INSERT INTO proxies (
 			hostname,
 			host,    
@@ -306,8 +324,8 @@ func insertProxy(db *sql.DB, p Proxy) (sql.Result, error) {
 	)
 }
 
-func updateProxy(db *sql.DB, p Proxy) (sql.Result, error) {
-	return db.Exec(`
+func updateProxy(tx *sql.Tx, p Proxy) (sql.Result, error) {
+	return tx.Exec(`
 		UPDATE proxies SET
 			host       = $2,
 			port       = $3,
@@ -332,8 +350,8 @@ func updateProxy(db *sql.DB, p Proxy) (sql.Result, error) {
 	)
 }
 
-func insertLink(db *sql.DB, l Link) (sql.Result, error) {
-	return db.Exec(`
+func insertLink(tx *sql.Tx, l Link) (sql.Result, error) {
+	return tx.Exec(`
 		INSERT INTO links (
 			hostname,
 			update_at,
@@ -350,8 +368,8 @@ func insertLink(db *sql.DB, l Link) (sql.Result, error) {
 	)
 }
 
-func updateLink(db *sql.DB, l Link) (sql.Result, error) {
-	return db.Exec(`
+func updateLink(tx *sql.Tx, l Link) (sql.Result, error) {
+	return tx.Exec(`
 		UPDATE links SET
 			update_at = $2,
 			num = $3
