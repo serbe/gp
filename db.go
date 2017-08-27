@@ -138,7 +138,7 @@ func getOldProxy(db *sql.DB) *mapProxy {
 	if err != nil {
 		errmsg("getOldProxy rows.Err", err)
 	}
-	debugmsg("end get100Proxy, load proxy", len(mProxy.values))
+	debugmsg("end getOldProxy, load proxy", len(mProxy.values))
 	return mProxy
 }
 
