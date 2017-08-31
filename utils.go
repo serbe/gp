@@ -20,6 +20,7 @@ func checkFlags() {
 	flag.BoolVar(&useServer, "s", useServer, "start server")
 	flag.BoolVar(&logErrors, "e", logErrors, "logging all errors")
 	flag.BoolVar(&useDebug, "d", useDebug, "show debug messages")
+	flag.StringVar(&useFile, "pf", useFile, "use file with proxy list")
 	flag.Parse()
 }
 

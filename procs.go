@@ -19,6 +19,15 @@ func findProxy(db *sql.DB) {
 	mL := getAllLinks(db)
 	mP := getAllProxy(db)
 
+	// var (
+	// 	fileBody []byte
+	// 	err      error
+	// )
+
+	// if useFile != "" {
+	// 	fileBody, err = ioutil.ReadFile(useFile)
+	// }
+
 	debugmsg("start add to pool")
 	p.SetTaskTimeout(5)
 	var addedLink int64
