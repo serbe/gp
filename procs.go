@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -19,14 +20,22 @@ func findProxy(db *sql.DB) {
 	mL := getAllLinks(db)
 	mP := getAllProxy(db)
 
-	// var (
-	// 	fileBody []byte
-	// 	err      error
-	// )
-
-	// if useFile != "" {
-	// 	fileBody, err = ioutil.ReadFile(useFile)
-	// }
+	if useFile != "" {
+		fileBody, err := ioutil.ReadFile(useFile)
+		if err != nil {
+			errmsg("findProxy ReadFile", err)
+		} else {
+			var numProxy int64
+			pList := getProxyList(fileBody)
+			for _, p := range pList {
+				if !mP.existProxy(p.Hostname) {
+					mP.set(p)
+					numProxy++
+				}
+			}
+			log.Println("find", numProxy, "in", useFile)
+		}
+	}
 
 	debugmsg("start add to pool")
 	p.SetTaskTimeout(5)
