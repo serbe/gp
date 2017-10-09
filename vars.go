@@ -17,6 +17,8 @@ var (
 	useServer  = false
 	useDebug   = false
 	useFile    = ""
+	testLink   = ""
+	addLink    = ""
 
 	myIP       string
 	reRemoteIP = regexp.MustCompile(`<p>RemoteAddr: (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d{1,5}<\/p>`)

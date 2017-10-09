@@ -21,6 +21,8 @@ func checkFlags() {
 	flag.BoolVar(&logErrors, "e", logErrors, "logging all errors")
 	flag.BoolVar(&useDebug, "d", useDebug, "show debug messages")
 	flag.StringVar(&useFile, "pf", useFile, "use file with proxy list")
+	flag.StringVar(&testLink, "test", testLink, "link to test it")
+	flag.StringVar(&addLink, "a", addLink, "add primary link")
 	flag.Parse()
 }
 

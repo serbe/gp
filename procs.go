@@ -14,10 +14,26 @@ import (
 )
 
 func findProxy(db *sql.DB) {
+	var mL *mapLink
 	debugmsg("Start find proxy")
 	p := pool.New(numWorkers)
 	p.SetHTTPTimeout(timeout)
-	mL := getAllLinks(db)
+	if testLink != "" {
+		mL = newMapLink()
+		link := mL.newLink(testLink)
+		link.Iterate = true
+		mL.set(link)
+		log.Println(link)
+	} else if addLink != "" {
+		mL = newMapLink()
+		link := mL.newLink(addLink)
+		link.Insert = true
+		link.Iterate = true
+		mL.set(link)
+		log.Println(link)
+	} else {
+		mL = getAllLinks(db)
+	}
 	mP := getAllProxy(db)
 
 	if useFile != "" {
@@ -50,7 +66,7 @@ func findProxy(db *sql.DB) {
 			}
 		}
 	}
-	debugmsg("end add to pool")
+	debugmsg("end add to pool, added", addedLink, "links")
 	if addedLink > 0 {
 		debugmsg("get from chan")
 		for result := range p.ResultChan {
@@ -63,9 +79,11 @@ func findProxy(db *sql.DB) {
 				}
 			}
 		}
-		debugmsg("save proxy")
-		saveAllProxy(db, mP)
-		saveAllLinks(db, mL)
+		if testLink == "" {
+			debugmsg("save proxy")
+			saveAllProxy(db, mP)
+			saveAllLinks(db, mL)
+		}
 	}
 	debugmsg("end findProxy")
 }
@@ -108,7 +126,7 @@ func checkProxy(db *sql.DB) {
 						if isOk {
 							mP.set(proxy)
 							if proxy.IsWork {
-								log.Printf("%d/%d %-15v %-5v %-10v anon=%v\n", checked, totalIP, task.Proxy.Hostname(), task.Proxy.Port(), task.ResponceTime, proxy.IsAnon)
+								log.Printf("%d/%d %-15v %-5v %-12v anon=%v\n", checked, totalIP, task.Proxy.Hostname(), task.Proxy.Port(), task.ResponceTime, proxy.IsAnon)
 								totalProxy++
 								if proxy.IsAnon {
 									anonProxy++
