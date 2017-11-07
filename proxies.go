@@ -10,7 +10,7 @@ import (
 )
 
 type mapProxy struct {
-	m      sync.RWMutex
+	sync.RWMutex
 	values map[string]Proxy
 }
 
@@ -19,15 +19,15 @@ func newMapProxy() *mapProxy {
 }
 
 func (mProxy *mapProxy) set(proxy Proxy) {
-	mProxy.m.Lock()
+	mProxy.Lock()
 	mProxy.values[proxy.Hostname] = proxy
-	mProxy.m.Unlock()
+	mProxy.Unlock()
 }
 
 func (mProxy *mapProxy) get(hostname string) (Proxy, bool) {
-	mProxy.m.Lock()
+	mProxy.Lock()
 	proxy, ok := mProxy.values[hostname]
-	mProxy.m.Unlock()
+	mProxy.Unlock()
 	return proxy, ok
 }
 
@@ -56,9 +56,9 @@ func newProxy(host, port string, ssl bool) (Proxy, error) {
 }
 
 func (mProxy *mapProxy) existProxy(hostname string) bool {
-	mProxy.m.RLock()
+	mProxy.RLock()
 	_, ok := mProxy.values[hostname]
-	mProxy.m.RUnlock()
+	mProxy.RUnlock()
 	return ok
 }
 

@@ -6,7 +6,7 @@ import (
 )
 
 type mapLink struct {
-	m      sync.RWMutex
+	sync.RWMutex
 	values map[string]Link
 }
 
@@ -15,25 +15,25 @@ func newMapLink() *mapLink {
 }
 
 func (mLink *mapLink) get(hostname string) Link {
-	mLink.m.RLock()
+	mLink.RLock()
 	link := mLink.values[hostname]
-	mLink.m.RUnlock()
+	mLink.RUnlock()
 	return link
 }
 
 func (mLink *mapLink) set(link Link) {
-	mLink.m.Lock()
+	mLink.Lock()
 	mLink.values[link.Hostname] = link
-	mLink.m.Unlock()
+	mLink.Unlock()
 }
 
 func (mLink *mapLink) update(hostname string) {
-	mLink.m.Lock()
+	mLink.Lock()
 	link := mLink.values[hostname]
 	link.Update = true
 	link.UpdateAt = time.Now()
 	mLink.values[hostname] = link
-	mLink.m.Unlock()
+	mLink.Unlock()
 }
 
 func (mLink *mapLink) newLink(hostname string) Link {
@@ -43,8 +43,8 @@ func (mLink *mapLink) newLink(hostname string) Link {
 }
 
 func (mLink *mapLink) existLink(hostname string) bool {
-	mLink.m.RLock()
+	mLink.RLock()
 	_, ok := mLink.values[hostname]
-	mLink.m.RUnlock()
+	mLink.RUnlock()
 	return ok
 }
