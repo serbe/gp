@@ -77,6 +77,24 @@ func (mProxy *mapProxy) taskToProxy(task pool.Task) (Proxy, bool) {
 			}
 			return proxy, ok
 		}
+		proxy.IsWork = false
+		proxy.Checks++
+	}
+	return proxy, ok
+}
+
+func (mProxy *mapProxy) taskMYToProxy(task pool.Task) (Proxy, bool) {
+	proxy, ok := mProxy.get(task.Proxy.String())
+	if ok {
+		proxy.Update = true
+		proxy.UpdateAt = time.Now()
+		proxy.Response = task.ResponceTime
+		if reMyIP.Match(task.Body) {
+			proxy.IsWork = true
+			proxy.Checks = 0
+			return proxy, ok
+		}
+		proxy.IsWork = false
 		proxy.Checks++
 	}
 	return proxy, ok
