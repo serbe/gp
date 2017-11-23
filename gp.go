@@ -26,5 +26,9 @@ func main() {
 		checkProxy(db)
 	}
 
+	if useMyIPCheck {
+		checkOnMyIP(db)
+	}
+
 	log.Printf("Total time: %v\n", time.Since(startAppTime))
 }

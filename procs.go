@@ -150,3 +150,61 @@ func checkProxy(db *sql.DB) {
 		}
 	}
 }
+
+func checkOnMyIP(db *sql.DB) {
+	debugmsg("start checkProxy")
+	var (
+		totalIP    int64
+		totalProxy int64
+		anonProxy  int64
+		err        error
+	)
+	mP := getWorkingProxy(db)
+	p := pool.New(numWorkers)
+	p.SetHTTPTimeout(timeout)
+	p.SetTaskTimeout(2)
+	targetURL := "http://myip.ru/"
+	myIP, err = getExternalIP()
+	if err == nil {
+		debugmsg("start add to pool")
+		for _, proxy := range mP.values {
+			totalIP++
+			p.Add(targetURL, proxy.URL)
+		}
+		debugmsg("end add to pool")
+		log.Println("Start check on myip", totalIP, "proxyes")
+		if totalIP > 0 {
+			c := make(chan os.Signal, 1)
+			signal.Notify(c, os.Interrupt)
+			var checked int
+		checkProxyLoop:
+			for {
+				select {
+				case task, ok := <-p.ResultChan:
+					if ok {
+						checked++
+						proxy, isOk := mP.taskMYToProxy(task)
+						if isOk {
+							mP.set(proxy)
+							if proxy.IsWork {
+								log.Printf("%d/%d %-15v %-5v %-12v anon=%v\n", checked, totalIP, task.Proxy.Hostname(), task.Proxy.Port(), task.ResponceTime, proxy.IsAnon)
+								totalProxy++
+							}
+						}
+					} else {
+						debugmsg("break loop by close chan ResultChan")
+						break checkProxyLoop
+					}
+				case <-c:
+					debugmsg("breal loop by pressing ctrl+c")
+					break checkProxyLoop
+				}
+			}
+			updateAllProxy(db, mP)
+			log.Printf("checked %d ip\n", totalIP)
+			log.Printf("%d is good\n", totalProxy)
+			log.Printf("%d is anon\n", anonProxy)
+			debugmsg("end checkProxy")
+		}
+	}
+}

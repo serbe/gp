@@ -5,23 +5,25 @@ import (
 )
 
 var (
-	user       = "pr"
-	pass       = "pr"
-	dbname     = "pr"
-	numWorkers = 5
-	timeout    = 10
-	serverPort = 19091
-	logErrors  = false
-	useFind    = false
-	useCheck   = false
-	useServer  = false
-	useDebug   = false
-	useFile    = ""
-	testLink   = ""
-	addLink    = ""
+	user         = "pr"
+	pass         = "pr"
+	dbname       = "pr"
+	numWorkers   = 5
+	timeout      = 10
+	serverPort   = 19091
+	logErrors    = false
+	useFind      = false
+	useCheck     = false
+	useMyIPCheck = false
+	useServer    = false
+	useDebug     = false
+	useFile      = ""
+	testLink     = ""
+	addLink      = ""
 
 	myIP       string
 	reRemoteIP = regexp.MustCompile(`<p>RemoteAddr: (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d{1,5}<\/p>`)
+	reMyIP     = regexp.MustCompile(`<td>(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})<\/td>`)
 
 	// siteList = []string{
 	// 	`https://hidester.com/proxydata/php/data.php?mykey=data&offset=0&limit=1000&orderBy=latest_check&sortOrder=DESC&country=&port=&type=undefined&anonymity=undefined&ping=undefined&gproxy=2`,
