@@ -142,7 +142,8 @@ func checkProxy(db *sql.DB) {
 					break checkProxyLoop
 				}
 			}
-			updateAllProxy(db, mP)
+			// updateAllProxy(db, mP)
+			saveAllProxy(db, mP)
 			log.Printf("checked %d ip\n", totalIP)
 			log.Printf("%d is good\n", totalProxy)
 			log.Printf("%d is anon\n", anonProxy)
@@ -200,7 +201,7 @@ func checkOnMyIP(db *sql.DB) {
 					break checkProxyLoop
 				}
 			}
-			updateAllProxy(db, mP)
+			saveAllProxy(db, mP)
 			log.Printf("checked %d ip\n", totalIP)
 			log.Printf("%d is good\n", totalProxy)
 			log.Printf("%d is anon\n", anonProxy)
