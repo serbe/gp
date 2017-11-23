@@ -142,6 +142,59 @@ func getOldProxy(db *sql.DB) *mapProxy {
 	return mProxy
 }
 
+func getWorkingProxy(db *sql.DB) *mapProxy {
+	debugmsg("start getWorkingProxy")
+	mProxy := newMapProxy()
+	rows, err := db.Query(`
+		SELECT
+			hostname,
+			host,
+			port,
+			work,
+			anon,
+			checks,
+			create_at,
+			update_at,
+			response
+		FROM
+			proxies
+		WHERE
+			work = true
+	`)
+	if err != nil {
+		errmsg("getWorkingProxy Query select", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var p Proxy
+		err = rows.Scan(
+			&p.Hostname,
+			&p.Host,
+			&p.Port,
+			&p.IsWork,
+			&p.IsAnon,
+			&p.Checks,
+			&p.CreateAt,
+			&p.UpdateAt,
+			&p.Response,
+		)
+		if err != nil {
+			errmsg("getWorkingProxy rows.Scan", err)
+		}
+		p.URL, err = url.Parse(p.Hostname)
+		if err != nil {
+			errmsg("getWorkingProxy url.Parse", err)
+		}
+		mProxy.set(p)
+	}
+	err = rows.Err()
+	if err != nil {
+		errmsg("getWorkingProxy rows.Err", err)
+	}
+	debugmsg("end getWorkingProxy, load proxy", len(mProxy.values))
+	return mProxy
+}
+
 func saveAllProxy(db *sql.DB, mProxy *mapProxy) {
 	debugmsg("start saveAllProxy")
 	var u, i int64
