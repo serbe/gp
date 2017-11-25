@@ -198,17 +198,12 @@ func getWorkingProxy(db *sql.DB) *mapProxy {
 func saveAllProxy(db *sql.DB, mProxy *mapProxy) {
 	debugmsg("start saveAllProxy")
 	var u, i int64
-	tx, err := db.Begin()
-	if err != nil {
-		errmsg("saveAllProxy db.Begin", err)
-		return
-	}
 	prepareInsert, _ := insertProxy(db)
 	prepareUpdate, _ := updateProxy(db)
 	for _, p := range mProxy.values {
 		if p.Update {
 			u++
-			_, err := tx.Stmt(prepareUpdate).Exec(
+			_, err := prepareUpdate.Exec(
 				&p.Hostname,
 				&p.Host,
 				&p.Port,
@@ -225,7 +220,7 @@ func saveAllProxy(db *sql.DB, mProxy *mapProxy) {
 		}
 		if p.Insert {
 			i++
-			_, err := tx.Stmt(prepareInsert).Exec(
+			_, err := prepareInsert.Exec(
 				&p.Hostname,
 				&p.Host,
 				&p.Port,
@@ -240,10 +235,6 @@ func saveAllProxy(db *sql.DB, mProxy *mapProxy) {
 				errmsg("saveAllLinks Insert", err)
 			}
 		}
-	}
-	err = tx.Commit()
-	if err != nil {
-		errmsg("saveAllProxy tx.Commit", err)
 	}
 	debugmsg("update proxy", u)
 	debugmsg("insert proxy", i)
