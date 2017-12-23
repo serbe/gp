@@ -110,7 +110,10 @@ func checkProxy(db *sql.DB) {
 	if err == nil {
 		debugmsg("start add to pool")
 		for _, proxy := range mP.values {
-			if proxyIsOld(proxy) {
+			if useCheckAll {
+				totalIP++
+				p.Add(targetURL, proxy.URL)
+			} else if proxyIsOld(proxy) {
 				totalIP++
 				p.Add(targetURL, proxy.URL)
 			}
