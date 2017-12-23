@@ -17,6 +17,7 @@ func checkFlags() {
 	flag.IntVar(&serverPort, "p", serverPort, "server port")
 	flag.BoolVar(&useFind, "f", useFind, "find new proxy")
 	flag.BoolVar(&useCheck, "c", useCheck, "check proxy")
+	flag.BoolVar(&useCheckAll, "all", useCheckAll, "check all proxy")
 	flag.BoolVar(&useMyIPCheck, "m", useMyIPCheck, "check working proxy on myip.ru")
 	flag.BoolVar(&useServer, "s", useServer, "start server")
 	flag.BoolVar(&logErrors, "e", logErrors, "logging all errors")

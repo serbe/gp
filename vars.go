@@ -14,6 +14,7 @@ var (
 	logErrors    = false
 	useFind      = false
 	useCheck     = false
+	useCheckAll  = false
 	useMyIPCheck = false
 	useServer    = false
 	useDebug     = false

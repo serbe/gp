@@ -95,8 +95,13 @@ func checkProxy(db *sql.DB) {
 		totalProxy int64
 		anonProxy  int64
 		err        error
+		mP         *mapProxy
 	)
-	mP := getOldProxy(db)
+	if useCheckAll {
+		mP = getAllProxy(db)
+	} else {
+		mP = getOldProxy(db)
+	}
 	p := pool.New(numWorkers)
 	p.SetHTTPTimeout(timeout)
 	p.SetTaskTimeout(2)
