@@ -12,13 +12,13 @@ import (
 type Proxy struct {
 	Insert   bool          `sql:"-"           json:"-"`
 	Update   bool          `sql:"-"           json:"-"`
-	Hostname string        `sql:"hostname,pk" json:"hostname"`
-	URL      *url.URL      `sql:"-"           json:"-"`
-	Host     string        `sql:"host"        json:"-"`
-	Port     string        `sql:"port"        json:"-"`
 	IsWork   bool          `sql:"work"        json:"-"`
 	IsAnon   bool          `sql:"anon"        json:"-"`
 	Checks   int           `sql:"checks"      json:"-"`
+	Hostname string        `sql:"hostname,pk" json:"hostname"`
+	Host     string        `sql:"host"        json:"-"`
+	Port     string        `sql:"port"        json:"-"`
+	URL      *url.URL      `sql:"-"           json:"-"`
 	CreateAt time.Time     `sql:"create_at"   json:"-"`
 	UpdateAt time.Time     `sql:"update_at"   json:"-"`
 	Response time.Duration `sql:"response"    json:"-"`
@@ -28,10 +28,10 @@ type Proxy struct {
 type Link struct {
 	Insert   bool      `sql:"-"           json:"-"`
 	Update   bool      `sql:"-"           json:"-"`
-	Hostname string    `sql:"hostname,pk" json:"hostname"`
-	UpdateAt time.Time `sql:"update_at"   json:"-"`
 	Iterate  bool      `sql:"iterate"     json:"-"`
 	Num      int64     `sql:"num"         json:"-"`
+	Hostname string    `sql:"hostname,pk" json:"hostname"`
+	UpdateAt time.Time `sql:"update_at"   json:"-"`
 }
 
 func initDB() (*sql.DB, error) {
