@@ -5,22 +5,22 @@ import (
 )
 
 var (
-	user         = "pr"
-	pass         = "pr"
-	dbname       = "pr"
-	numWorkers   = 5
-	timeout      = 10
-	serverPort   = 19091
-	logErrors    = false
-	useFind      = false
-	useCheck     = false
-	useCheckAll  = false
-	useMyIPCheck = false
-	useServer    = false
-	useDebug     = false
-	useFile      = ""
-	testLink     = ""
-	addLink      = ""
+	user               = "pr"
+	pass               = "pr"
+	dbname             = "pr"
+	numWorkers   int64 = 5
+	timeout      int64 = 10000
+	serverPort         = 19091
+	logErrors          = false
+	useFind            = false
+	useCheck           = false
+	useCheckAll        = false
+	useMyIPCheck       = false
+	useServer          = false
+	useDebug           = false
+	useFile            = ""
+	testLink           = ""
+	addLink            = ""
 
 	myIP       string
 	reRemoteIP = regexp.MustCompile(`<p>RemoteAddr: (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d{1,5}<\/p>`)

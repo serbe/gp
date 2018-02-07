@@ -8,12 +8,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/serbe/pool"
+	"github.com/serbe/gocrawl"
 )
 
 func checkFlags() {
-	flag.IntVar(&numWorkers, "w", numWorkers, "number of workers")
-	flag.IntVar(&timeout, "t", timeout, "timeout")
+	flag.Int64Var(&numWorkers, "w", numWorkers, "number of workers")
+	flag.Int64Var(&timeout, "t", timeout, "timeout")
 	flag.IntVar(&serverPort, "p", serverPort, "server port")
 	flag.BoolVar(&useFind, "f", useFind, "find new proxy")
 	flag.BoolVar(&useCheck, "c", useCheck, "check proxy")
@@ -38,7 +38,7 @@ func cleanBody(body []byte) []byte {
 	return body
 }
 
-func getLinkList(mL *mapLink, task pool.Task) []Link {
+func getLinkList(mL *mapLink, task *gocrawl.Task) []Link {
 	var links []Link
 	for i := range reURL {
 		host, err := getHost(task.Hostname)
@@ -127,7 +127,7 @@ func getProxyList(body []byte) []Proxy {
 	return pList
 }
 
-func grab(mP *mapProxy, mL *mapLink, task pool.Task) []Link {
+func grab(mP *mapProxy, mL *mapLink, task *gocrawl.Task) []Link {
 	var numProxy int64
 	task.Body = cleanBody(task.Body)
 	pList := getProxyList(task.Body)

@@ -5,19 +5,18 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/url"
 	"os"
 	"os/signal"
 	"time"
 
-	"github.com/serbe/pool"
+	"github.com/serbe/gocrawl"
 )
 
 func findProxy(db *sql.DB) {
 	var mL *mapLink
 	debugmsg("Start find proxy")
-	p := pool.New(numWorkers)
-	p.SetHTTPTimeout(timeout)
+	p := gocrawl.New(numWorkers)
+	p.SetTimeout(timeout)
 	if testLink != "" {
 		mL = newMapLink()
 		link := mL.newLink(testLink)
@@ -54,11 +53,12 @@ func findProxy(db *sql.DB) {
 	}
 
 	debugmsg("start add to pool")
-	p.SetTaskTimeout(5)
+	p.SetTimeout(timeout)
+	p.SetQuitTimeout(1000)
 	var addedLink int64
 	for _, link := range mL.values {
 		if link.Iterate && time.Since(link.UpdateAt) > time.Duration(1)*time.Hour {
-			err := p.Add(link.Hostname, new(url.URL))
+			err := p.Add(link.Hostname, "")
 			if err != nil {
 				errmsg("findProxy p.Add", err)
 			} else {
@@ -74,7 +74,7 @@ func findProxy(db *sql.DB) {
 				mL.update(result.Hostname)
 				links := grab(mP, mL, result)
 				for _, l := range links {
-					p.Add(l.Hostname, new(url.URL))
+					p.Add(l.Hostname, "")
 					debugmsg("add to pool", l.Hostname)
 				}
 			}
@@ -102,9 +102,9 @@ func checkProxy(db *sql.DB) {
 	} else {
 		mP = getOldProxy(db)
 	}
-	p := pool.New(numWorkers)
-	p.SetHTTPTimeout(timeout)
-	p.SetTaskTimeout(2)
+	p := gocrawl.New(numWorkers)
+	p.SetTimeout(timeout)
+	p.SetQuitTimeout(1000)
 	targetURL := fmt.Sprintf("http://93.170.123.221:%d/", serverPort)
 	myIP, err = getExternalIP()
 	if err == nil {
@@ -112,10 +112,10 @@ func checkProxy(db *sql.DB) {
 		for _, proxy := range mP.values {
 			if useCheckAll {
 				totalIP++
-				p.Add(targetURL, proxy.URL)
+				p.Add(targetURL, proxy.URL.Host)
 			} else if proxyIsOld(proxy) {
 				totalIP++
-				p.Add(targetURL, proxy.URL)
+				p.Add(targetURL, proxy.URL.Host)
 			}
 		}
 		debugmsg("end add to pool")
@@ -169,18 +169,18 @@ func checkOnMyIP(db *sql.DB) {
 		err        error
 	)
 	mP := getWorkingProxy(db)
-	p := pool.New(numWorkers)
-	p.SetHTTPTimeout(timeout)
-	p.SetTaskTimeout(2)
+	p := gocrawl.New(numWorkers)
+	p.SetTimeout(timeout)
 	targetURL := "http://myip.ru/"
 	myIP, err = getExternalIP()
 	if err == nil {
 		debugmsg("start add to pool")
 		for _, proxy := range mP.values {
 			totalIP++
-			p.Add(targetURL, proxy.URL)
+			p.Add(targetURL, proxy.URL.Host)
 		}
 		debugmsg("end add to pool")
+		p.EndWaitingTasks()
 		log.Println("Start check on myip", totalIP, "proxyes")
 		if totalIP > 0 {
 			c := make(chan os.Signal, 1)

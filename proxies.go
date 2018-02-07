@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/serbe/pool"
+	"github.com/serbe/gocrawl"
 )
 
 type mapProxy struct {
@@ -62,7 +62,7 @@ func (mProxy *mapProxy) existProxy(hostname string) bool {
 	return ok
 }
 
-func (mProxy *mapProxy) taskToProxy(task pool.Task) (Proxy, bool) {
+func (mProxy *mapProxy) taskToProxy(task *gocrawl.Task) (Proxy, bool) {
 	proxy, ok := mProxy.get(task.Proxy.String())
 	if ok {
 		proxy.Update = true
@@ -83,7 +83,7 @@ func (mProxy *mapProxy) taskToProxy(task pool.Task) (Proxy, bool) {
 	return proxy, ok
 }
 
-func (mProxy *mapProxy) taskMYToProxy(task pool.Task) (Proxy, bool) {
+func (mProxy *mapProxy) taskMYToProxy(task *gocrawl.Task) (Proxy, bool) {
 	proxy, ok := mProxy.get(task.Proxy.String())
 	if ok {
 		proxy.Update = true
