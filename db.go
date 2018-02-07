@@ -421,6 +421,93 @@ func updateLink(db *sql.DB) (*sql.Stmt, error) {
 	`)
 }
 
+func frequentlyUsedPorts(db *sql.DB) []string {
+	type port struct {
+		Port  string `sql:"port"        json:"-"`
+		Count int64  `sql:"c"           json:"-"`
+	}
+	rows, err := db.Query(`
+		SELECT
+			port,
+			count(port) as c
+		FROM
+			proxies
+		GROUP BY
+			port
+		ORDER BY
+			c DESC
+		LIMIT 5
+	`)
+	if err != nil {
+		errmsg("frequentlyUsedPorts Query select", err)
+	}
+	var result []string
+	defer rows.Close()
+	for rows.Next() {
+		var p port
+		err = rows.Scan(
+			&p.Port,
+			&p.Count,
+		)
+		if err != nil {
+			errmsg("frequentlyUsedPorts rows.Scan", err)
+		}
+		result = append(result, p.Port)
+	}
+	err = rows.Err()
+	if err != nil {
+		errmsg("frequentlyUsedPorts rows.Err", err)
+	}
+	return result
+}
+
+func uniqueHosts(db *sql.DB) []string {
+	type host struct {
+		Host string `sql:"host"        json:"-"`
+	}
+	rows, err := db.Query(`
+		SELECT
+			DISTINCT host
+		FROM
+			proxies
+	`)
+	if err != nil {
+		errmsg("uniqueHosts Query select", err)
+	}
+	var result []string
+	defer rows.Close()
+	for rows.Next() {
+		var h host
+		err = rows.Scan(
+			&h.Host,
+		)
+		if err != nil {
+			errmsg("uniqueHosts rows.Scan", err)
+		}
+		result = append(result, h.Host)
+	}
+	err = rows.Err()
+	if err != nil {
+		errmsg("uniqueHosts rows.Err", err)
+	}
+	return result
+}
+
+// func getFUPList(db *sql.DB) *mapProxy {
+// 	mProxy := getAllProxy(db)
+// 	hosts := uniqueHosts(db)
+// 	ports := frequentlyUsedPorts(db)
+// 	for host := range hosts {
+// 		for port := range ports {
+// 			var p Proxy
+// 			mProxy.set(Proxy{
+// 				Host
+// 			})
+// 		}
+// 	}
+
+// }
+
 // func makeTables() {
 // 	db.ExecOne(`
 // 		CREATE TABLE IF NOT EXISTS proxies (

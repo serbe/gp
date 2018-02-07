@@ -25,6 +25,7 @@ func checkFlags() {
 	flag.StringVar(&useFile, "pf", useFile, "use file with proxy list")
 	flag.StringVar(&testLink, "test", testLink, "link to test it")
 	flag.StringVar(&addLink, "a", addLink, "add primary link")
+	flag.BoolVar(&useFUP, "fup", useFUP, "test all hosts with 4 frequently used ports")
 	flag.Parse()
 }
 

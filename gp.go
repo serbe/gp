@@ -14,20 +14,24 @@ func main() {
 
 	startAppTime := time.Now()
 
-	if useServer {
-		go startServer()
-	}
+	if useFUP {
+		// fup(db)
+	} else {
+		if useServer {
+			go startServer()
+		}
 
-	if useFind {
-		findProxy(db)
-	}
+		if useFind {
+			findProxy(db)
+		}
 
-	if useCheck {
-		checkProxy(db)
-	}
+		if useCheck {
+			checkProxy(db)
+		}
 
-	if useMyIPCheck {
-		checkOnMyIP(db)
+		if useMyIPCheck {
+			checkOnMyIP(db)
+		}
 	}
 
 	log.Printf("Total time: %v\n", time.Since(startAppTime))

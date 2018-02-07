@@ -11,6 +11,7 @@ var (
 	numWorkers   int64 = 5
 	timeout      int64 = 10000
 	serverPort         = 19091
+	useFUP             = false
 	logErrors          = false
 	useFind            = false
 	useCheck           = false

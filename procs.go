@@ -99,6 +99,8 @@ func checkProxy(db *sql.DB) {
 	)
 	if useCheckAll {
 		mP = getAllProxy(db)
+	} else if useFUP {
+		// mp = getFUPProxy(db)
 	} else {
 		mP = getOldProxy(db)
 	}
