@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	"log"
 	"sync"
 	"time"
 )
@@ -47,4 +49,25 @@ func (mLink *mapLink) existLink(hostname string) bool {
 	_, ok := mLink.values[hostname]
 	mLink.RUnlock()
 	return ok
+}
+
+func getMapLink(db *sql.DB) *mapLink {
+	var mL *mapLink
+	if testLink != "" {
+		mL = newMapLink()
+		link := mL.newLink(testLink)
+		link.Iterate = true
+		mL.set(link)
+		log.Println(link)
+	} else if addLink != "" {
+		mL = newMapLink()
+		link := mL.newLink(addLink)
+		link.Insert = true
+		link.Iterate = true
+		mL.set(link)
+		log.Println(link)
+	} else {
+		mL = getAllLinks(db)
+	}
+	return mL
 }

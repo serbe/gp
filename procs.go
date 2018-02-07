@@ -13,26 +13,10 @@ import (
 )
 
 func findProxy(db *sql.DB) {
-	var mL *mapLink
 	debugmsg("Start find proxy")
 	p := gocrawl.New(numWorkers)
 	p.SetTimeout(timeout)
-	if testLink != "" {
-		mL = newMapLink()
-		link := mL.newLink(testLink)
-		link.Iterate = true
-		mL.set(link)
-		log.Println(link)
-	} else if addLink != "" {
-		mL = newMapLink()
-		link := mL.newLink(addLink)
-		link.Insert = true
-		link.Iterate = true
-		mL.set(link)
-		log.Println(link)
-	} else {
-		mL = getAllLinks(db)
-	}
+	mL := getMapLink(db)
 	mP := getAllProxy(db)
 
 	if useFile != "" {
@@ -54,7 +38,7 @@ func findProxy(db *sql.DB) {
 
 	debugmsg("start add to pool")
 	p.SetTimeout(timeout)
-	p.SetQuitTimeout(1000)
+	p.SetQuitTimeout(2000)
 	var addedLink int64
 	for _, link := range mL.values {
 		if link.Iterate && time.Since(link.UpdateAt) > time.Duration(1)*time.Hour {
@@ -95,32 +79,22 @@ func checkProxy(db *sql.DB) {
 		totalProxy int64
 		anonProxy  int64
 		err        error
-		mP         *mapProxy
 	)
-	if useCheckAll {
-		mP = getAllProxy(db)
-	} else if useFUP {
-		mP = getFUPList(db)
-	} else {
-		mP = getOldProxy(db)
-	}
+	mP := getMapProxy(db)
 	p := gocrawl.New(numWorkers)
 	p.SetTimeout(timeout)
-	p.SetQuitTimeout(1000)
 	targetURL := fmt.Sprintf("http://93.170.123.221:%d/", serverPort)
 	myIP, err = getExternalIP()
 	if err == nil {
 		debugmsg("start add to pool")
 		for _, proxy := range mP.values {
-			if useCheckAll {
-				totalIP++
-				p.Add(targetURL, proxy.URL.Host)
-			} else if proxyIsOld(proxy) {
+			if useCheckAll || proxyIsOld(proxy) {
 				totalIP++
 				p.Add(targetURL, proxy.URL.Host)
 			}
 		}
 		debugmsg("end add to pool")
+		p.EndWaitingTasks()
 		log.Println("Start check", totalIP, "proxyes")
 		if totalIP > 0 {
 			c := make(chan os.Signal, 1)

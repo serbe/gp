@@ -510,6 +510,18 @@ func getFUPList(db *sql.DB) *mapProxy {
 	return mProxy
 }
 
+func getMapProxy(db *sql.DB) *mapProxy {
+	var mP *mapProxy
+	if useCheckAll {
+		mP = getAllProxy(db)
+	} else if useFUP {
+		mP = getFUPList(db)
+	} else {
+		mP = getOldProxy(db)
+	}
+	return mP
+}
+
 // func makeTables() {
 // 	db.ExecOne(`
 // 		CREATE TABLE IF NOT EXISTS proxies (
