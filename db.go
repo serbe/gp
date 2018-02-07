@@ -493,20 +493,22 @@ func uniqueHosts(db *sql.DB) []string {
 	return result
 }
 
-// func getFUPList(db *sql.DB) *mapProxy {
-// 	mProxy := getAllProxy(db)
-// 	hosts := uniqueHosts(db)
-// 	ports := frequentlyUsedPorts(db)
-// 	for host := range hosts {
-// 		for port := range ports {
-// 			var p Proxy
-// 			mProxy.set(Proxy{
-// 				Host
-// 			})
-// 		}
-// 	}
-
-// }
+func getFUPList(db *sql.DB) *mapProxy {
+	mProxy := getAllProxy(db)
+	hosts := uniqueHosts(db)
+	ports := frequentlyUsedPorts(db)
+	for _, host := range hosts {
+		for _, port := range ports {
+			proxy, err := newProxy(host, port, false)
+			if err == nil {
+				if !mProxy.existProxy(proxy.Hostname) {
+					mProxy.set(proxy)
+				}
+			}
+		}
+	}
+	return mProxy
+}
 
 // func makeTables() {
 // 	db.ExecOne(`
