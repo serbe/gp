@@ -33,6 +33,12 @@ func (mProxy *mapProxy) get(hostname string) (Proxy, bool) {
 	return proxy, ok
 }
 
+func (mProxy *mapProxy) remove(hostname string) {
+	mProxy.Lock()
+	delete(mProxy.values, hostname)
+	mProxy.Unlock()
+}
+
 func newProxy(host, port string, ssl bool) (Proxy, error) {
 	var (
 		proxy  Proxy
@@ -69,34 +75,20 @@ func (mProxy *mapProxy) taskToProxy(task *pool.Task) (Proxy, bool) {
 	if !ok {
 		return proxy, ok
 	}
+	pattern := reRemoteIP
+	if useMyIPCheck {
+		pattern = reMyIP
+	}
 	proxy.Update = true
 	proxy.UpdateAt = time.Now()
 	proxy.Response = task.ResponceTime
 	strBody := string(task.Body)
-	if reRemoteIP.Match(task.Body) && !strings.Contains(strBody, myIP) {
+	if pattern.Match(task.Body) && !strings.Contains(strBody, myIP) {
 		proxy.IsWork = true
 		proxy.Checks = 0
-		if strings.Count(strBody, "<p>") == 1 {
+		if !useMyIPCheck && strings.Count(strBody, "<p>") == 1 {
 			proxy.IsAnon = true
 		}
-		return proxy, ok
-	}
-	proxy.IsWork = false
-	proxy.Checks++
-	return proxy, ok
-}
-
-func (mProxy *mapProxy) taskMYToProxy(task *pool.Task) (Proxy, bool) {
-	proxy, ok := mProxy.get(task.Proxy.String())
-	if !ok {
-		return proxy, ok
-	}
-	proxy.Update = true
-	proxy.UpdateAt = time.Now()
-	proxy.Response = task.ResponceTime
-	if reMyIP.Match(task.Body) {
-		proxy.IsWork = true
-		proxy.Checks = 0
 		return proxy, ok
 	}
 	proxy.IsWork = false
