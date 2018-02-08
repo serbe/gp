@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/serbe/gocrawl"
+	"github.com/serbe/pool"
 )
 
 func checkFlags() {
@@ -39,7 +39,7 @@ func cleanBody(body []byte) []byte {
 	return body
 }
 
-func getLinkList(mL *mapLink, task *gocrawl.Task) []Link {
+func getLinkList(mL *mapLink, task *pool.Task) []Link {
 	var links []Link
 	for i := range reURL {
 		host, err := getHost(task.Hostname)
@@ -134,7 +134,7 @@ func getProxyList(body []byte) []Proxy {
 	return pList
 }
 
-func grab(mP *mapProxy, mL *mapLink, task *gocrawl.Task) []Link {
+func grab(mP *mapProxy, mL *mapLink, task *pool.Task) []Link {
 	var numProxy int64
 	task.Body = cleanBody(task.Body)
 	pList := getProxyList(task.Body)

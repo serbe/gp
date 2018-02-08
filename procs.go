@@ -8,12 +8,12 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/serbe/gocrawl"
+	"github.com/serbe/pool"
 )
 
 func findProxy(db *sql.DB) {
 	debugmsg("Start find proxy")
-	p := gocrawl.New(numWorkers)
+	p := pool.New(numWorkers)
 	p.SetTimeout(timeout)
 	mL := getMapLink(db)
 	mP := getAllProxy(db)
@@ -62,7 +62,7 @@ func checkProxy(db *sql.DB) {
 		err        error
 	)
 	mP := getMapProxy(db)
-	p := gocrawl.New(numWorkers)
+	p := pool.New(numWorkers)
 	p.SetTimeout(timeout)
 	targetURL := fmt.Sprintf("http://93.170.123.221:%d/", serverPort)
 	myIP, err = getExternalIP()
@@ -130,7 +130,7 @@ func checkOnMyIP(db *sql.DB) {
 		err        error
 	)
 	mP := getWorkingProxy(db)
-	p := gocrawl.New(numWorkers)
+	p := pool.New(numWorkers)
 	p.SetTimeout(timeout)
 	targetURL := "http://myip.ru/"
 	myIP, err = getExternalIP()
