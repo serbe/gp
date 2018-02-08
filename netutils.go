@@ -56,27 +56,26 @@ func getExternalIP() (string, error) {
 	return string(body), nil
 }
 
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	_, err := fmt.Fprintf(w, "<p>RemoteAddr: %s</p>", r.RemoteAddr)
+	chkErr("startServer fmt.Fprintf", err)
+	for _, header := range headers {
+		str := r.Header.Get(header)
+		if str == "" {
+			continue
+		}
+		_, err = fmt.Fprintf(w, "<p>%s: %s</p>", header, str)
+		chkErr("startServer fmt.Fprintf", err)
+	}
+}
+
 func startServer() {
 	debugmsg("Start server")
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := fmt.Fprintf(w, "<p>RemoteAddr: %s</p>", r.RemoteAddr)
-		if err != nil {
-			errmsg("startServer fmt.Fprintf", err)
-		}
-		for _, header := range headers {
-			str := r.Header.Get(header)
-			if str != "" {
-				_, err = fmt.Fprintf(w, "<p>%s: %s</p>", header, str)
-				if err != nil {
-					errmsg("startServer fmt.Fprintf", err)
-				}
-			}
-		}
-	})
+	http.HandleFunc("/", rootHandler)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", serverPort), nil))
 }
 
-func convPort(port string, base int) string {
+func portToInt(port string, base int) string {
 	portInt, _ := strconv.ParseInt(port, base, 32)
 	return strconv.Itoa(int(portInt))
 }

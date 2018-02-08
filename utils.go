@@ -47,18 +47,20 @@ func getLinkList(mL *mapLink, task *gocrawl.Task) []Link {
 			continue
 		}
 		re := regexp.MustCompile(reURL[i])
-		if re.Match(task.Body) {
-			allResults := re.FindAllSubmatch(task.Body, -1)
-			for _, result := range allResults {
-				hostname := host + "/" + string(result[1])
-				if !mL.existLink(hostname) {
-					link := mL.newLink(hostname)
-					link.Insert = true
-					link.UpdateAt = time.Now()
-					mL.set(link)
-					links = append(links, link)
-				}
+		if !re.Match(task.Body) {
+			continue
+		}
+		allResults := re.FindAllSubmatch(task.Body, -1)
+		for _, result := range allResults {
+			hostname := host + "/" + string(result[1])
+			if mL.existLink(hostname) {
+				continue
 			}
+			link := mL.newLink(hostname)
+			link.Insert = true
+			link.UpdateAt = time.Now()
+			mL.set(link)
+			links = append(links, link)
 		}
 	}
 	return links
@@ -83,45 +85,49 @@ func getProxyList(body []byte) []Proxy {
 	)
 	for i := range baseDecode {
 		re := regexp.MustCompile(baseDecode[i])
-		if re.Match(body) {
-			results := re.FindAllSubmatch(body, -1)
-			for _, res := range results {
-				var ip, port string
-				ip, port, err = decodeIP(res[1])
-				if err == nil {
-					var proxy Proxy
-					proxy, err = newProxy(ip, port, false)
-					if err == nil {
-						pList = append(pList, proxy)
-					}
-				}
+		if !re.Match(body) {
+			continue
+		}
+		results := re.FindAllSubmatch(body, -1)
+		for _, res := range results {
+			var ip, port string
+			ip, port, err = decodeIP(res[1])
+			if err != nil {
+				continue
+			}
+			var proxy Proxy
+			proxy, err = newProxy(ip, port, false)
+			if err == nil {
+				pList = append(pList, proxy)
 			}
 		}
 	}
 	for i := range base16 {
 		re := regexp.MustCompile(base16[i])
-		if re.Match(body) {
-			results := re.FindAllSubmatch(body, -1)
-			for _, res := range results {
-				var proxy Proxy
-				port := convPort(string(res[2]), 16)
-				proxy, err = newProxy(string(res[1]), port, false)
-				if err == nil {
-					pList = append(pList, proxy)
-				}
+		if !re.Match(body) {
+			continue
+		}
+		results := re.FindAllSubmatch(body, -1)
+		for _, res := range results {
+			var proxy Proxy
+			port := portToInt(string(res[2]), 16)
+			proxy, err = newProxy(string(res[1]), port, false)
+			if err == nil {
+				pList = append(pList, proxy)
 			}
 		}
 	}
 	for i := range reCommaList {
 		re := regexp.MustCompile(reIP + reCommaList[i] + rePort)
-		if re.Match(body) {
-			results := re.FindAllSubmatch(body, -1)
-			for _, res := range results {
-				var proxy Proxy
-				proxy, err = newProxy(string(res[1]), string(res[2]), false)
-				if err == nil {
-					pList = append(pList, proxy)
-				}
+		if !re.Match(body) {
+			continue
+		}
+		results := re.FindAllSubmatch(body, -1)
+		for _, res := range results {
+			var proxy Proxy
+			proxy, err = newProxy(string(res[1]), string(res[2]), false)
+			if err == nil {
+				pList = append(pList, proxy)
 			}
 		}
 	}
@@ -134,10 +140,11 @@ func grab(mP *mapProxy, mL *mapLink, task *gocrawl.Task) []Link {
 	pList := getProxyList(task.Body)
 	lList := getLinkList(mL, task)
 	for _, p := range pList {
-		if !mP.existProxy(p.Hostname) {
-			mP.set(p)
-			numProxy++
+		if mP.existProxy(p.Hostname) {
+			continue
 		}
+		mP.set(p)
+		numProxy++
 	}
 	if numProxy > 0 {
 		link := mL.get(task.Hostname)
@@ -146,6 +153,12 @@ func grab(mP *mapProxy, mL *mapLink, task *gocrawl.Task) []Link {
 		debugmsg("find", numProxy, "in", task.Hostname)
 	}
 	return lList
+}
+
+func chkErr(str string, err error) {
+	if err != nil {
+		errmsg(str, err)
+	}
 }
 
 func errmsg(str string, err error) {

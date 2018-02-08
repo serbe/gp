@@ -9,7 +9,8 @@ func main() {
 	checkFlags()
 	db, err := initDB()
 	if err != nil {
-		log.Fatal(err)
+		errmsg("initDB", err)
+		return
 	}
 
 	startAppTime := time.Now()
