@@ -1,6 +1,8 @@
 package main
 
 import (
+	"io/ioutil"
+	"log"
 	"net/url"
 	"strings"
 	"sync"
@@ -104,4 +106,25 @@ func (mProxy *mapProxy) taskMYToProxy(task *gocrawl.Task) (Proxy, bool) {
 
 func proxyIsOld(proxy Proxy) bool {
 	return time.Since(proxy.UpdateAt) > time.Duration(proxy.Checks)*time.Duration(60*24*7)*time.Minute
+}
+
+func loadProxyFromFile(mP *mapProxy) {
+	if useFile == "" {
+		return
+	}
+	fileBody, err := ioutil.ReadFile(useFile)
+	if err != nil {
+		errmsg("findProxy ReadFile", err)
+		return
+	}
+	var numProxy int64
+	pList := getProxyList(fileBody)
+	for _, p := range pList {
+		if mP.existProxy(p.Hostname) {
+			continue
+		}
+		mP.set(p)
+		numProxy++
+	}
+	log.Println("find", numProxy, "in", useFile)
 }

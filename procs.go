@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
@@ -19,55 +18,38 @@ func findProxy(db *sql.DB) {
 	mL := getMapLink(db)
 	mP := getAllProxy(db)
 
-	if useFile != "" {
-		fileBody, err := ioutil.ReadFile(useFile)
-		if err != nil {
-			errmsg("findProxy ReadFile", err)
-		} else {
-			var numProxy int64
-			pList := getProxyList(fileBody)
-			for _, p := range pList {
-				if !mP.existProxy(p.Hostname) {
-					mP.set(p)
-					numProxy++
-				}
-			}
-			log.Println("find", numProxy, "in", useFile)
-		}
-	}
+	loadProxyFromFile(mP)
 
 	debugmsg("start add to pool")
 	p.SetTimeout(timeout)
 	p.SetQuitTimeout(2000)
-	var addedLink int64
 	for _, link := range mL.values {
 		if link.Iterate && time.Since(link.UpdateAt) > time.Duration(1)*time.Hour {
-			err := p.Add(link.Hostname, "")
-			if err != nil {
-				errmsg("findProxy p.Add", err)
-			} else {
-				addedLink++
-			}
+			err := p.Add(link.Hostname, nil)
+			chkErr("findProxy p.Add", err)
 		}
 	}
-	debugmsg("end add to pool, added", addedLink, "links")
-	if addedLink > 0 {
-		debugmsg("get from chan")
-		for result := range p.ResultChan {
-			if result.Error == nil {
-				mL.update(result.Hostname)
-				links := grab(mP, mL, result)
-				for _, l := range links {
-					p.Add(l.Hostname, "")
-					debugmsg("add to pool", l.Hostname)
-				}
-			}
+	if p.GetAddedTasks() == 0 {
+		debugmsg("not added tasks to pool")
+		return
+	}
+	debugmsg("end add to pool, added", p.GetAddedTasks(), "links")
+	debugmsg("start get from chan")
+	for result := range p.ResultChan {
+		if result.Error != nil {
+			continue
 		}
-		if testLink == "" {
-			debugmsg("save proxy")
-			saveAllProxy(db, mP)
-			saveAllLinks(db, mL)
+		mL.update(result.Hostname)
+		links := grab(mP, mL, result)
+		for _, l := range links {
+			p.Add(l.Hostname, nil)
+			debugmsg("add to pool", l.Hostname)
 		}
+	}
+	if testLink == "" {
+		debugmsg("save proxy")
+		saveAllProxy(db, mP)
+		saveAllLinks(db, mL)
 	}
 	debugmsg("end findProxy")
 }
@@ -93,7 +75,7 @@ func checkProxy(db *sql.DB) {
 	for _, proxy := range mP.values {
 		if useCheckAll || proxyIsOld(proxy) {
 			totalIP++
-			p.Add(targetURL, proxy.URL.Host)
+			chkErr("add to pool", p.Add(targetURL, proxy.URL))
 		}
 	}
 	debugmsg("end add to pool")
@@ -161,7 +143,7 @@ func checkOnMyIP(db *sql.DB) {
 	debugmsg("start add to pool")
 	for _, proxy := range mP.values {
 		totalIP++
-		p.Add(targetURL, proxy.URL.Host)
+		p.Add(targetURL, proxy.URL)
 	}
 	debugmsg("end add to pool")
 	p.EndWaitingTasks()
