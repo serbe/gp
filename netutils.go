@@ -11,17 +11,17 @@ import (
 	"time"
 )
 
-func fetchBody(targetURL string, URL *url.URL) ([]byte, error) {
+func fetchMyIPBody(proxy *url.URL) ([]byte, error) {
 	client := &http.Client{
 		Timeout: time.Duration(timeout) * time.Second,
 	}
-	if URL != nil {
+	if proxy != nil {
 		client.Transport = &http.Transport{
-			Proxy:             http.ProxyURL(URL),
+			Proxy:             http.ProxyURL(proxy),
 			DisableKeepAlives: true,
 		}
 	}
-	resp, err := client.Get(targetURL)
+	resp, err := client.Get("http://myexternalip.com/raw")
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func getHost(u string) (string, error) {
 
 func getExternalIP() (string, error) {
 	debugmsg("start getExternalIP")
-	body, err := fetchBody("http://myexternalip.com/raw", nil)
+	body, err := fetchMyIPBody(nil)
 	if err != nil {
 		return "", err
 	}
@@ -75,7 +75,7 @@ func startServer() {
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", serverPort), nil))
 }
 
-func portToInt(port string, base int) string {
-	portInt, _ := strconv.ParseInt(port, base, 32)
+func convertPort(port string) string {
+	portInt, _ := strconv.ParseInt(port, 16, 32)
 	return strconv.Itoa(int(portInt))
 }

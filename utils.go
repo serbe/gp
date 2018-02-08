@@ -110,7 +110,7 @@ func getProxyList(body []byte) []Proxy {
 		results := re.FindAllSubmatch(body, -1)
 		for _, res := range results {
 			var proxy Proxy
-			port := portToInt(string(res[2]), 16)
+			port := convertPort(string(res[2]))
 			proxy, err = newProxy(string(res[1]), port, false)
 			if err == nil {
 				pList = append(pList, proxy)

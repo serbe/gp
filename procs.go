@@ -25,8 +25,7 @@ func findProxy(db *sql.DB) {
 	p.SetQuitTimeout(2000)
 	for _, link := range mL.values {
 		if link.Iterate && time.Since(link.UpdateAt) > time.Duration(1)*time.Hour {
-			err := p.Add(link.Hostname, nil)
-			chkErr("findProxy p.Add", err)
+			chkErr("findProxy p.Add", p.Add(link.Hostname, nil))
 		}
 	}
 	if p.GetAddedTasks() == 0 {
@@ -42,7 +41,7 @@ func findProxy(db *sql.DB) {
 		mL.update(result.Hostname)
 		links := grab(mP, mL, result)
 		for _, l := range links {
-			p.Add(l.Hostname, nil)
+			chkErr("findProxy add to pool", p.Add(l.Hostname, nil))
 			debugmsg("add to pool", l.Hostname)
 		}
 	}
@@ -142,7 +141,7 @@ func checkOnMyIP(db *sql.DB) {
 	debugmsg("start add to pool")
 	for _, proxy := range mP.values {
 		totalIP++
-		p.Add(targetURL, proxy.URL)
+		chkErr("checkOnMyIP add to pool", p.Add(targetURL, proxy.URL))
 	}
 	debugmsg("end add to pool")
 	p.EndWaitingTasks()
