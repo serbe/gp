@@ -105,11 +105,10 @@ checkProxyLoop:
 			if proxy.IsWork {
 				log.Printf("%d/%d %-15v %-5v %-12v anon=%v\n", checked, totalIP, task.Proxy.Hostname(), task.Proxy.Port(), task.ResponceTime, proxy.IsAnon)
 				totalProxy++
+				if proxy.IsAnon {
+					anonProxy++
+				}
 			}
-			if proxy.IsAnon {
-				anonProxy++
-			}
-
 		case <-c:
 			debugmsg("break loop by pressing ctrl+c")
 			break checkProxyLoop
