@@ -197,12 +197,29 @@ func getOldProxy() *mapProxy {
 func saveAllProxy(mProxy *mapProxy) {
 	debugmsg("start saveAllProxy")
 	var u, i int64
-	prepareInsert, _ := insertProxy()
-	prepareUpdate, _ := updateProxy()
+	// prepareInsert, _ := insertProxy()
+	// prepareUpdate, _ := updateProxy()
+	tx, err := db.Begin()
+	if err != nil {
+		errmsg("saveAllProxy Begin", err)
+		return
+	}
 	for _, p := range mProxy.values {
 		if p.Update {
 			u++
-			_, err := prepareUpdate.Exec(
+			_, err := tx.Exec(`
+				UPDATE proxies SET
+					host       = $2,
+					port       = $3,
+					work       = $4,
+					anon       = $5,
+					checks     = $6,
+					create_at  = $7,
+					update_at  = $8,
+					response   = $9
+				WHERE
+					hostname = $1
+				`,
 				&p.Hostname,
 				&p.Host,
 				&p.Port,
@@ -213,13 +230,32 @@ func saveAllProxy(mProxy *mapProxy) {
 				&p.UpdateAt,
 				&p.Response,
 			)
-			if err != nil {
-				errmsg("saveAllProxy Update", err)
-			}
+			chkErr("saveAllProxy Update", err)
 		}
 		if p.Insert {
 			i++
-			_, err := prepareInsert.Exec(
+			_, err := tx.Exec(`
+				INSERT INTO proxies (
+					hostname,
+					host,    
+					port,    
+					work,  
+					anon,  
+					checks,  
+					create_at,
+					update_at,
+					response
+				) VALUES (
+					$1,
+					$2,
+					$3,
+					$4,
+					$5,
+					$6,
+					$7,
+					$8,
+					$9
+				)`,
 				&p.Hostname,
 				&p.Host,
 				&p.Port,
@@ -235,6 +271,7 @@ func saveAllProxy(mProxy *mapProxy) {
 			}
 		}
 	}
+	chkErr("saveAllProxy commit", tx.Commit())
 	debugmsg("update proxy", u)
 	debugmsg("insert proxy", i)
 	debugmsg("end getAllProxy")
@@ -323,62 +360,79 @@ func saveAllLinks(mL *mapLink) {
 	var (
 		u, i int64
 	)
-	prepareInsert, _ := insertLink()
-	prepareUpdate, _ := updateLink()
+	// prepareInsert, _ := insertLink()
+	// prepareUpdate, _ := updateLink()
+	tx, err := db.Begin()
+	if err != nil {
+		errmsg("saveAllLinks Begin", err)
+		return
+	}
 	for _, l := range mL.values {
 		if l.Insert {
 			i++
-			_, err := prepareInsert.Exec(
+			_, err = tx.Exec(`
+				INSERT INTO links (
+					hostname,
+					update_at,
+					num
+				) VALUES (
+					$1,
+					$2,
+					$3
+				)`,
 				&l.Hostname,
 				&l.UpdateAt,
 				&l.Num,
 			)
-			if err != nil {
-				errmsg("saveAllLinks Insert", err)
-			}
+			chkErr("saveAllLinks Insert", err)
 		}
 		if l.Update {
 			u++
-			_, err := prepareUpdate.Exec(
+			_, err = tx.Exec(`
+				UPDATE links SET
+					update_at = $2,
+					num = $3
+				WHERE
+					hostname = $1
+				`,
 				&l.Hostname,
 				&l.UpdateAt,
 				&l.Num,
 			)
-			if err != nil {
-				errmsg("saveAllLinks Update", err)
-			}
+			chkErr("saveAllLinks Update", err)
 		}
 	}
+	chkErr("saveAllLinks commit", tx.Commit())
 	debugmsg("update links", u)
 	debugmsg("insert links", i)
 	debugmsg("end saveAllLinks")
 }
 
-func insertProxy() (*sql.Stmt, error) {
-	return db.Prepare(`
-		INSERT INTO proxies (
-			hostname,
-			host,    
-			port,    
-			work,  
-			anon,  
-			checks,  
-			create_at,
-			update_at,
-			response
-		) VALUES (
-			$1,
-			$2,
-			$3,
-			$4,
-			$5,
-			$6,
-			$7,
-			$8,
-			$9
-		)
-	`)
-}
+// func insertProxy() (*sql.Stmt, error) {
+// 	return db.Prepare(`
+// 		INSERT INTO proxies (
+// 			hostname,
+// 			host,
+// 			port,
+// 			work,
+// 			anon,
+// 			checks,
+// 			create_at,
+// 			update_at,
+// 			response
+// 		) VALUES (
+// 			$1,
+// 			$2,
+// 			$3,
+// 			$4,
+// 			$5,
+// 			$6,
+// 			$7,
+// 			$8,
+// 			$9
+// 		)
+// 	`)
+// }
 
 func updateProxy() (*sql.Stmt, error) {
 	return db.Prepare(`
@@ -396,29 +450,29 @@ func updateProxy() (*sql.Stmt, error) {
 	`)
 }
 
-func insertLink() (*sql.Stmt, error) {
-	return db.Prepare(`
-		INSERT INTO links (
-			hostname,
-			update_at,
-			num
-		) VALUES (
-			$1,
-			$2,
-			$3
-		)
-	`)
-}
+// func insertLink() (*sql.Stmt, error) {
+// 	return db.Prepare(`
+// 		INSERT INTO links (
+// 			hostname,
+// 			update_at,
+// 			num
+// 		) VALUES (
+// 			$1,
+// 			$2,
+// 			$3
+// 		)
+// 	`)
+// }
 
-func updateLink() (*sql.Stmt, error) {
-	return db.Prepare(`
-		UPDATE links SET
-			update_at = $2,
-			num = $3
-		WHERE
-			hostname = $1
-	`)
-}
+// func updateLink() (*sql.Stmt, error) {
+// 	return db.Prepare(`
+// 		UPDATE links SET
+// 			update_at = $2,
+// 			num = $3
+// 		WHERE
+// 			hostname = $1
+// 	`)
+// }
 
 func frequentlyUsedPorts() []string {
 	type port struct {
