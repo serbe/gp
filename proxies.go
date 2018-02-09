@@ -50,13 +50,12 @@ func newProxy(host, port string, ssl bool) (Proxy, error) {
 		schema = "http://"
 	}
 	hostname := schema + host + ":" + port
-	URL, err := url.Parse(hostname)
+	_, err := url.Parse(hostname)
 	if err != nil {
 		return proxy, err
 	}
 	proxy.Hostname = hostname
 	proxy.Insert = true
-	proxy.URL = URL
 	proxy.Host = host
 	proxy.Port = port
 	proxy.CreateAt = time.Now()
@@ -119,4 +118,33 @@ func loadProxyFromFile(mP *mapProxy) {
 		numProxy++
 	}
 	log.Println("find", numProxy, "in", useFile)
+}
+
+func getFUPList() *mapProxy {
+	mProxy := getAllProxy()
+	hosts := uniqueHosts()
+	ports := frequentlyUsedPorts()
+	for _, host := range hosts {
+		for _, port := range ports {
+			proxy, err := newProxy(host, port, false)
+			if err == nil {
+				if !mProxy.existProxy(proxy.Hostname) {
+					mProxy.set(proxy)
+				}
+			}
+		}
+	}
+	return mProxy
+}
+
+func getMapProxy() *mapProxy {
+	var mP *mapProxy
+	if useCheckAll {
+		mP = getAllProxy()
+	} else if useFUP {
+		mP = getFUPList()
+	} else {
+		mP = getOldProxy()
+	}
+	return mP
 }

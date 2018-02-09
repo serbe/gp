@@ -6,8 +6,9 @@ import (
 )
 
 func main() {
+	var err error
 	checkFlags()
-	db, err := initDB()
+	db, err = initDB()
 	if err != nil {
 		errmsg("initDB", err)
 		return
@@ -20,11 +21,11 @@ func main() {
 	}
 
 	if useFind {
-		findProxy(db)
+		findProxy()
 	}
 
 	if useCheck {
-		checkProxy(db)
+		checkProxy()
 	}
 
 	log.Printf("Total time: %v\n", time.Since(startAppTime))

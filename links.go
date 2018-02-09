@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"sync"
 	"time"
@@ -51,7 +50,7 @@ func (mLink *mapLink) existLink(hostname string) bool {
 	return ok
 }
 
-func getMapLink(db *sql.DB) *mapLink {
+func getMapLink() *mapLink {
 	var mL *mapLink
 	if testLink != "" {
 		mL = newMapLink()
@@ -67,7 +66,7 @@ func getMapLink(db *sql.DB) *mapLink {
 		mL.set(link)
 		log.Println(link)
 	} else {
-		mL = getAllLinks(db)
+		mL = getAllLinks()
 	}
 	return mL
 }

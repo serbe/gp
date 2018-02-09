@@ -1,9 +1,9 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"os/signal"
 	"time"
@@ -11,12 +11,12 @@ import (
 	"github.com/serbe/pool"
 )
 
-func findProxy(db *sql.DB) {
+func findProxy() {
 	debugmsg("Start find proxy")
 	p := pool.New(numWorkers)
 	p.SetTimeout(timeout)
-	mL := getMapLink(db)
-	mP := getAllProxy(db)
+	mL := getMapLink()
+	mP := getAllProxy()
 
 	loadProxyFromFile(mP)
 
@@ -47,20 +47,20 @@ func findProxy(db *sql.DB) {
 	}
 	if testLink == "" {
 		debugmsg("save proxy")
-		saveAllProxy(db, mP)
-		saveAllLinks(db, mL)
+		saveAllProxy(mP)
+		saveAllLinks(mL)
 	}
 	debugmsg("end findProxy")
 }
 
-func checkProxy(db *sql.DB) {
+func checkProxy() {
 	debugmsg("start checkProxy")
 	var (
 		totalProxy int64
 		anonProxy  int64
 		err        error
 	)
-	mP := getMapProxy(db)
+	mP := getMapProxy()
 	p := pool.New(numWorkers)
 	p.SetTimeout(timeout)
 	targetURL := fmt.Sprintf("http://93.170.123.221:%d/", serverPort)
@@ -75,7 +75,9 @@ func checkProxy(db *sql.DB) {
 	debugmsg("start add to pool")
 	for _, proxy := range mP.values {
 		if useCheckAll || proxyIsOld(proxy) {
-			chkErr("add to pool", p.Add(targetURL, proxy.URL))
+			proxyURL, err := url.Parse(proxy.Hostname)
+			chkErr("parse url", err)
+			chkErr("add to pool", p.Add(targetURL, proxyURL))
 		}
 	}
 	debugmsg("end add to pool")
@@ -117,7 +119,7 @@ checkProxyLoop:
 		}
 	}
 	// updateAllProxy(db, mP)
-	saveAllProxy(db, mP)
+	saveAllProxy(mP)
 	log.Printf("checked %d ip\n", p.GetAddedTasks())
 	log.Printf("%d is good\n", totalProxy)
 	log.Printf("%d is anon\n", anonProxy)

@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"net/url"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -10,15 +9,15 @@ import (
 
 // Proxy - proxy unit
 type Proxy struct {
-	Insert   bool          `sql:"-"           json:"-"`
-	Update   bool          `sql:"-"           json:"-"`
-	IsWork   bool          `sql:"work"        json:"-"`
-	IsAnon   bool          `sql:"anon"        json:"-"`
-	Checks   int           `sql:"checks"      json:"-"`
-	Hostname string        `sql:"hostname,pk" json:"hostname"`
-	Host     string        `sql:"host"        json:"-"`
-	Port     string        `sql:"port"        json:"-"`
-	URL      *url.URL      `sql:"-"           json:"-"`
+	Insert   bool   `sql:"-"           json:"-"`
+	Update   bool   `sql:"-"           json:"-"`
+	IsWork   bool   `sql:"work"        json:"-"`
+	IsAnon   bool   `sql:"anon"        json:"-"`
+	Checks   int    `sql:"checks"      json:"-"`
+	Hostname string `sql:"hostname,pk" json:"hostname"`
+	Host     string `sql:"host"        json:"-"`
+	Port     string `sql:"port"        json:"-"`
+	// URL      *url.URL      `sql:"-"           json:"-"`
 	CreateAt time.Time     `sql:"create_at"   json:"-"`
 	UpdateAt time.Time     `sql:"update_at"   json:"-"`
 	Response time.Duration `sql:"response"    json:"-"`
@@ -38,7 +37,7 @@ func initDB() (*sql.DB, error) {
 	return sql.Open("postgres", "user="+user+" password="+pass+" dbname="+dbname+" sslmode=disable")
 }
 
-func getAllProxy(db *sql.DB) *mapProxy {
+func getAllProxy() *mapProxy {
 	debugmsg("start getAllProxy")
 	mProxy := newMapProxy()
 	rows, err := db.Query(`
@@ -75,10 +74,10 @@ func getAllProxy(db *sql.DB) *mapProxy {
 		if err != nil {
 			errmsg("getAllProxy rows.Scan", err)
 		}
-		p.URL, err = url.Parse(p.Hostname)
-		if err != nil {
-			errmsg("getAllProxy url.Parse", err)
-		}
+		// p.URL, err = url.Parse(p.Hostname)
+		// if err != nil {
+		// 	errmsg("getAllProxy url.Parse", err)
+		// }
 		mProxy.set(p)
 	}
 	err = rows.Err()
@@ -89,7 +88,7 @@ func getAllProxy(db *sql.DB) *mapProxy {
 	return mProxy
 }
 
-func getOldProxy(db *sql.DB) *mapProxy {
+func getOldProxy() *mapProxy {
 	debugmsg("start getOldProxy")
 	mProxy := newMapProxy()
 	rows, err := db.Query(`
@@ -128,10 +127,10 @@ func getOldProxy(db *sql.DB) *mapProxy {
 		if err != nil {
 			errmsg("getOldProxy rows.Scan", err)
 		}
-		p.URL, err = url.Parse(p.Hostname)
-		if err != nil {
-			errmsg("getOldProxy url.Parse", err)
-		}
+		// p.URL, err = url.Parse(p.Hostname)
+		// if err != nil {
+		// 	errmsg("getOldProxy url.Parse", err)
+		// }
 		mProxy.set(p)
 	}
 	err = rows.Err()
@@ -142,7 +141,7 @@ func getOldProxy(db *sql.DB) *mapProxy {
 	return mProxy
 }
 
-// func getWorkingProxy(db *sql.DB) *mapProxy {
+// func getWorkingProxy() *mapProxy {
 // 	debugmsg("start getWorkingProxy")
 // 	mProxy := newMapProxy()
 // 	rows, err := db.Query(`
@@ -195,11 +194,11 @@ func getOldProxy(db *sql.DB) *mapProxy {
 // 	return mProxy
 // }
 
-func saveAllProxy(db *sql.DB, mProxy *mapProxy) {
+func saveAllProxy(mProxy *mapProxy) {
 	debugmsg("start saveAllProxy")
 	var u, i int64
-	prepareInsert, _ := insertProxy(db)
-	prepareUpdate, _ := updateProxy(db)
+	prepareInsert, _ := insertProxy()
+	prepareUpdate, _ := updateProxy()
 	for _, p := range mProxy.values {
 		if p.Update {
 			u++
@@ -241,7 +240,7 @@ func saveAllProxy(db *sql.DB, mProxy *mapProxy) {
 	debugmsg("end getAllProxy")
 }
 
-// func updateAllProxy(db *sql.DB, mProxy *mapProxy) {
+// func updateAllProxy(, mProxy *mapProxy) {
 // 	debugmsg("start updateAllProxy")
 // 	stmt, err := db.Prepare(`
 // 		UPDATE proxies SET
@@ -280,7 +279,7 @@ func saveAllProxy(db *sql.DB, mProxy *mapProxy) {
 // 	debugmsg("end updateAllProxy, update proxy", len(mProxy.values))
 // }
 
-func getAllLinks(db *sql.DB) *mapLink {
+func getAllLinks() *mapLink {
 	debugmsg("start getAllLinks")
 	mLink := newMapLink()
 	rows, err := db.Query(`
@@ -319,13 +318,13 @@ func getAllLinks(db *sql.DB) *mapLink {
 	return mLink
 }
 
-func saveAllLinks(db *sql.DB, mL *mapLink) {
+func saveAllLinks(mL *mapLink) {
 	debugmsg("start saveAllLinks")
 	var (
 		u, i int64
 	)
-	prepareInsert, _ := insertLink(db)
-	prepareUpdate, _ := updateLink(db)
+	prepareInsert, _ := insertLink()
+	prepareUpdate, _ := updateLink()
 	for _, l := range mL.values {
 		if l.Insert {
 			i++
@@ -355,7 +354,7 @@ func saveAllLinks(db *sql.DB, mL *mapLink) {
 	debugmsg("end saveAllLinks")
 }
 
-func insertProxy(db *sql.DB) (*sql.Stmt, error) {
+func insertProxy() (*sql.Stmt, error) {
 	return db.Prepare(`
 		INSERT INTO proxies (
 			hostname,
@@ -381,7 +380,7 @@ func insertProxy(db *sql.DB) (*sql.Stmt, error) {
 	`)
 }
 
-func updateProxy(db *sql.DB) (*sql.Stmt, error) {
+func updateProxy() (*sql.Stmt, error) {
 	return db.Prepare(`
 		UPDATE proxies SET
 			host       = $2,
@@ -397,7 +396,7 @@ func updateProxy(db *sql.DB) (*sql.Stmt, error) {
 	`)
 }
 
-func insertLink(db *sql.DB) (*sql.Stmt, error) {
+func insertLink() (*sql.Stmt, error) {
 	return db.Prepare(`
 		INSERT INTO links (
 			hostname,
@@ -411,7 +410,7 @@ func insertLink(db *sql.DB) (*sql.Stmt, error) {
 	`)
 }
 
-func updateLink(db *sql.DB) (*sql.Stmt, error) {
+func updateLink() (*sql.Stmt, error) {
 	return db.Prepare(`
 		UPDATE links SET
 			update_at = $2,
@@ -421,7 +420,7 @@ func updateLink(db *sql.DB) (*sql.Stmt, error) {
 	`)
 }
 
-func frequentlyUsedPorts(db *sql.DB) []string {
+func frequentlyUsedPorts() []string {
 	type port struct {
 		Port  string `sql:"port"        json:"-"`
 		Count int64  `sql:"c"           json:"-"`
@@ -461,7 +460,7 @@ func frequentlyUsedPorts(db *sql.DB) []string {
 	return result
 }
 
-func uniqueHosts(db *sql.DB) []string {
+func uniqueHosts() []string {
 	type host struct {
 		Host string `sql:"host"        json:"-"`
 	}
@@ -491,35 +490,6 @@ func uniqueHosts(db *sql.DB) []string {
 		errmsg("uniqueHosts rows.Err", err)
 	}
 	return result
-}
-
-func getFUPList(db *sql.DB) *mapProxy {
-	mProxy := getAllProxy(db)
-	hosts := uniqueHosts(db)
-	ports := frequentlyUsedPorts(db)
-	for _, host := range hosts {
-		for _, port := range ports {
-			proxy, err := newProxy(host, port, false)
-			if err == nil {
-				if !mProxy.existProxy(proxy.Hostname) {
-					mProxy.set(proxy)
-				}
-			}
-		}
-	}
-	return mProxy
-}
-
-func getMapProxy(db *sql.DB) *mapProxy {
-	var mP *mapProxy
-	if useCheckAll {
-		mP = getAllProxy(db)
-	} else if useFUP {
-		mP = getFUPList(db)
-	} else {
-		mP = getOldProxy(db)
-	}
-	return mP
 }
 
 // func makeTables() {
