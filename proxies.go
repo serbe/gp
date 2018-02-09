@@ -148,3 +148,10 @@ func getMapProxy() *mapProxy {
 	}
 	return mP
 }
+
+func saveProxy(p Proxy) error {
+	if p.Update {
+		return updateProxy(p)
+	}
+	return insertProxy(p)
+}

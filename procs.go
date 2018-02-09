@@ -47,7 +47,7 @@ func findProxy() {
 	}
 	if testLink == "" {
 		debugmsg("save proxy")
-		saveAllProxy(mP)
+		// saveAllProxy(mP)
 		saveAllLinks(mL)
 	}
 	debugmsg("end findProxy")
@@ -104,6 +104,7 @@ checkProxyLoop:
 				continue
 			}
 			mP.set(proxy)
+			saveProxy(proxy)
 			if proxy.IsWork {
 				log.Printf("%d/%d %-15v %-5v %-12v anon=%v\n", checked, p.GetAddedTasks(), task.Proxy.Hostname(), task.Proxy.Port(), task.ResponceTime, proxy.IsAnon)
 				totalProxy++
@@ -119,7 +120,7 @@ checkProxyLoop:
 		}
 	}
 	// updateAllProxy(db, mP)
-	saveAllProxy(mP)
+	// saveAllProxy(mP)
 	log.Printf("checked %d ip\n", p.GetAddedTasks())
 	log.Printf("%d is good\n", totalProxy)
 	log.Printf("%d is anon\n", anonProxy)

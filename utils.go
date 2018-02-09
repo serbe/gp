@@ -144,6 +144,7 @@ func grab(mP *mapProxy, mL *mapLink, task *pool.Task) []Link {
 			continue
 		}
 		mP.set(p)
+		insertProxy(p)
 		numProxy++
 	}
 	if numProxy > 0 {
