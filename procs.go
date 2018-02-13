@@ -15,15 +15,15 @@ func findProxy() {
 	debugmsg("Start find proxy")
 	p := pool.New(numWorkers)
 	p.SetTimeout(timeout)
-	mL := getMapLink()
-	mP := getAllProxy()
+	ml := getMapLink()
+	mP := getMapProxy()
 
 	loadProxyFromFile(mP)
 
 	debugmsg("start add to pool")
 	p.SetTimeout(timeout)
 	p.SetQuitTimeout(2000)
-	for _, link := range mL.values {
+	for _, link := range ml.values {
 		if link.Iterate && time.Since(link.UpdateAt) > time.Duration(1)*time.Hour {
 			chkErr("findProxy p.Add", p.Add(link.Hostname, nil))
 		}
@@ -38,8 +38,8 @@ func findProxy() {
 		if result.Error != nil {
 			continue
 		}
-		mL.update(result.Hostname)
-		links := grab(mP, mL, result)
+		ml.update(result.Hostname)
+		links := grab(mP, ml, result)
 		for _, l := range links {
 			chkErr("findProxy add to pool", p.Add(l.Hostname, nil))
 			debugmsg("add to pool", l.Hostname)
@@ -48,7 +48,7 @@ func findProxy() {
 	if testLink == "" {
 		debugmsg("save proxy")
 		// saveAllProxy(mP)
-		saveAllLinks(mL)
+		ml.saveAll()
 	}
 	debugmsg("end findProxy")
 }

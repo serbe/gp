@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/serbe/adb"
 	"github.com/serbe/pool"
 )
 
@@ -39,8 +40,8 @@ func cleanBody(body []byte) []byte {
 	return body
 }
 
-func getLinkList(mL *mapLink, task *pool.Task) []Link {
-	var links []Link
+func getLinkList(ml *mapLink, task *pool.Task) []adb.Link {
+	var links []adb.Link
 	for i := range reURL {
 		host, err := getHost(task.Hostname)
 		if err != nil {
@@ -53,13 +54,13 @@ func getLinkList(mL *mapLink, task *pool.Task) []Link {
 		allResults := re.FindAllSubmatch(task.Body, -1)
 		for _, result := range allResults {
 			hostname := host + "/" + string(result[1])
-			if mL.existLink(hostname) {
+			if ml.existLink(hostname) {
 				continue
 			}
-			link := mL.newLink(hostname)
+			link := newLink(hostname)
 			link.Insert = true
 			link.UpdateAt = time.Now()
-			mL.set(link)
+			ml.set(link)
 			links = append(links, link)
 		}
 	}
@@ -78,9 +79,9 @@ func decodeIP(src []byte) (string, string, error) {
 	return "", "", err
 }
 
-func getProxyList(body []byte) []Proxy {
+func getProxyList(body []byte) []adb.Proxy {
 	var (
-		pList []Proxy
+		pList []adb.Proxy
 		err   error
 	)
 	for i := range baseDecode {
@@ -95,7 +96,7 @@ func getProxyList(body []byte) []Proxy {
 			if err != nil {
 				continue
 			}
-			var proxy Proxy
+			var proxy adb.Proxy
 			proxy, err = newProxy(ip, port, false)
 			if err == nil {
 				pList = append(pList, proxy)
@@ -109,7 +110,7 @@ func getProxyList(body []byte) []Proxy {
 		}
 		results := re.FindAllSubmatch(body, -1)
 		for _, res := range results {
-			var proxy Proxy
+			var proxy adb.Proxy
 			port := convertPort(string(res[2]))
 			proxy, err = newProxy(string(res[1]), port, false)
 			if err == nil {
@@ -124,7 +125,7 @@ func getProxyList(body []byte) []Proxy {
 		}
 		results := re.FindAllSubmatch(body, -1)
 		for _, res := range results {
-			var proxy Proxy
+			var proxy adb.Proxy
 			proxy, err = newProxy(string(res[1]), string(res[2]), false)
 			if err == nil {
 				pList = append(pList, proxy)
@@ -134,24 +135,26 @@ func getProxyList(body []byte) []Proxy {
 	return pList
 }
 
-func grab(mP *mapProxy, mL *mapLink, task *pool.Task) []Link {
+func grab(mp *mapProxy, ml *mapLink, task *pool.Task) []adb.Link {
 	var numProxy int64
 	task.Body = cleanBody(task.Body)
 	pList := getProxyList(task.Body)
-	lList := getLinkList(mL, task)
+	lList := getLinkList(ml, task)
 	for _, p := range pList {
-		if mP.existProxy(p.Hostname) {
+		if mp.existProxy(p.Hostname) {
 			continue
 		}
-		mP.set(p)
-		insertProxy(p)
+		mp.set(p)
+		db.ProxyCreate(p)
 		numProxy++
 	}
 	if numProxy > 0 {
-		link := mL.get(task.Hostname)
-		link.Num = link.Num + numProxy
-		mL.set(link)
-		debugmsg("find", numProxy, "in", task.Hostname)
+		link, ok := ml.get(task.Hostname)
+		if ok {
+			link.Num = link.Num + numProxy
+			ml.set(link)
+			debugmsg("find", numProxy, "in", task.Hostname)
+		}
 	}
 	return lList
 }

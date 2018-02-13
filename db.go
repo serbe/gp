@@ -1,9 +1,5 @@
 package main
 
-import (
-	_ "github.com/lib/pq"
-)
-
 // func saveAllProxy(mProxy *mapProxy) {
 // 	debugmsg("start saveAllProxy")
 // 	var u, i int64
@@ -124,57 +120,4 @@ import (
 // 		}
 // 	}
 // 	debugmsg("end updateAllProxy, update proxy", len(mProxy.values))
-// }
-
-// func saveAllLinks(mL *mapLink) {
-// 	debugmsg("start saveAllLinks")
-// 	var (
-// 		u, i int64
-// 	)
-// 	// prepareInsert, _ := insertLink()
-// 	// prepareUpdate, _ := updateLink()
-// 	tx, err := db.Begin()
-// 	if err != nil {
-// 		errmsg("saveAllLinks Begin", err)
-// 		return
-// 	}
-// 	for _, l := range mL.values {
-// 		if l.Insert {
-// 			i++
-// 			_, err = tx.Exec(`
-// 				INSERT INTO links (
-// 					hostname,
-// 					update_at,
-// 					num
-// 				) VALUES (
-// 					$1,
-// 					$2,
-// 					$3
-// 				)`,
-// 				&l.Hostname,
-// 				&l.UpdateAt,
-// 				&l.Num,
-// 			)
-// 			chkErr("saveAllLinks Insert", err)
-// 		}
-// 		if l.Update {
-// 			u++
-// 			_, err = tx.Exec(`
-// 				UPDATE links SET
-// 					update_at = $2,
-// 					num = $3
-// 				WHERE
-// 					hostname = $1
-// 				`,
-// 				&l.Hostname,
-// 				&l.UpdateAt,
-// 				&l.Num,
-// 			)
-// 			chkErr("saveAllLinks Update", err)
-// 		}
-// 	}
-// 	chkErr("saveAllLinks commit", tx.Commit())
-// 	debugmsg("update links", u)
-// 	debugmsg("insert links", i)
-// 	debugmsg("end saveAllLinks")
 // }

@@ -12,47 +12,43 @@ import (
 	"github.com/serbe/pool"
 )
 
-type Proxy adb.Proxy
-
 type mapProxy struct {
 	sync.RWMutex
-	values map[string]Proxy
+	values map[string]adb.Proxy
 }
 
-func fillProxy(list []Proxy) *mapProxy {
-	p := newMapProxy()
-	for _, proxy := range list {
-		p.set(proxy)
+func (mp *mapProxy) fillMapProxy(proxyList []adb.Proxy) {
+	for _, proxy := range proxyList {
+		mp.set(proxy)
 	}
-	return p
 }
 
 func newMapProxy() *mapProxy {
-	return &mapProxy{values: make(map[string]Proxy)}
+	return &mapProxy{values: make(map[string]adb.Proxy)}
 }
 
-func (mProxy *mapProxy) set(proxy Proxy) {
-	mProxy.Lock()
-	mProxy.values[proxy.Hostname] = proxy
-	mProxy.Unlock()
+func (mp *mapProxy) set(proxy adb.Proxy) {
+	mp.Lock()
+	mp.values[proxy.Hostname] = proxy
+	mp.Unlock()
 }
 
-func (mProxy *mapProxy) get(hostname string) (Proxy, bool) {
-	mProxy.Lock()
-	proxy, ok := mProxy.values[hostname]
-	mProxy.Unlock()
+func (mp *mapProxy) get(hostname string) (adb.Proxy, bool) {
+	mp.Lock()
+	proxy, ok := mp.values[hostname]
+	mp.Unlock()
 	return proxy, ok
 }
 
-func (mProxy *mapProxy) remove(hostname string) {
-	mProxy.Lock()
-	delete(mProxy.values, hostname)
-	mProxy.Unlock()
+func (mp *mapProxy) remove(hostname string) {
+	mp.Lock()
+	delete(mp.values, hostname)
+	mp.Unlock()
 }
 
-func newProxy(host, port string, ssl bool) (Proxy, error) {
+func newProxy(host, port string, ssl bool) (adb.Proxy, error) {
 	var (
-		proxy  Proxy
+		proxy  adb.Proxy
 		schema string
 	)
 	if ssl {
@@ -73,15 +69,13 @@ func newProxy(host, port string, ssl bool) (Proxy, error) {
 	return proxy, err
 }
 
-func (mProxy *mapProxy) existProxy(hostname string) bool {
-	mProxy.RLock()
-	_, ok := mProxy.values[hostname]
-	mProxy.RUnlock()
+func (mp *mapProxy) existProxy(hostname string) bool {
+	_, ok := mp.get(hostname)
 	return ok
 }
 
-func (mProxy *mapProxy) taskToProxy(task *pool.Task) (Proxy, bool) {
-	proxy, ok := mProxy.get(task.Proxy.String())
+func (mp *mapProxy) taskToProxy(task *pool.Task) (adb.Proxy, bool) {
+	proxy, ok := mp.get(task.Proxy.String())
 	if !ok {
 		return proxy, ok
 	}
@@ -106,11 +100,11 @@ func (mProxy *mapProxy) taskToProxy(task *pool.Task) (Proxy, bool) {
 	return proxy, ok
 }
 
-func proxyIsOld(proxy Proxy) bool {
+func proxyIsOld(proxy adb.Proxy) bool {
 	return time.Since(proxy.UpdateAt) > time.Duration(proxy.Checks)*time.Duration(60*24*7)*time.Minute
 }
 
-func loadProxyFromFile(mP *mapProxy) {
+func loadProxyFromFile(mp *mapProxy) {
 	if useFile == "" {
 		return
 	}
@@ -122,47 +116,47 @@ func loadProxyFromFile(mP *mapProxy) {
 	var numProxy int64
 	pList := getProxyList(fileBody)
 	for _, p := range pList {
-		if mP.existProxy(p.Hostname) {
+		if mp.existProxy(p.Hostname) {
 			continue
 		}
-		mP.set(p)
+		mp.set(p)
 		numProxy++
 	}
 	log.Println("find", numProxy, "in", useFile)
 }
 
 // func getFUPList() *mapProxy {
-// 	mProxy := getAllProxy()
+// 	mp := getAllProxy()
 // 	hosts := uniqueHosts()
 // 	ports := frequentlyUsedPorts()
 // 	for _, host := range hosts {
 // 		for _, port := range ports {
 // 			proxy, err := newProxy(host, port, false)
 // 			if err == nil {
-// 				if !mProxy.existProxy(proxy.Hostname) {
-// 					mProxy.set(proxy)
+// 				if !mp.existProxy(proxy.Hostname) {
+// 					mp.set(proxy)
 // 				}
 // 			}
 // 		}
 // 	}
-// 	return mProxy
+// 	return mp
 // }
 
 func getMapProxy() *mapProxy {
-	var mP *mapProxy
+	mp := newMapProxy()
 	if useCheckAll {
-		mP = getAllProxy()
+		mp.fillMapProxy(db.ProxyGetAll())
 		// } else if useFUP {
-		// 	mP = getFUPList()
+		// 	mp = getFUPList()
 	} else {
-		mP = getOldProxy()
+		mp.fillMapProxy(db.ProxyGetAllOld())
 	}
-	return mP
+	return mp
 }
 
-func saveProxy(p Proxy) error {
+func saveProxy(p adb.Proxy) error {
 	if p.Update {
-		return updateProxy(p)
+		return db.ProxyUpdate(p)
 	}
-	return insertProxy(p)
+	return db.ProxyCreate(p)
 }

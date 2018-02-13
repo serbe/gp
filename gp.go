@@ -7,9 +7,14 @@ import (
 	"github.com/serbe/adb"
 )
 
+var db *adb.ADB
+
 func main() {
+	var err error
+
 	checkFlags()
-	db, err := adb.InitDB("pr", "127.0.0.1:5432", "pr", "pr")
+
+	db, err = adb.InitDB("pr", "127.0.0.1:5432", "pr", "pr")
 	if err != nil {
 		errmsg("initDB", err)
 		return

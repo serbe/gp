@@ -8,69 +8,89 @@ import (
 	"github.com/serbe/adb"
 )
 
-type Link adb.Link
-
 type mapLink struct {
 	sync.RWMutex
-	values map[string]Link
+	values map[string]adb.Link
 }
 
 func newMapLink() *mapLink {
-	return &mapLink{values: make(map[string]Link)}
+	return &mapLink{values: make(map[string]adb.Link)}
 }
 
-func (mLink *mapLink) get(hostname string) Link {
-	mLink.RLock()
-	link := mLink.values[hostname]
-	mLink.RUnlock()
-	return link
+func (ml *mapLink) fillMapLink(linkList []adb.Link) {
+	for _, link := range linkList {
+		ml.set(link)
+	}
 }
 
-func (mLink *mapLink) set(link Link) {
-	mLink.Lock()
-	mLink.values[link.Hostname] = link
-	mLink.Unlock()
+func (ml *mapLink) get(hostname string) (adb.Link, bool) {
+	ml.RLock()
+	link, ok := ml.values[hostname]
+	ml.RUnlock()
+	return link, ok
 }
 
-func (mLink *mapLink) update(hostname string) {
-	mLink.Lock()
-	link := mLink.values[hostname]
+func (ml *mapLink) set(link adb.Link) {
+	ml.Lock()
+	ml.values[link.Hostname] = link
+	ml.Unlock()
+}
+
+func (ml *mapLink) update(hostname string) {
+	ml.Lock()
+	link := ml.values[hostname]
 	link.Update = true
 	link.UpdateAt = time.Now()
-	mLink.values[hostname] = link
-	mLink.Unlock()
+	ml.values[hostname] = link
+	ml.Unlock()
 }
 
-func (mLink *mapLink) newLink(hostname string) Link {
-	var link Link
+func newLink(hostname string) adb.Link {
+	var link adb.Link
 	link.Hostname = hostname
 	return link
 }
 
-func (mLink *mapLink) existLink(hostname string) bool {
-	mLink.RLock()
-	_, ok := mLink.values[hostname]
-	mLink.RUnlock()
+func (ml *mapLink) existLink(hostname string) bool {
+	_, ok := ml.get(hostname)
 	return ok
 }
 
 func getMapLink() *mapLink {
-	var mL *mapLink
+	ml := newMapLink()
 	if testLink != "" {
-		mL = newMapLink()
-		link := mL.newLink(testLink)
+		link := newLink(testLink)
 		link.Iterate = true
-		mL.set(link)
+		ml.set(link)
 		log.Println(link)
 	} else if addLink != "" {
-		mL = newMapLink()
-		link := mL.newLink(addLink)
+		link := newLink(addLink)
 		link.Insert = true
 		link.Iterate = true
-		mL.set(link)
+		ml.set(link)
 		log.Println(link)
 	} else {
-		mL = getAllLinks()
+		ml.fillMapLink(db.LinksGetAllOld())
 	}
-	return mL
+	return ml
+}
+
+func (ml *mapLink) saveAll() {
+	debugmsg("start saveAllLinks")
+	var (
+		u, i int64
+	)
+	for _, l := range ml.values {
+		if l.Insert {
+			i++
+			chkErr("saveAllLinks Insert", db.LinkCreate(l))
+		}
+		if l.Update {
+			u++
+			chkErr("saveAllLinks Update", db.LinkUpdate(l))
+		}
+	}
+	debugmsg("update links", u)
+	debugmsg("insert links", i)
+	debugmsg("end saveAllLinks")
 }
