@@ -3,15 +3,20 @@ package main
 import (
 	"log"
 	"time"
+
+	"github.com/serbe/adb"
 )
 
 func main() {
-	var err error
 	checkFlags()
-	db, err = initDB()
+	db, err := adb.InitDB("pr", "127.0.0.1:5432", "pr", "pr")
 	if err != nil {
 		errmsg("initDB", err)
 		return
+	}
+
+	if useDebug {
+		db.UseDebug(true)
 	}
 
 	startAppTime := time.Now()

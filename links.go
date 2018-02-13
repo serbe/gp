@@ -4,7 +4,11 @@ import (
 	"log"
 	"sync"
 	"time"
+
+	"github.com/serbe/adb"
 )
+
+type Link adb.Link
 
 type mapLink struct {
 	sync.RWMutex

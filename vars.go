@@ -1,14 +1,10 @@
 package main
 
 import (
-	"database/sql"
 	"regexp"
 )
 
 var (
-	user               = "pr"
-	pass               = "pr"
-	dbname             = "pr"
 	numWorkers   int64 = 5
 	timeout      int64 = 10000
 	serverPort         = 19091
@@ -24,7 +20,6 @@ var (
 	testLink           = ""
 	addLink            = ""
 
-	db         *sql.DB
 	myIP       string
 	reRemoteIP = regexp.MustCompile(`<p>RemoteAddr: (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d{1,5}<\/p>`)
 	reMyIP     = regexp.MustCompile(`<td>(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})<\/td>`)

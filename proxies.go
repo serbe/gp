@@ -8,12 +8,23 @@ import (
 	"sync"
 	"time"
 
+	"github.com/serbe/adb"
 	"github.com/serbe/pool"
 )
+
+type Proxy adb.Proxy
 
 type mapProxy struct {
 	sync.RWMutex
 	values map[string]Proxy
+}
+
+func fillProxy(list []Proxy) *mapProxy {
+	p := newMapProxy()
+	for _, proxy := range list {
+		p.set(proxy)
+	}
+	return p
 }
 
 func newMapProxy() *mapProxy {
@@ -120,29 +131,29 @@ func loadProxyFromFile(mP *mapProxy) {
 	log.Println("find", numProxy, "in", useFile)
 }
 
-func getFUPList() *mapProxy {
-	mProxy := getAllProxy()
-	hosts := uniqueHosts()
-	ports := frequentlyUsedPorts()
-	for _, host := range hosts {
-		for _, port := range ports {
-			proxy, err := newProxy(host, port, false)
-			if err == nil {
-				if !mProxy.existProxy(proxy.Hostname) {
-					mProxy.set(proxy)
-				}
-			}
-		}
-	}
-	return mProxy
-}
+// func getFUPList() *mapProxy {
+// 	mProxy := getAllProxy()
+// 	hosts := uniqueHosts()
+// 	ports := frequentlyUsedPorts()
+// 	for _, host := range hosts {
+// 		for _, port := range ports {
+// 			proxy, err := newProxy(host, port, false)
+// 			if err == nil {
+// 				if !mProxy.existProxy(proxy.Hostname) {
+// 					mProxy.set(proxy)
+// 				}
+// 			}
+// 		}
+// 	}
+// 	return mProxy
+// }
 
 func getMapProxy() *mapProxy {
 	var mP *mapProxy
 	if useCheckAll {
 		mP = getAllProxy()
-	} else if useFUP {
-		mP = getFUPList()
+		// } else if useFUP {
+		// 	mP = getFUPList()
 	} else {
 		mP = getOldProxy()
 	}
