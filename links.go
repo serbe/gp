@@ -2,10 +2,12 @@ package main
 
 import (
 	"log"
+	"regexp"
 	"sync"
 	"time"
 
 	"github.com/serbe/adb"
+	"github.com/serbe/pool"
 )
 
 type mapLink struct {
@@ -70,7 +72,7 @@ func getMapLink() *mapLink {
 		ml.set(link)
 		log.Println(link)
 	} else {
-		ml.fillMapLink(db.LinksGetAllOld())
+		ml.fillMapLink(db.LinksGetAll())
 	}
 	return ml
 }
@@ -93,4 +95,31 @@ func (ml *mapLink) saveAll() {
 	debugmsg("update links", u)
 	debugmsg("insert links", i)
 	debugmsg("end saveAllLinks")
+}
+
+func (ml *mapLink) getNewLinksFromTask(task *pool.Task) []adb.Link {
+	var links []adb.Link
+	for i := range reURL {
+		host, err := getHost(task.Hostname)
+		if err != nil {
+			continue
+		}
+		re := regexp.MustCompile(reURL[i])
+		if !re.Match(task.Body) {
+			continue
+		}
+		allResults := re.FindAllSubmatch(task.Body, -1)
+		for _, result := range allResults {
+			hostname := host + "/" + string(result[1])
+			if ml.existLink(hostname) {
+				continue
+			}
+			link := newLink(hostname)
+			link.Insert = true
+			link.UpdateAt = time.Now()
+			ml.set(link)
+			links = append(links, link)
+		}
+	}
+	return links
 }

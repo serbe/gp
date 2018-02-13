@@ -6,10 +6,6 @@ import (
 	"log"
 	"regexp"
 	"strings"
-	"time"
-
-	"github.com/serbe/adb"
-	"github.com/serbe/pool"
 )
 
 func checkFlags() {
@@ -40,33 +36,6 @@ func cleanBody(body []byte) []byte {
 	return body
 }
 
-func getLinkList(ml *mapLink, task *pool.Task) []adb.Link {
-	var links []adb.Link
-	for i := range reURL {
-		host, err := getHost(task.Hostname)
-		if err != nil {
-			continue
-		}
-		re := regexp.MustCompile(reURL[i])
-		if !re.Match(task.Body) {
-			continue
-		}
-		allResults := re.FindAllSubmatch(task.Body, -1)
-		for _, result := range allResults {
-			hostname := host + "/" + string(result[1])
-			if ml.existLink(hostname) {
-				continue
-			}
-			link := newLink(hostname)
-			link.Insert = true
-			link.UpdateAt = time.Now()
-			ml.set(link)
-			links = append(links, link)
-		}
-	}
-	return links
-}
-
 func decodeIP(src []byte) (string, string, error) {
 	out, err := base64.StdEncoding.DecodeString(string(src))
 	if err != nil {
@@ -77,86 +46,6 @@ func decodeIP(src []byte) (string, string, error) {
 		return split[0], split[1], nil
 	}
 	return "", "", err
-}
-
-func getProxyList(body []byte) []adb.Proxy {
-	var (
-		pList []adb.Proxy
-		err   error
-	)
-	for i := range baseDecode {
-		re := regexp.MustCompile(baseDecode[i])
-		if !re.Match(body) {
-			continue
-		}
-		results := re.FindAllSubmatch(body, -1)
-		for _, res := range results {
-			var ip, port string
-			ip, port, err = decodeIP(res[1])
-			if err != nil {
-				continue
-			}
-			var proxy adb.Proxy
-			proxy, err = newProxy(ip, port, false)
-			if err == nil {
-				pList = append(pList, proxy)
-			}
-		}
-	}
-	for i := range base16 {
-		re := regexp.MustCompile(base16[i])
-		if !re.Match(body) {
-			continue
-		}
-		results := re.FindAllSubmatch(body, -1)
-		for _, res := range results {
-			var proxy adb.Proxy
-			port := convertPort(string(res[2]))
-			proxy, err = newProxy(string(res[1]), port, false)
-			if err == nil {
-				pList = append(pList, proxy)
-			}
-		}
-	}
-	for i := range reCommaList {
-		re := regexp.MustCompile(reIP + reCommaList[i] + rePort)
-		if !re.Match(body) {
-			continue
-		}
-		results := re.FindAllSubmatch(body, -1)
-		for _, res := range results {
-			var proxy adb.Proxy
-			proxy, err = newProxy(string(res[1]), string(res[2]), false)
-			if err == nil {
-				pList = append(pList, proxy)
-			}
-		}
-	}
-	return pList
-}
-
-func grab(mp *mapProxy, ml *mapLink, task *pool.Task) []adb.Link {
-	var numProxy int64
-	task.Body = cleanBody(task.Body)
-	pList := getProxyList(task.Body)
-	lList := getLinkList(ml, task)
-	for _, p := range pList {
-		if mp.existProxy(p.Hostname) {
-			continue
-		}
-		mp.set(p)
-		db.ProxyCreate(p)
-		numProxy++
-	}
-	if numProxy > 0 {
-		link, ok := ml.get(task.Hostname)
-		if ok {
-			link.Num = link.Num + numProxy
-			ml.set(link)
-			debugmsg("find", numProxy, "in", task.Hostname)
-		}
-	}
-	return lList
 }
 
 func chkErr(str string, err error) {

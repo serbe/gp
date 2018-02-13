@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -104,7 +105,7 @@ func proxyIsOld(proxy adb.Proxy) bool {
 	return time.Since(proxy.UpdateAt) > time.Duration(proxy.Checks)*time.Duration(60*24*7)*time.Minute
 }
 
-func loadProxyFromFile(mp *mapProxy) {
+func (mp *mapProxy) loadProxyFromFile() {
 	if useFile == "" {
 		return
 	}
@@ -114,8 +115,8 @@ func loadProxyFromFile(mp *mapProxy) {
 		return
 	}
 	var numProxy int64
-	pList := getProxyList(fileBody)
-	for _, p := range pList {
+	pl := getProxyList(fileBody)
+	for _, p := range pl {
 		if mp.existProxy(p.Hostname) {
 			continue
 		}
@@ -144,7 +145,7 @@ func loadProxyFromFile(mp *mapProxy) {
 
 func getMapProxy() *mapProxy {
 	mp := newMapProxy()
-	if useCheckAll {
+	if useCheckAll || useFind {
 		mp.fillMapProxy(db.ProxyGetAll())
 		// } else if useFUP {
 		// 	mp = getFUPList()
@@ -159,4 +160,74 @@ func saveProxy(p adb.Proxy) error {
 		return db.ProxyUpdate(p)
 	}
 	return db.ProxyCreate(p)
+}
+
+func (mp *mapProxy) numOfNewProxyInTask(task *pool.Task) int64 {
+	var num int64
+	proxies := getProxyList(cleanBody(task.Body))
+	for _, p := range proxies {
+		if mp.existProxy(p.Hostname) {
+			continue
+		}
+		mp.set(p)
+		db.ProxyCreate(p)
+		num++
+	}
+	return num
+}
+
+func getProxyList(body []byte) []adb.Proxy {
+	var (
+		pList []adb.Proxy
+		err   error
+	)
+	for i := range baseDecode {
+		re := regexp.MustCompile(baseDecode[i])
+		if !re.Match(body) {
+			continue
+		}
+		results := re.FindAllSubmatch(body, -1)
+		for _, res := range results {
+			var ip, port string
+			ip, port, err = decodeIP(res[1])
+			if err != nil {
+				continue
+			}
+			var proxy adb.Proxy
+			proxy, err = newProxy(ip, port, false)
+			if err == nil {
+				pList = append(pList, proxy)
+			}
+		}
+	}
+	for i := range base16 {
+		re := regexp.MustCompile(base16[i])
+		if !re.Match(body) {
+			continue
+		}
+		results := re.FindAllSubmatch(body, -1)
+		for _, res := range results {
+			var proxy adb.Proxy
+			port := convertPort(string(res[2]))
+			proxy, err = newProxy(string(res[1]), port, false)
+			if err == nil {
+				pList = append(pList, proxy)
+			}
+		}
+	}
+	for i := range reCommaList {
+		re := regexp.MustCompile(reIP + reCommaList[i] + rePort)
+		if !re.Match(body) {
+			continue
+		}
+		results := re.FindAllSubmatch(body, -1)
+		for _, res := range results {
+			var proxy adb.Proxy
+			proxy, err = newProxy(string(res[1]), string(res[2]), false)
+			if err == nil {
+				pList = append(pList, proxy)
+			}
+		}
+	}
+	return pList
 }

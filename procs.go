@@ -16,9 +16,9 @@ func findProxy() {
 	p := pool.New(numWorkers)
 	p.SetTimeout(timeout)
 	ml := getMapLink()
-	mP := getMapProxy()
+	mp := getMapProxy()
 
-	loadProxyFromFile(mP)
+	mp.loadProxyFromFile()
 
 	debugmsg("start add to pool")
 	p.SetTimeout(timeout)
@@ -39,7 +39,15 @@ func findProxy() {
 			continue
 		}
 		ml.update(result.Hostname)
-		links := grab(mP, ml, result)
+		links := ml.getNewLinksFromTask(result)
+		num := mp.numOfNewProxyInTask(result)
+		if num > 0 {
+			if link, ok := ml.get(result.Hostname); ok {
+				link.Num = link.Num + num
+				ml.set(link)
+				debugmsg("find", num, "in", result.Hostname)
+			}
+		}
 		for _, l := range links {
 			chkErr("findProxy add to pool", p.Add(l.Hostname, nil))
 			debugmsg("add to pool", l.Hostname)
