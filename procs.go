@@ -72,6 +72,7 @@ func checkProxy() {
 		err        error
 	)
 	list := getProxyListFromDB()
+breakCheckProxyLoop:
 	for len(list) > 0 {
 		mp := newMapProxy()
 		var r = 10000
@@ -122,8 +123,13 @@ func checkProxy() {
 					continue
 				}
 				mp.set(proxy)
-				saveProxy(proxy)
+				if !useFUP {
+					saveProxy(proxy)
+				}
 				if proxy.IsWork {
+					if useFUP {
+						saveProxy(proxy)
+					}
 					log.Printf("%d/%d %-15v %-5v %-12v anon=%v\n", checked, p.GetAddedTasks(), task.Proxy.Hostname(), task.Proxy.Port(), task.ResponceTime, proxy.IsAnon)
 					totalProxy++
 					if proxy.IsAnon {
@@ -132,7 +138,7 @@ func checkProxy() {
 				}
 			case <-c:
 				debugmsg("break loop by pressing ctrl+c")
-				break checkProxyLoop
+				break breakCheckProxyLoop
 			}
 		}
 		log.Printf("checked %d ip\n", p.GetAddedTasks())
