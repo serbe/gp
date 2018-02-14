@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/url"
 	"os"
@@ -12,6 +11,7 @@ import (
 )
 
 func findProxy() {
+	var addedProxy int64
 	debugmsg("Start find proxy")
 	p := pool.New(numWorkers)
 	p.SetTimeout(timeout)
@@ -52,11 +52,13 @@ func findProxy() {
 			chkErr("findProxy add to pool", p.Add(l.Hostname, nil))
 			debugmsg("add to pool", l.Hostname)
 		}
+		addedProxy = addedProxy + num
 	}
 	if testLink == "" {
 		debugmsg("save proxy")
 		ml.saveAll()
 	}
+	debugmsg(addedProxy, "new proxy found")
 	debugmsg("end findProxy")
 }
 
@@ -70,10 +72,7 @@ func checkProxy() {
 	mP := getMapProxy()
 	p := pool.New(numWorkers)
 	p.SetTimeout(timeout)
-	targetURL := fmt.Sprintf("http://93.170.123.221:%d/", serverPort)
-	if useMyIPCheck {
-		targetURL = "http://myip.ru/"
-	}
+	targetURL := getTarget()
 	myIP, err = getExternalIP()
 	if err != nil {
 		errmsg("checkProxy getExternalIP", err)

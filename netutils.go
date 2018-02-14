@@ -103,3 +103,11 @@ func decodeIP(src []byte) (string, string, error) {
 	}
 	return "", "", err
 }
+
+func getTarget() string {
+	target := fmt.Sprintf("http://93.170.123.221:%d/", serverPort)
+	if useMyIPCheck {
+		target = "http://myip.ru/"
+	}
+	return target
+}

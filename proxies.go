@@ -47,17 +47,9 @@ func (mp *mapProxy) remove(hostname string) {
 	mp.Unlock()
 }
 
-func newProxy(host, port string, ssl bool) (adb.Proxy, error) {
-	var (
-		proxy  adb.Proxy
-		schema string
-	)
-	if ssl {
-		schema = "https://"
-	} else {
-		schema = "http://"
-	}
-	hostname := schema + host + ":" + port
+func newProxy(host, port string) (adb.Proxy, error) {
+	var proxy adb.Proxy
+	hostname := "http://" + host + ":" + port
 	_, err := url.Parse(hostname)
 	if err != nil {
 		return proxy, err
@@ -132,7 +124,7 @@ func (mp *mapProxy) getFUPList() {
 	ports := db.ProxyGetFequentlyUsedPorts()
 	for _, host := range hosts {
 		for _, port := range ports {
-			proxy, err := newProxy(host, port, false)
+			proxy, err := newProxy(host, port)
 			if err == nil {
 				if !mp.existProxy(proxy.Hostname) {
 					mp.set(proxy)
@@ -193,7 +185,7 @@ func getProxyList(body []byte) []adb.Proxy {
 				continue
 			}
 			var proxy adb.Proxy
-			proxy, err = newProxy(ip, port, false)
+			proxy, err = newProxy(ip, port)
 			if err == nil {
 				pList = append(pList, proxy)
 			}
@@ -208,7 +200,7 @@ func getProxyList(body []byte) []adb.Proxy {
 		for _, res := range results {
 			var proxy adb.Proxy
 			port := convertPort(string(res[2]))
-			proxy, err = newProxy(string(res[1]), port, false)
+			proxy, err = newProxy(string(res[1]), port)
 			if err == nil {
 				pList = append(pList, proxy)
 			}
@@ -222,7 +214,7 @@ func getProxyList(body []byte) []adb.Proxy {
 		results := re.FindAllSubmatch(body, -1)
 		for _, res := range results {
 			var proxy adb.Proxy
-			proxy, err = newProxy(string(res[1]), string(res[2]), false)
+			proxy, err = newProxy(string(res[1]), string(res[2]))
 			if err == nil {
 				pList = append(pList, proxy)
 			}
