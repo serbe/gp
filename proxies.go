@@ -41,11 +41,11 @@ func (mp *mapProxy) get(hostname string) (adb.Proxy, bool) {
 	return proxy, ok
 }
 
-func (mp *mapProxy) remove(hostname string) {
-	mp.Lock()
-	delete(mp.values, hostname)
-	mp.Unlock()
-}
+// func (mp *mapProxy) remove(hostname string) {
+// 	mp.Lock()
+// 	delete(mp.values, hostname)
+// 	mp.Unlock()
+// }
 
 func newProxy(host, port string) (adb.Proxy, error) {
 	var proxy adb.Proxy
@@ -118,32 +118,31 @@ func (mp *mapProxy) loadProxyFromFile() {
 	log.Println("find", numProxy, "in", useFile)
 }
 
-func (mp *mapProxy) getFUPList() {
-	mp.fillMapProxy(db.ProxyGetAll())
+func getFUPList() []adb.Proxy {
+	var list []adb.Proxy
 	hosts := db.ProxyGetUniqueHosts()
 	ports := db.ProxyGetFequentlyUsedPorts()
 	for _, host := range hosts {
 		for _, port := range ports {
 			proxy, err := newProxy(host, port)
 			if err == nil {
-				if !mp.existProxy(proxy.Hostname) {
-					mp.set(proxy)
-				}
+				list = append(list, proxy)
 			}
 		}
 	}
+	return list
 }
 
-func getMapProxy() *mapProxy {
-	mp := newMapProxy()
+func getProxyListFromDB() []adb.Proxy {
+	var list []adb.Proxy
 	if useCheckAll || useFind {
-		mp.fillMapProxy(db.ProxyGetAll())
+		list = db.ProxyGetAll()
 	} else if useFUP {
-		mp.getFUPList()
+		list = getFUPList()
 	} else {
-		mp.fillMapProxy(db.ProxyGetAllOld())
+		list = db.ProxyGetAllOld()
 	}
-	return mp
+	return list
 }
 
 func saveProxy(p adb.Proxy) error {
