@@ -126,29 +126,28 @@ func (mp *mapProxy) loadProxyFromFile() {
 	log.Println("find", numProxy, "in", useFile)
 }
 
-// func getFUPList() *mapProxy {
-// 	mp := getAllProxy()
-// 	hosts := uniqueHosts()
-// 	ports := frequentlyUsedPorts()
-// 	for _, host := range hosts {
-// 		for _, port := range ports {
-// 			proxy, err := newProxy(host, port, false)
-// 			if err == nil {
-// 				if !mp.existProxy(proxy.Hostname) {
-// 					mp.set(proxy)
-// 				}
-// 			}
-// 		}
-// 	}
-// 	return mp
-// }
+func (mp *mapProxy) getFUPList() {
+	mp.fillMapProxy(db.ProxyGetAll())
+	hosts := db.ProxyGetUniqueHosts()
+	ports := db.ProxyGetFequentlyUsedPorts()
+	for _, host := range hosts {
+		for _, port := range ports {
+			proxy, err := newProxy(host, port, false)
+			if err == nil {
+				if !mp.existProxy(proxy.Hostname) {
+					mp.set(proxy)
+				}
+			}
+		}
+	}
+}
 
 func getMapProxy() *mapProxy {
 	mp := newMapProxy()
 	if useCheckAll || useFind {
 		mp.fillMapProxy(db.ProxyGetAll())
-		// } else if useFUP {
-		// 	mp = getFUPList()
+	} else if useFUP {
+		mp.getFUPList()
 	} else {
 		mp.fillMapProxy(db.ProxyGetAllOld())
 	}

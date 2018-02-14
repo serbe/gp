@@ -1,11 +1,8 @@
 package main
 
 import (
-	"encoding/base64"
 	"flag"
 	"log"
-	"regexp"
-	"strings"
 )
 
 func checkFlags() {
@@ -24,28 +21,6 @@ func checkFlags() {
 	flag.StringVar(&addLink, "a", addLink, "add primary link")
 	flag.BoolVar(&useFUP, "fup", useFUP, "test all hosts with 4 frequently used ports")
 	flag.Parse()
-}
-
-func cleanBody(body []byte) []byte {
-	for i := range replace {
-		re := regexp.MustCompile(replace[i][0])
-		if re.Match(body) {
-			body = re.ReplaceAll(body, []byte(replace[i][1]))
-		}
-	}
-	return body
-}
-
-func decodeIP(src []byte) (string, string, error) {
-	out, err := base64.StdEncoding.DecodeString(string(src))
-	if err != nil {
-		return "", "", err
-	}
-	split := strings.Split(string(out), ":")
-	if len(split) == 2 {
-		return split[0], split[1], nil
-	}
-	return "", "", err
 }
 
 func chkErr(str string, err error) {

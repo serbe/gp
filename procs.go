@@ -55,7 +55,6 @@ func findProxy() {
 	}
 	if testLink == "" {
 		debugmsg("save proxy")
-		// saveAllProxy(mP)
 		ml.saveAll()
 	}
 	debugmsg("end findProxy")
@@ -127,8 +126,6 @@ checkProxyLoop:
 			break checkProxyLoop
 		}
 	}
-	// updateAllProxy(db, mP)
-	// saveAllProxy(mP)
 	log.Printf("checked %d ip\n", p.GetAddedTasks())
 	log.Printf("%d is good\n", totalProxy)
 	log.Printf("%d is anon\n", anonProxy)

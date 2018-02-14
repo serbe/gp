@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -78,4 +80,26 @@ func startServer() {
 func convertPort(port string) string {
 	portInt, _ := strconv.ParseInt(port, 16, 32)
 	return strconv.Itoa(int(portInt))
+}
+
+func cleanBody(body []byte) []byte {
+	for i := range replace {
+		re := regexp.MustCompile(replace[i][0])
+		if re.Match(body) {
+			body = re.ReplaceAll(body, []byte(replace[i][1]))
+		}
+	}
+	return body
+}
+
+func decodeIP(src []byte) (string, string, error) {
+	out, err := base64.StdEncoding.DecodeString(string(src))
+	if err != nil {
+		return "", "", err
+	}
+	split := strings.Split(string(out), ":")
+	if len(split) == 2 {
+		return split[0], split[1], nil
+	}
+	return "", "", err
 }

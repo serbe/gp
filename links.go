@@ -47,9 +47,11 @@ func (ml *mapLink) update(hostname string) {
 	ml.Unlock()
 }
 
-func newLink(hostname string) adb.Link {
+func newLink(hostname string, insert bool, iterate bool) adb.Link {
 	var link adb.Link
 	link.Hostname = hostname
+	link.Insert = insert
+	link.Iterate = iterate
 	return link
 }
 
@@ -61,14 +63,11 @@ func (ml *mapLink) existLink(hostname string) bool {
 func getMapLink() *mapLink {
 	ml := newMapLink()
 	if testLink != "" {
-		link := newLink(testLink)
-		link.Iterate = true
+		link := newLink(testLink, false, true)
 		ml.set(link)
 		log.Println(link)
 	} else if addLink != "" {
-		link := newLink(addLink)
-		link.Insert = true
-		link.Iterate = true
+		link := newLink(addLink, true, true)
 		ml.set(link)
 		log.Println(link)
 	} else {
@@ -114,8 +113,7 @@ func (ml *mapLink) getNewLinksFromTask(task *pool.Task) []adb.Link {
 			if ml.existLink(hostname) {
 				continue
 			}
-			link := newLink(hostname)
-			link.Insert = true
+			link := newLink(hostname, true, false)
 			link.UpdateAt = time.Now()
 			ml.set(link)
 			links = append(links, link)
