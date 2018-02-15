@@ -155,7 +155,8 @@ func saveProxy(p adb.Proxy) {
 
 func (mp *mapProxy) numOfNewProxyInTask(task *pool.Task) int64 {
 	var num int64
-	proxies := getProxyList(cleanBody(task.Body))
+	body := cleanBody(task.Body)
+	proxies := getProxyList(body)
 	for _, p := range proxies {
 		if mp.existProxy(p.Hostname) {
 			continue

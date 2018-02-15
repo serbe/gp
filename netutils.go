@@ -41,11 +41,12 @@ func fetchMyIPBody(proxy *url.URL) ([]byte, error) {
 }
 
 func getHost(u string) (string, error) {
-	_, err := url.Parse(u)
+	h, err := url.Parse(u)
 	if err != nil {
 		return "", err
 	}
-	return u[:strings.LastIndex(u, "/")], nil
+	// return u[:strings.LastIndex(u, "/")], nil
+	return h.Scheme + "://" + h.Host, err
 }
 
 func getExternalIP() (string, error) {
@@ -89,6 +90,7 @@ func cleanBody(body []byte) []byte {
 			body = re.ReplaceAll(body, []byte(replace[i][1]))
 		}
 	}
+	// ioutil.WriteFile("tmp.html", body, 0644)
 	return body
 }
 

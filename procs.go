@@ -22,28 +22,37 @@ func findProxy() {
 
 	mp.loadProxyFromFile()
 
+	debugmsg("load links", len(ml.values))
+	debugmsg("load proxies", len(mp.values))
 	debugmsg("start add to pool")
 	p.SetTimeout(timeout)
 	p.SetQuitTimeout(2000)
-	for _, link := range ml.values {
-		if link.Iterate && time.Since(link.UpdateAt) > time.Duration(1)*time.Hour {
-			chkErr("findProxy p.Add", p.Add(link.Hostname, nil))
+	if testLink != "" {
+		link, _ := ml.get(testLink)
+		chkErr("findProxy p.Add", p.Add(link.Hostname, nil))
+	} else {
+		for _, link := range ml.values {
+			if link.Iterate && time.Since(link.UpdateAt) > time.Duration(1)*time.Hour {
+				chkErr("findProxy p.Add", p.Add(link.Hostname, nil))
+			}
 		}
+		if p.GetAddedTasks() == 0 {
+			debugmsg("not added tasks to pool")
+			return
+		}
+		debugmsg("end add to pool, added", p.GetAddedTasks(), "links")
 	}
-	if p.GetAddedTasks() == 0 {
-		debugmsg("not added tasks to pool")
-		return
-	}
-	debugmsg("end add to pool, added", p.GetAddedTasks(), "links")
 	debugmsg("start get from chan")
 	for result := range p.ResultChan {
 		if result.Error != nil {
+			errmsg("result", result.Error)
 			continue
 		}
 		ml.update(result.Hostname)
 		links := ml.getNewLinksFromTask(result)
 		num := mp.numOfNewProxyInTask(result)
 		if num > 0 {
+			debugmsg("find", num, "proxy in", result.Hostname)
 			if link, ok := ml.get(result.Hostname); ok {
 				link.Num = link.Num + num
 				ml.set(link)
