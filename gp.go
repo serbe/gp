@@ -10,18 +10,12 @@ import (
 var db *adb.ADB
 
 func main() {
-	var err error
-
 	checkFlags()
 
-	db, err = adb.InitDB("pr", "127.0.0.1:5432", "pr", "pr")
-	if err != nil {
-		errmsg("initDB", err)
-		return
-	}
+	db = adb.InitDB("pr", "127.0.0.1:5432", "pr", "pr")
 
 	if useDebug {
-		db.UseDebug(true)
+		db.ShowErrors(true)
 	}
 
 	startAppTime := time.Now()

@@ -121,7 +121,7 @@ func (mp *mapProxy) loadProxyFromFile() {
 func getFUPList() []adb.Proxy {
 	var list []adb.Proxy
 	hosts := db.ProxyGetUniqueHosts()
-	ports := db.ProxyGetFequentlyUsedPorts()
+	ports := db.ProxyGetFrequentlyUsedPorts()
 	for _, host := range hosts {
 		for _, port := range ports {
 			proxy, err := newProxy(host, port)
@@ -145,11 +145,12 @@ func getProxyListFromDB() []adb.Proxy {
 	return list
 }
 
-func saveProxy(p adb.Proxy) error {
+func saveProxy(p adb.Proxy) {
 	if p.Update {
-		return db.ProxyUpdate(p)
+		db.ProxyUpdate(p)
+	} else {
+		db.ProxyInsert(p)
 	}
-	return db.ProxyCreate(p)
 }
 
 func (mp *mapProxy) numOfNewProxyInTask(task *pool.Task) int64 {
@@ -160,7 +161,7 @@ func (mp *mapProxy) numOfNewProxyInTask(task *pool.Task) int64 {
 			continue
 		}
 		mp.set(p)
-		db.ProxyCreate(p)
+		db.ProxyInsert(p)
 		num++
 	}
 	return num
