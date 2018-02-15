@@ -72,8 +72,13 @@ func checkProxy() {
 		err        error
 	)
 	list := getProxyListFromDB()
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+
 breakCheckProxyLoop:
 	for len(list) > 0 {
+		log.Println("len > 0", len(list))
 		mp := newMapProxy()
 		var r = 10000
 		if r > len(list) {
@@ -83,6 +88,7 @@ breakCheckProxyLoop:
 			mp.set(list[i])
 		}
 		list = list[r:]
+		log.Println("len =", len(list))
 		p := pool.New(numWorkers)
 		p.SetTimeout(timeout)
 		targetURL := getTarget()
@@ -106,8 +112,6 @@ breakCheckProxyLoop:
 			debugmsg("no task added to pool")
 			return
 		}
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, os.Interrupt)
 		var checked int
 	checkProxyLoop:
 		for {
