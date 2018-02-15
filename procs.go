@@ -75,20 +75,19 @@ func checkProxy() {
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
-	loop := len(list)
+	listLen := len(list)
 
 breakCheckProxyLoop:
-	for j := 0; j < loop/10000; j++ {
-		log.Println("len > 0", len(list))
+	for j := 0; j < listLen/10000; j++ {
+		log.Println("len > 0", listLen)
 		mp := newMapProxy()
 		var r = 10000
-		if len(list) < r {
-			r = len(list)
+		if j*10000 > listLen {
+			r = listLen % 10000
 		}
 		for i := 0; i < r; i++ {
-			mp.set(list[i])
+			mp.set(list[j*10000+i])
 		}
-		list = list[r:]
 		log.Println("len =", len(list))
 		p := pool.New(numWorkers)
 		p.SetTimeout(timeout)
