@@ -75,13 +75,14 @@ func checkProxy() {
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
+	loop := len(list)
 
 breakCheckProxyLoop:
-	for len(list) > 0 {
+	for j := 0; j < loop/10000; j++ {
 		log.Println("len > 0", len(list))
 		mp := newMapProxy()
 		var r = 10000
-		if r > len(list) {
+		if len(list) < r {
 			r = len(list)
 		}
 		for i := 0; i < r; i++ {
