@@ -97,15 +97,12 @@ breakCheckProxyLoop:
 		}
 		debugmsg("start add to pool")
 		for _, proxy := range mp.values {
-			// if useCheckAll || proxyIsOld(proxy) {
 			proxyURL, err := url.Parse(proxy.Hostname)
 			chkErr("parse url", err)
 			chkErr("add to pool", p.Add(targetURL, proxyURL))
-			// }
 		}
 		debugmsg("end add to pool")
 		p.EndWaitingTasks()
-		log.Println("Start check", p.GetAddedTasks(), "proxies")
 		if p.GetAddedTasks() == 0 {
 			debugmsg("no task added to pool")
 			return
@@ -132,7 +129,7 @@ breakCheckProxyLoop:
 					if useFUP {
 						saveProxy(proxy)
 					}
-					log.Printf("%d/%d/%d %-15v %-5v %-12v anon=%v\n", j, checked, p.GetAddedTasks(), task.Proxy.Hostname(), task.Proxy.Port(), task.ResponceTime, proxy.IsAnon)
+					log.Printf("%d/%d %-15v %-5v %-12v anon=%v\n", j*10000+checked, listLen, task.Proxy.Hostname(), task.Proxy.Port(), task.ResponceTime, proxy.IsAnon)
 					totalProxy++
 					if proxy.IsAnon {
 						anonProxy++
@@ -143,7 +140,6 @@ breakCheckProxyLoop:
 				break breakCheckProxyLoop
 			}
 		}
-		log.Printf("checked %d ip\n", p.GetAddedTasks())
 	}
 	log.Printf("%d is good\n", totalProxy)
 	log.Printf("%d is anon\n", anonProxy)
