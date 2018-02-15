@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"regexp"
 	"sync"
 	"time"
@@ -65,11 +64,9 @@ func getMapLink() *mapLink {
 	if testLink != "" {
 		link := newLink(testLink, false, true)
 		ml.set(link)
-		log.Println(link)
 	} else if addLink != "" {
 		link := newLink(addLink, true, true)
 		ml.set(link)
-		log.Println(link)
 	} else {
 		ml.fillMapLink(db.LinksGetAll())
 	}

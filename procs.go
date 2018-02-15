@@ -79,7 +79,6 @@ func checkProxy() {
 
 breakCheckProxyLoop:
 	for j := 0; j < listLen/10000; j++ {
-		log.Println("len list =", listLen)
 		mp := newMapProxy()
 		var r = 10000
 		if j*10000 > listLen {
@@ -88,7 +87,6 @@ breakCheckProxyLoop:
 		for i := 0; i < r; i++ {
 			mp.set(list[j*10000+i])
 		}
-		log.Println("len mp =", len(mp.values))
 		p := pool.New(numWorkers)
 		p.SetTimeout(timeout)
 		targetURL := getTarget()
@@ -134,7 +132,7 @@ breakCheckProxyLoop:
 					if useFUP {
 						saveProxy(proxy)
 					}
-					log.Printf("%d/%d %-15v %-5v %-12v anon=%v\n", checked, p.GetAddedTasks(), task.Proxy.Hostname(), task.Proxy.Port(), task.ResponceTime, proxy.IsAnon)
+					log.Printf("%d/%d/%d %-15v %-5v %-12v anon=%v\n", j, checked, p.GetAddedTasks(), task.Proxy.Hostname(), task.Proxy.Port(), task.ResponceTime, proxy.IsAnon)
 					totalProxy++
 					if proxy.IsAnon {
 						anonProxy++
