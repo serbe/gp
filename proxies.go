@@ -135,7 +135,9 @@ func getFUPList() []adb.Proxy {
 
 func getProxyListFromDB() []adb.Proxy {
 	var list []adb.Proxy
-	if useCheckAll || useFind {
+	if testLink != "" {
+		return list
+	} else if useCheckAll || useFind {
 		list = db.ProxyGetAll()
 	} else if useFUP {
 		list = getFUPList()

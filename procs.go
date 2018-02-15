@@ -16,10 +16,9 @@ func findProxy() {
 	p := pool.New(numWorkers)
 	p.SetTimeout(timeout)
 	ml := getMapLink()
-	list := getProxyListFromDB()
 	mp := newMapProxy()
+	list := getProxyListFromDB()
 	mp.fillMapProxy(list)
-
 	mp.loadProxyFromFile()
 
 	debugmsg("load links", len(ml.values))

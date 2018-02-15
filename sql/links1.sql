@@ -140,3 +140,14 @@ http://www.cool-proxy.net/proxies/http_proxy_list/country_code:US/port:/anonymou
 http://free-proxy-list.net/
 http://multiproxy.org/txt_all/proxy.txt
 http://txt.proxyspy.net/proxy.txt    
+
+
+http://www.xicidaili.com/nn/1
+https://www.kuaidaili.com/free/inha/1
+https://www.rmccurdy.com/scripts/proxy/good.txt
+http://www.ip181.com/
+http://www.proxylists.net/http_highanon.txt
+http://ab57.ru/downloads/proxylist.txt
+http://cn-proxy.com
+
+http://httpbin.org/get?show_env=1
