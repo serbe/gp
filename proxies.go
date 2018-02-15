@@ -93,9 +93,9 @@ func (mp *mapProxy) taskToProxy(task *pool.Task) (adb.Proxy, bool) {
 	return proxy, ok
 }
 
-func proxyIsOld(proxy adb.Proxy) bool {
-	return time.Since(proxy.UpdateAt) > time.Duration(proxy.Checks)*time.Duration(60*24*7)*time.Minute
-}
+// func proxyIsOld(proxy adb.Proxy) bool {
+// 	return time.Since(proxy.UpdateAt) > time.Duration(proxy.Checks)*time.Duration(60*24*7)*time.Minute
+// }
 
 func (mp *mapProxy) loadProxyFromFile() {
 	if useFile == "" {

@@ -79,7 +79,7 @@ func checkProxy() {
 
 breakCheckProxyLoop:
 	for j := 0; j < listLen/10000; j++ {
-		log.Println("len > 0", listLen)
+		log.Println("len list =", listLen)
 		mp := newMapProxy()
 		var r = 10000
 		if j*10000 > listLen {
@@ -88,7 +88,7 @@ breakCheckProxyLoop:
 		for i := 0; i < r; i++ {
 			mp.set(list[j*10000+i])
 		}
-		log.Println("len =", len(list))
+		log.Println("len mp =", len(mp.values))
 		p := pool.New(numWorkers)
 		p.SetTimeout(timeout)
 		targetURL := getTarget()
@@ -99,11 +99,11 @@ breakCheckProxyLoop:
 		}
 		debugmsg("start add to pool")
 		for _, proxy := range mp.values {
-			if useCheckAll || proxyIsOld(proxy) {
-				proxyURL, err := url.Parse(proxy.Hostname)
-				chkErr("parse url", err)
-				chkErr("add to pool", p.Add(targetURL, proxyURL))
-			}
+			// if useCheckAll || proxyIsOld(proxy) {
+			proxyURL, err := url.Parse(proxy.Hostname)
+			chkErr("parse url", err)
+			chkErr("add to pool", p.Add(targetURL, proxyURL))
+			// }
 		}
 		debugmsg("end add to pool")
 		p.EndWaitingTasks()
