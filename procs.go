@@ -74,6 +74,7 @@ func findProxy() {
 func checkProxy() {
 	debugmsg("start checkProxy")
 	var (
+		checked    int64
 		totalProxy int64
 		anonProxy  int64
 		err        error
@@ -83,16 +84,18 @@ func checkProxy() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	listLen := len(list)
+	debugmsg("load proxies", listLen)
 
 breakCheckProxyLoop:
-	for j := 0; j < listLen/10000; j++ {
+	for j := 0; j < listLen; {
 		mp := newMapProxy()
 		var r = 10000
-		if j*10000 > listLen {
+		if j+10000 > listLen {
 			r = listLen % 10000
 		}
 		for i := 0; i < r; i++ {
-			mp.set(list[j*10000+i])
+			mp.set(list[j])
+			j++
 		}
 		p := pool.New(numWorkers)
 		p.SetTimeout(timeout)
@@ -114,7 +117,6 @@ breakCheckProxyLoop:
 			debugmsg("no task added to pool")
 			return
 		}
-		var checked int
 	checkProxyLoop:
 		for {
 			select {
@@ -136,7 +138,7 @@ breakCheckProxyLoop:
 					if useFUP {
 						saveProxy(proxy)
 					}
-					log.Printf("%d/%d %-15v %-5v %-12v anon=%v\n", j*10000+checked, listLen, task.Proxy.Hostname(), task.Proxy.Port(), task.ResponceTime, proxy.IsAnon)
+					log.Printf("%d/%d %-15v %-5v %-12v anon=%v\n", checked, listLen, task.Proxy.Hostname(), task.Proxy.Port(), task.ResponceTime, proxy.IsAnon)
 					totalProxy++
 					if proxy.IsAnon {
 						anonProxy++
