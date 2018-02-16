@@ -61,10 +61,10 @@ func (ml *mapLink) existLink(hostname string) bool {
 
 func getMapLink() *mapLink {
 	ml := newMapLink()
-	if testLink != "" {
+	if useTestLink {
 		link := newLink(testLink, false, true)
 		ml.set(link)
-	} else if addLink != "" {
+	} else if useAddLink {
 		link := newLink(addLink, true, true)
 		ml.set(link)
 	} else {

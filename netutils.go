@@ -90,7 +90,9 @@ func cleanBody(body []byte) []byte {
 			body = re.ReplaceAll(body, []byte(replace[i][1]))
 		}
 	}
-	// ioutil.WriteFile("tmp.html", body, 0644)
+	if useTestLink && useDebug {
+		ioutil.WriteFile("tmp.html", body, 0644)
+	}
 	return body
 }
 

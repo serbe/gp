@@ -2,7 +2,6 @@ package main
 
 import (
 	"io/ioutil"
-	"log"
 	"net/url"
 	"regexp"
 	"strings"
@@ -115,7 +114,6 @@ func (mp *mapProxy) loadProxyFromFile() {
 		mp.set(p)
 		numProxy++
 	}
-	log.Println("find", numProxy, "in", useFile)
 }
 
 func getFUPList() []adb.Proxy {
@@ -135,7 +133,7 @@ func getFUPList() []adb.Proxy {
 
 func getProxyListFromDB() []adb.Proxy {
 	var list []adb.Proxy
-	if testLink != "" {
+	if useTestLink {
 		return list
 	} else if useCheckAll || useFind {
 		list = db.ProxyGetAll()

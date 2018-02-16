@@ -14,6 +14,8 @@ var (
 	useMyIPCheck       = false
 	useServer          = false
 	useDebug           = false
+	useAddLink         = false
+	useTestLink        = false
 	useFile            = ""
 	testLink           = ""
 	addLink            = ""

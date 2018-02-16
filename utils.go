@@ -21,6 +21,14 @@ func checkFlags() {
 	flag.StringVar(&addLink, "a", addLink, "add primary link")
 	flag.BoolVar(&useFUP, "fup", useFUP, "test all hosts with 4 frequently used ports")
 	flag.Parse()
+
+	if addLink != "" {
+		useAddLink = true
+	}
+
+	if testLink != "" {
+		useTestLink = true
+	}
 }
 
 func chkErr(str string, err error) {

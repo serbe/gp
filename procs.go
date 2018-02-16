@@ -26,21 +26,20 @@ func findProxy() {
 	debugmsg("start add to pool")
 	p.SetTimeout(timeout)
 	p.SetQuitTimeout(2000)
-	if testLink != "" {
-		link, _ := ml.get(testLink)
-		chkErr("findProxy p.Add", p.Add(link.Hostname, nil))
-	} else {
-		for _, link := range ml.values {
-			if link.Iterate && time.Since(link.UpdateAt) > time.Duration(1)*time.Hour {
-				chkErr("findProxy p.Add", p.Add(link.Hostname, nil))
+	for _, link := range ml.values {
+		if useAddLink || useTestLink || link.Iterate && time.Since(link.UpdateAt) > time.Duration(1)*time.Hour {
+			err := p.Add(link.Hostname, nil)
+			if err == nil {
+				addedProxy++
 			}
+			chkErr("findProxy p.Add", err)
 		}
-		if p.GetAddedTasks() == 0 {
-			debugmsg("not added tasks to pool")
-			return
-		}
-		debugmsg("end add to pool, added", p.GetAddedTasks(), "links")
 	}
+	if addedProxy == 0 {
+		debugmsg("not added tasks to pool")
+		return
+	}
+	debugmsg("end add to pool, added", p.GetAddedTasks(), "links")
 	debugmsg("start get from chan")
 	for result := range p.ResultChan {
 		if result.Error != nil {
@@ -64,7 +63,7 @@ func findProxy() {
 		}
 		addedProxy = addedProxy + num
 	}
-	if testLink == "" {
+	if !useTestLink {
 		debugmsg("save proxy")
 		ml.saveAll()
 	}

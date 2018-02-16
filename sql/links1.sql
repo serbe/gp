@@ -1,5 +1,13 @@
-INSERT INTO links (hostname, iterate) VALUES 
-    ('http://multiproxy.org/txt_all/proxy.txt', TRUE),
+https://www.kuaidaili.com/free/inha/1
+https://www.rmccurdy.com/scripts/proxy/good.txt
+http://www.proxylists.net/http_highanon.txt
+http://ab57.ru/downloads/proxylist.txt
+http://multiproxy.org/txt_all/proxy.txt
+http://proxy50-50.blogspot.com.tr/
+http://www.rmccurdy.com/scripts/proxy/good.txt
+
+
+
     ('http://free-proxy-list.net/', TRUE),
     ()
 
@@ -30,7 +38,7 @@ http://www.proxydb.ru/News.aspx|HTTP|0
 http://www.fakemyip.info/anonymous-proxies
 http://www.lawinaboard.com/forums/index.php?showforum=8|showtopic=|1|act=Attach
 http://www.final4ever.com/forumdisplay.php?f=144|showthread.php?t=|0
-http://www.rmccurdy.com/scripts/proxy/good.txt
+
 http://bulkinfo.net/Proxy|/Proxy/Article/|0
 http://www.cnproxy.com|proxy|0
 http://www.proxyvadi.net/proxy-list|-listesi-|0
@@ -97,7 +105,6 @@ http://spys.ru/free-proxy-list/FR/
 http://spys.ru/free-proxy-list/NL/
 http://proxy.centerblog.net/
 http://free-proxy.blogspot.com.tr/
-http://proxy50-50.blogspot.com.tr/
 http://www.proxyfire.net/forum/forumdisplay.php?f=14|showthread.php?t=|0
 http://www.cybersyndrome.net|pl|0
 http://www.freeproxy.ch/proxy.txt
@@ -138,16 +145,12 @@ http://www.cool-proxy.net/proxies/http_proxy_list/sort:score/direction:desc
 http://www.cool-proxy.net/proxies/http_proxy_list/country_code:CN/port:/anonymous:
 http://www.cool-proxy.net/proxies/http_proxy_list/country_code:US/port:/anonymous:
 http://free-proxy-list.net/
-http://multiproxy.org/txt_all/proxy.txt
-http://txt.proxyspy.net/proxy.txt    
+    
 
 
 http://www.xicidaili.com/nn/1
-https://www.kuaidaili.com/free/inha/1
-https://www.rmccurdy.com/scripts/proxy/good.txt
+
 http://www.ip181.com/
-http://www.proxylists.net/http_highanon.txt
-http://ab57.ru/downloads/proxylist.txt
 http://cn-proxy.com
 
 http://httpbin.org/get?show_env=1
