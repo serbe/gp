@@ -3,22 +3,23 @@ package main
 import "regexp"
 
 var (
-	numWorkers   int64 = 5
-	timeout      int64 = 10000
-	serverPort         = 19091
-	useFUP             = false
-	logErrors          = false
-	useFind            = false
-	useCheck           = false
-	useCheckAll        = false
-	useMyIPCheck       = false
-	useServer          = false
-	useDebug           = false
-	useAddLink         = false
-	useTestLink        = false
-	useFile            = ""
-	testLink           = ""
-	addLink            = ""
+	numWorkers    int64 = 5
+	timeout       int64 = 10000
+	serverPort          = 19091
+	useFUP              = false
+	logErrors           = false
+	useFind             = false
+	useCheck            = false
+	useCheckAll         = false
+	useMyIPCheck        = false
+	useServer           = false
+	useDebug            = false
+	useAddLink          = false
+	useNoAddLinks       = false
+	useTestLink         = false
+	useFile             = ""
+	testLink            = ""
+	addLink             = ""
 
 	myIP       string
 	reRemoteIP = regexp.MustCompile(`<p>RemoteAddr: (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d{1,5}<\/p>`)

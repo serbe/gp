@@ -16,10 +16,11 @@ func checkFlags() {
 	flag.BoolVar(&useServer, "s", useServer, "start server")
 	flag.BoolVar(&logErrors, "e", logErrors, "logging all errors")
 	flag.BoolVar(&useDebug, "d", useDebug, "show debug messages")
-	flag.StringVar(&useFile, "pf", useFile, "use file with proxy list")
-	flag.StringVar(&testLink, "test", testLink, "link to test it")
-	flag.StringVar(&addLink, "a", addLink, "add primary link")
-	flag.BoolVar(&useFUP, "fup", useFUP, "test all hosts with 4 frequently used ports")
+	flag.StringVar(&useFile, "file", useFile, "use file with proxy list")
+	flag.StringVar(&testLink, "link", testLink, "link to test it")
+	flag.StringVar(&addLink, "add", addLink, "add primary link")
+	flag.BoolVar(&useFUP, "fup", useFUP, "test all hosts with frequently used ports")
+	flag.BoolVar(&useNoAddLinks, "n", useNoAddLinks, "no add find links")
 	flag.Parse()
 
 	if addLink != "" {

@@ -57,9 +57,11 @@ func findProxy() {
 				debugmsg("find", num, "in", result.Hostname)
 			}
 		}
-		for _, l := range links {
-			chkErr("findProxy add to pool", p.Add(l.Hostname, nil))
-			debugmsg("add to pool", l.Hostname)
+		if !useNoAddLinks {
+			for _, l := range links {
+				chkErr("findProxy add to pool", p.Add(l.Hostname, nil))
+				debugmsg("add to pool", l.Hostname)
+			}
 		}
 		addedProxy = addedProxy + num
 	}
