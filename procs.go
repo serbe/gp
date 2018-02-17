@@ -54,7 +54,6 @@ func findProxy() {
 			if link, ok := ml.get(result.Hostname); ok {
 				link.Num = link.Num + num
 				ml.set(link)
-				debugmsg("find", num, "in", result.Hostname)
 			}
 		}
 		if !useNoAddLinks {
