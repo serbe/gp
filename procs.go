@@ -62,6 +62,8 @@ func findProxy() {
 				chkErr("findProxy add to pool", p.Add(l.Hostname, nil))
 				debugmsg("add to pool", l.Hostname)
 			}
+		} else {
+			debugmsg("find", len(links), "in", result.Hostname)
 		}
 		addedProxy = addedProxy + num
 	}
