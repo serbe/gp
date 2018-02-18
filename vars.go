@@ -58,20 +58,20 @@ var (
 	// }
 
 	reURL = []string{
-		`href=(?:'|")/publ/(\d{1,3}-\d{1,3})(?:'|")\s`,
+		`href=(?:'|")/publ/(\d{1,2}-\d{1,2})(?:'|")\s`,
 		`href=(?:'|")/(freeproxylist/proxylist.*?\.txt)(?:'|")`,
 		`value=(?:'|")http://awmproxy.com/(freeproxy_\d{3,12}\.txt)(?:'|")`,
-		`<a href=(?:'|")/(proxies/\d{1,3}/)(?:'|")>`,
-		`<a class=(?:'|")page(?:'|") href=(?:'|")(type-\d{1,3}.htm)(?:'|")>`,
-		`<a href=(?:'|")/(proxy/list/order/updated/order_dir/desc/page/\d{1,3})(?:'|")>`,
+		`<a href=(?:'|")/(proxies/\d{1,2}/)(?:'|")>`,
+		`<a class=(?:'|")page(?:'|") href=(?:'|")(type-\d{1,2}.htm)(?:'|")>`,
+		`<a href=(?:'|")/(proxy/list/order/updated/order_dir/desc/page/\d{1,2})(?:'|")>`,
 		`<a href='http://proxyserverlist-24.blogspot.ru/(\d{4}/\d{1,2}/\d{1,2}-\d{1,2}-\d{1,2}-free-proxy-server-list-\d{1,6}.html#more)'`,
 		`<a href=(?:'|")((?:anon|elite)/\d{1,12}.html)(?:'|")>(?:anon|elite)`,
 		`href=(?:'|")/(proxylist\.php\?.+?\#table)`,
 		`href=(?:'|")/(\w\w/proxy-list/\?.*?#list)`,
-		`<a class=(?:'|")page(?:'|") href=(?:'|")(\d{1,3}.htm)(?:'|")>`,
-		`href=(?:'|")\./(index\.php\?p=\d{1,3})(?:'|")>`,
-		`<a href=(?:'|")(\d{1,3}\.htm)(?:'|")>`,
-		`<a href=(?:'|")/(\w*?/\w*?/\d{1,4}/)(?:'|")>`,
+		`<a class=(?:'|")page(?:'|") href=(?:'|")(\d{1,2}.htm)(?:'|")>`,
+		`href=(?:'|")\./(index\.php\?p=\d{1,2})(?:'|")>`,
+		`<a href=(?:'|")(\d{1,2}\.htm)(?:'|")>`,
+		`<a href=(?:'|")/(\w*?/\w*?/\d{1,2}/)(?:'|")>`,
 		`http://www\.proxyserverlist24\.top/(\d{4}/\d{2}/\S*?\.html)`,
 	}
 	reIP        = `((?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))`
