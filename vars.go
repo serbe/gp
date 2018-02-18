@@ -4,7 +4,7 @@ import "regexp"
 
 var (
 	numWorkers    int64 = 5
-	timeout       int64 = 10000
+	timeout       int64 = 15000
 	serverPort          = 19091
 	useFUP              = false
 	logErrors           = false
