@@ -143,9 +143,9 @@ breakCheckProxyLoop:
 					}
 					totalProxy++
 					log.Printf("%d/%d/%d %-15v %-5v %-6v anon=%v\n",
+						totalProxy,
 						checked,
 						listLen,
-						totalProxy,
 						task.Proxy.Hostname(),
 						task.Proxy.Port(),
 						task.Proxy.Scheme,
