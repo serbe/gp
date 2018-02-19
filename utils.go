@@ -21,6 +21,7 @@ func checkFlags() {
 	flag.StringVar(&addLink, "add", addLink, "add primary link")
 	flag.BoolVar(&useFUP, "fup", useFUP, "test all hosts with frequently used ports")
 	flag.BoolVar(&useNoAddLinks, "n", useNoAddLinks, "no add find links")
+	flag.BoolVar(&useTestScheme, "scheme", useTestScheme, "test all to scheme")
 	flag.Parse()
 
 	if addLink != "" {

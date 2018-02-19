@@ -17,6 +17,7 @@ var (
 	useAddLink          = false
 	useNoAddLinks       = false
 	useTestLink         = false
+	useTestScheme       = false
 	useFile             = ""
 	testLink            = ""
 	addLink             = ""

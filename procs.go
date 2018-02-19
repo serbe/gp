@@ -141,8 +141,16 @@ breakCheckProxyLoop:
 					if useFUP {
 						saveProxy(proxy)
 					}
-					log.Printf("%d/%d %-15v %-5v %-12v anon=%v\n", checked, listLen, task.Proxy.Hostname(), task.Proxy.Port(), task.ResponceTime, proxy.IsAnon)
 					totalProxy++
+					log.Printf("%d/%d/%d %-15v %-5v %-6v anon=%v\n",
+						checked,
+						listLen,
+						totalProxy,
+						task.Proxy.Hostname(),
+						task.Proxy.Port(),
+						task.Proxy.Scheme,
+						proxy.IsAnon,
+					)
 					if proxy.IsAnon {
 						anonProxy++
 					}
