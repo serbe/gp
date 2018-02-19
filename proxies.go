@@ -176,7 +176,7 @@ func getProxyListFromDB() []adb.Proxy {
 }
 
 func saveProxy(p adb.Proxy) {
-	debugmsg("save", p.Hostname, p.Scheme)
+	debugmsg("save", p)
 	if p.Update {
 		chkErr("saveProxy ProxyUpdate", db.ProxyUpdate(p))
 	} else {
