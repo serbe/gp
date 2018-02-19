@@ -134,11 +134,11 @@ breakCheckProxyLoop:
 					continue
 				}
 				mp.set(proxy)
-				if !useFUP {
+				if !(useFUP || useTestScheme) {
 					saveProxy(proxy)
 				}
 				if proxy.IsWork {
-					if useFUP {
+					if useFUP || useTestScheme {
 						saveProxy(proxy)
 					}
 					totalProxy++
