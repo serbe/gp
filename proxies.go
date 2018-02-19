@@ -122,8 +122,10 @@ func (mp *mapProxy) loadProxyFromFile() {
 
 func getFUPList() []adb.Proxy {
 	var list []adb.Proxy
-	hosts := db.ProxyGetUniqueHosts()
-	ports := db.ProxyGetFrequentlyUsedPorts()
+	hosts, err := db.ProxyGetUniqueHosts()
+	chkErr("getFUPList ProxyGetUniqueHosts", err)
+	ports, err := db.ProxyGetFrequentlyUsedPorts()
+	chkErr("getFUPList ProxyGetFrequentlyUsedPorts", err)
 	for _, host := range hosts {
 		for _, port := range ports {
 			proxy, err := newProxy(host, port, "")
@@ -137,7 +139,8 @@ func getFUPList() []adb.Proxy {
 
 func getListWithScheme() []adb.Proxy {
 	var newList []adb.Proxy
-	list := db.ProxyGetAllScheme("http")
+	list, err := db.ProxyGetAllScheme("http")
+	chkErr("getListWithScheme ProxyGetAllScheme", err)
 	for _, item := range list {
 		proxy, err := newProxy(item.Host, item.Port, "https")
 		if err == nil {
@@ -152,26 +155,31 @@ func getListWithScheme() []adb.Proxy {
 }
 
 func getProxyListFromDB() []adb.Proxy {
-	var list []adb.Proxy
+	var (
+		list []adb.Proxy
+		err  error
+	)
 	if useTestLink {
 		return list
 	} else if useCheckAll || useFind {
-		list = db.ProxyGetAll()
+		list, err = db.ProxyGetAll()
+		chkErr("getProxyListFromDB ProxyGetAll", err)
 	} else if useFUP {
 		list = getFUPList()
 	} else if useTestScheme {
 		list = getListWithScheme()
 	} else {
-		list = db.ProxyGetAllOld()
+		list, err = db.ProxyGetAllOld()
+		chkErr("getProxyListFromDB ProxyGetAllOld", err)
 	}
 	return list
 }
 
 func saveProxy(p adb.Proxy) {
 	if p.Update {
-		db.ProxyUpdate(p)
+		chkErr("saveProxy ProxyUpdate", db.ProxyUpdate(p))
 	} else {
-		db.ProxyInsert(p)
+		chkErr("saveProxy ProxyInsert", db.ProxyInsert(p))
 	}
 }
 
@@ -184,7 +192,7 @@ func (mp *mapProxy) numOfNewProxyInTask(task *pool.Task) int64 {
 			continue
 		}
 		mp.set(p)
-		db.ProxyInsert(p)
+		chkErr("numOfNewProxyInTask ProxyInsert", db.ProxyInsert(p))
 		num++
 	}
 	return num

@@ -68,7 +68,9 @@ func getMapLink() *mapLink {
 		link := newLink(addLink, true, true)
 		ml.set(link)
 	} else {
-		ml.fillMapLink(db.LinksGetAll())
+		links, err := db.LinksGetAll()
+		chkErr("getMapLink LinksGetAll", err)
+		ml.fillMapLink(links)
 	}
 	return ml
 }
@@ -81,11 +83,11 @@ func (ml *mapLink) saveAll() {
 	for _, l := range ml.values {
 		if l.Insert {
 			i++
-			db.LinkInsert(l)
+			errmsg("saveAll LinkInsert", db.LinkInsert(l))
 		}
 		if l.Update {
 			u++
-			db.LinkUpdate(l)
+			errmsg("saveAll LinkUpdate", db.LinkUpdate(l))
 		}
 	}
 	debugmsg("update links", u)

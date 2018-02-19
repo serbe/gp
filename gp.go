@@ -14,10 +14,6 @@ func main() {
 
 	db = adb.InitDB("pr", "127.0.0.1:5432", "pr", "pr")
 
-	if useDebug {
-		db.ShowErrors(true)
-	}
-
 	startAppTime := time.Now()
 
 	if useServer {
