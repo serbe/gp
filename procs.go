@@ -129,7 +129,11 @@ breakCheckProxyLoop:
 					break checkProxyLoop
 				}
 				checked++
-				proxy, isOk := mp.taskToProxy(task)
+				isNew := false
+				if useFUP || useTestScheme {
+					isNew = true
+				}
+				proxy, isOk := mp.taskToProxy(task, isNew)
 				if !isOk {
 					continue
 				}

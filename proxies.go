@@ -70,7 +70,7 @@ func (mp *mapProxy) existProxy(hostname string) bool {
 	return ok
 }
 
-func (mp *mapProxy) taskToProxy(task *pool.Task) (adb.Proxy, bool) {
+func (mp *mapProxy) taskToProxy(task *pool.Task, isNew bool) (adb.Proxy, bool) {
 	proxy, ok := mp.get(task.Proxy.String())
 	if !ok {
 		return proxy, ok
@@ -79,7 +79,9 @@ func (mp *mapProxy) taskToProxy(task *pool.Task) (adb.Proxy, bool) {
 	if useMyIPCheck {
 		pattern = reMyIP
 	}
-	proxy.Update = true
+	if !isNew {
+		proxy.Update = true
+	}
 	proxy.UpdateAt = time.Now()
 	proxy.Response = task.ResponceTime
 	strBody := string(task.Body)
@@ -176,7 +178,7 @@ func getProxyListFromDB() []adb.Proxy {
 }
 
 func saveProxy(p adb.Proxy) {
-	debugmsg("save", p)
+	// debugmsg("save", p)
 	if p.Update {
 		chkErr("saveProxy ProxyUpdate", db.ProxyUpdate(p))
 	} else {
