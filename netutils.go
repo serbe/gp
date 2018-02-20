@@ -45,18 +45,18 @@ func getHost(u string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	// return u[:strings.LastIndex(u, "/")], nil
 	return h.Scheme + "://" + h.Host, err
 }
 
-func getExternalIP() (string, error) {
+func getExternalIP() error {
 	debugmsg("start getExternalIP")
 	body, err := fetchMyIPBody(nil)
 	if err != nil {
-		return "", err
+		return err
 	}
 	debugmsg("end getExternalIP")
-	return string(body), nil
+	myIP = string(body)
+	return nil
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
@@ -108,10 +108,14 @@ func decodeIP(src []byte) (string, string, error) {
 	return "", "", err
 }
 
-func getTarget() string {
-	target := fmt.Sprintf("http://93.170.123.221:%d/", serverPort)
-	if useMyIPCheck {
-		target = "http://myip.ru/"
+func getTarget() {
+	if targetURL == "" {
+		if useMyIPCheck {
+			targetURL = "http://myip.ru/"
+		} else if useHttBinCheck {
+			targetURL = "http://httpbin.org/get?show_env=1"
+		} else {
+			targetURL = fmt.Sprintf("http://%s:%d/", myIP, serverPort)
+		}
 	}
-	return target
 }

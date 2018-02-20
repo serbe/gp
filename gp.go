@@ -11,6 +11,12 @@ var db *adb.ADB
 
 func main() {
 	checkFlags()
+	if (useMyIPCheck && useHttBinCheck) ||
+		(useServer && (useMyIPCheck || useHttBinCheck)) ||
+		(targetURL != "" && (useServer || useMyIPCheck || useHttBinCheck)) {
+		log.Println("use only one target")
+		return
+	}
 
 	db = adb.InitDB("pr", "127.0.0.1:5432", "pr", "pr")
 

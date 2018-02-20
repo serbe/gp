@@ -82,6 +82,14 @@ func checkProxy() {
 		anonProxy  int64
 		err        error
 	)
+
+	err = getExternalIP()
+	if err != nil {
+		errmsg("checkProxy getExternalIP", err)
+		return
+	}
+	getTarget()
+
 	list := getProxyListFromDB()
 
 	c := make(chan os.Signal, 1)
@@ -102,12 +110,6 @@ breakCheckProxyLoop:
 		}
 		p := pool.New(numWorkers)
 		p.SetTimeout(timeout)
-		targetURL := getTarget()
-		myIP, err = getExternalIP()
-		if err != nil {
-			errmsg("checkProxy getExternalIP", err)
-			return
-		}
 		debugmsg("start add to pool")
 		for _, proxy := range mp.values {
 			proxyURL, err := url.Parse(proxy.Hostname)

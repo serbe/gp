@@ -40,12 +40,6 @@ func (mp *mapProxy) get(hostname string) (adb.Proxy, bool) {
 	return proxy, ok
 }
 
-// func (mp *mapProxy) remove(hostname string) {
-// 	mp.Lock()
-// 	delete(mp.values, hostname)
-// 	mp.Unlock()
-// }
-
 func newProxy(host, port, scheme string) (adb.Proxy, error) {
 	var proxy adb.Proxy
 	if scheme == "" {
@@ -97,10 +91,6 @@ func (mp *mapProxy) taskToProxy(task *pool.Task, isNew bool) (adb.Proxy, bool) {
 	proxy.Checks++
 	return proxy, ok
 }
-
-// func proxyIsOld(proxy adb.Proxy) bool {
-// 	return time.Since(proxy.UpdateAt) > time.Duration(proxy.Checks)*time.Duration(60*24*7)*time.Minute
-// }
 
 func (mp *mapProxy) loadProxyFromFile() {
 	if useFile == "" {
@@ -178,7 +168,6 @@ func getProxyListFromDB() []adb.Proxy {
 }
 
 func saveProxy(p adb.Proxy) {
-	// debugmsg("save", p)
 	if p.Update {
 		chkErr("saveProxy ProxyUpdate", db.ProxyUpdate(p))
 	} else {
