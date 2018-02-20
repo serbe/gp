@@ -36,7 +36,3 @@ func parseFPL() ([]string, []string) {
 	log.Println(links)
 	return ips, links
 }
-
-func main() {
-	parseFPL()
-}

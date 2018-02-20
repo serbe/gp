@@ -1,15 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"log"
-	"strings"
-	//	"os"
+	"os"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/headzoo/surf"
 )
 
-func main() {
+func kd() ([]string, []string) {
 	bow := surf.NewBrowser()
 	err := bow.Open("https://www.kuaidaili.com/free/inha/1")
 	if err != nil {
@@ -23,17 +23,15 @@ func main() {
 			ips = append(ips, td.Eq(3).Text()+"://"+td.Eq(0).Text()+":"+td.Eq(1).Text())
 		}
 	})
-	for _, link := range bow.Links() {
-		log.Println(link.URL.Path)
-		if strings.Contains(link.Text, "/free/inha/") {
-			links = append(links, link.Text)
-		}
+	for page := 2; page < 5; page++ {
+		links = append(links, fmt.Sprintf("https://www.kuaidaili.com/free/inha/%d", page))
 	}
-	//	f, err := os.Create("body.html")
-	//	if err != nil {
-	//		log.Println(err)
-	//	}
-	//	bow.Download(f)
+	f, err := os.Create("kd.html")
+	if err != nil {
+		log.Println(err)
+	}
+	bow.Download(f)
 	log.Println(ips)
 	log.Println(links)
+	return ips, links
 }
