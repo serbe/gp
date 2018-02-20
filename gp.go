@@ -13,7 +13,7 @@ func main() {
 	checkFlags()
 	if (useMyIPCheck && useHttBinCheck) ||
 		(useServer && (useMyIPCheck || useHttBinCheck)) ||
-		(targetURL != "" && (useServer || useMyIPCheck || useHttBinCheck)) {
+		(useTargetURL != "" && (useServer || useMyIPCheck || useHttBinCheck)) {
 		log.Println("use only one target")
 		return
 	}

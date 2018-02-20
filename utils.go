@@ -23,7 +23,7 @@ func checkFlags() {
 	flag.StringVar(&addLink, "add", addLink, "add primary link")
 	flag.StringVar(&useFile, "file", useFile, "use file with proxy list")
 	flag.StringVar(&testLink, "link", testLink, "link to test it")
-	flag.StringVar(&targetURL, "target", targetURL, "target URL to check like 'http://127.0.0.1:12345'")
+	flag.StringVar(&useTargetURL, "target", useTargetURL, "target URL to check like 'http://127.0.0.1:12345'")
 	flag.Parse()
 
 	if addLink != "" {

@@ -13,21 +13,20 @@ import (
 	"time"
 )
 
-func getMyIP() error {
+func getMyIP() (string, error) {
 	client := &http.Client{
 		Timeout: time.Duration(timeout) * time.Second,
 	}
 	resp, err := client.Get("http://myexternalip.com/raw")
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return "", err
 	}
-	myIP = string(body)
-	return err
+	return string(body), err
 }
 
 func getHost(u string) (string, error) {
@@ -87,14 +86,16 @@ func decodeIP(src []byte) (string, string, error) {
 	return "", "", err
 }
 
-func getTarget() {
-	if targetURL == "" {
+func getTarget(myIP string) string {
+	target := useTargetURL
+	if useTargetURL == "" {
 		if useMyIPCheck {
-			targetURL = "http://myip.ru/"
+			target = "http://myip.ru/"
 		} else if useHttBinCheck {
-			targetURL = "http://httpbin.org/get?show_env=1"
+			target = "http://httpbin.org/get?show_env=1"
 		} else {
-			targetURL = fmt.Sprintf("http://%s:%d/", myIP, serverPort)
+			target = fmt.Sprintf("http://%s:%d/", myIP, serverPort)
 		}
 	}
+	return target
 }

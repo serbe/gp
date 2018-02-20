@@ -64,7 +64,7 @@ func (mp *mapProxy) existProxy(hostname string) bool {
 	return ok
 }
 
-func (mp *mapProxy) taskToProxy(task *pool.Task, isNew bool) (adb.Proxy, bool) {
+func (mp *mapProxy) taskToProxy(task *pool.Task, isNew bool, myIP string) (adb.Proxy, bool) {
 	proxy, ok := mp.get(task.Proxy.String())
 	if !ok {
 		return proxy, ok

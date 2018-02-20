@@ -80,15 +80,14 @@ func checkProxy() {
 		checked    int64
 		totalProxy int64
 		anonProxy  int64
-		err        error
 	)
 
-	err = getMyIP()
+	myIP, err := getMyIP()
 	if err != nil {
 		errmsg("checkProxy getMyIP", err)
 		return
 	}
-	getTarget()
+	targetURL := getTarget(myIP)
 
 	list := getProxyListFromDB()
 
@@ -135,7 +134,7 @@ breakCheckProxyLoop:
 				if useFUP || useTestScheme {
 					isNew = true
 				}
-				proxy, isOk := mp.taskToProxy(task, isNew)
+				proxy, isOk := mp.taskToProxy(task, isNew, myIP)
 				if !isOk {
 					continue
 				}
