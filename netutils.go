@@ -13,31 +13,21 @@ import (
 	"time"
 )
 
-func fetchMyIPBody(proxy *url.URL) ([]byte, error) {
+func getMyIP() error {
 	client := &http.Client{
 		Timeout: time.Duration(timeout) * time.Second,
 	}
-	if proxy != nil {
-		client.Transport = &http.Transport{
-			Proxy:             http.ProxyURL(proxy),
-			DisableKeepAlives: true,
-		}
-	}
 	resp, err := client.Get("http://myexternalip.com/raw")
 	if err != nil {
-		return nil, err
+		return err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	defer func() {
-		err = resp.Body.Close()
-		if err != nil {
-			errmsg("fetchBody resp.Body.Close", err)
-		}
-	}()
-	return body, err
+	myIP = string(body)
+	return err
 }
 
 func getHost(u string) (string, error) {
@@ -46,17 +36,6 @@ func getHost(u string) (string, error) {
 		return "", err
 	}
 	return h.Scheme + "://" + h.Host, err
-}
-
-func getExternalIP() error {
-	debugmsg("start getExternalIP")
-	body, err := fetchMyIPBody(nil)
-	if err != nil {
-		return err
-	}
-	debugmsg("end getExternalIP")
-	myIP = string(body)
-	return nil
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {

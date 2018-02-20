@@ -83,9 +83,9 @@ func checkProxy() {
 		err        error
 	)
 
-	err = getExternalIP()
+	err = getMyIP()
 	if err != nil {
-		errmsg("checkProxy getExternalIP", err)
+		errmsg("checkProxy getMyIP", err)
 		return
 	}
 	getTarget()
