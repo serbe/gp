@@ -26,7 +26,8 @@ func getMyIP() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(body), err
+	ip := strings.Replace(string(body), "\n", "", 1)
+	return ip, err
 }
 
 func getHost(u string) (string, error) {
