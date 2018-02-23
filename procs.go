@@ -89,6 +89,11 @@ func checkProxy() {
 	}
 	targetURL := getTarget(myIP)
 
+	if targetURL != "http://93.170.123.221:19091/" {
+		debugmsg(targetURL)
+		os.Exit(1)
+	}
+
 	list := getProxyListFromDB()
 
 	c := make(chan os.Signal, 1)
