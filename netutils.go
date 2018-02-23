@@ -17,7 +17,7 @@ func getMyIP() (string, error) {
 	client := &http.Client{
 		Timeout: time.Duration(timeout) * time.Second,
 	}
-	resp, err := client.Get("http://myexternalip.com/raw")
+	resp, err := client.Get("https://api.ipify.org")
 	if err != nil {
 		return "", err
 	}
@@ -87,7 +87,7 @@ func decodeIP(src []byte) (string, string, error) {
 	return "", "", err
 }
 
-func getTarget(myIP string) string {
+func getTarget(targetIP string) string {
 	target := useTargetURL
 	if useTargetURL == "" {
 		if useMyIPCheck {
@@ -95,7 +95,7 @@ func getTarget(myIP string) string {
 		} else if useHttBinCheck {
 			target = "http://httpbin.org/get?show_env=1"
 		} else {
-			target = fmt.Sprintf("http://%s:%d/", myIP, serverPort)
+			target = fmt.Sprintf("http://%s:%d/", targetIP, serverPort)
 		}
 	}
 	return target
