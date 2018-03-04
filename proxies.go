@@ -175,8 +175,8 @@ func saveProxy(p adb.Proxy) {
 	}
 }
 
-func (mp *mapProxy) numOfNewProxyInTask(task *pool.Task) int64 {
-	var num int64
+func (mp *mapProxy) newProxyInTask(task *pool.Task) []adb.Proxy {
+	var list []adb.Proxy
 	body := cleanBody(task.Body)
 	proxies := getProxyList(body)
 	for _, p := range proxies {
@@ -184,10 +184,10 @@ func (mp *mapProxy) numOfNewProxyInTask(task *pool.Task) int64 {
 			continue
 		}
 		mp.set(p)
-		chkErr("numOfNewProxyInTask ProxyInsert", db.ProxyInsert(p))
-		num++
+		// chkErr("numOfNewProxyInTask ProxyInsert", db.ProxyInsert(p))
+		list = append(list, p)
 	}
-	return num
+	return list
 }
 
 func getProxyList(body []byte) []adb.Proxy {

@@ -11,8 +11,8 @@ var db *adb.ADB
 
 func main() {
 	checkFlags()
-	if (useMyIPCheck && useHttBinCheck) ||
-		(useServer && (useMyIPCheck || useHttBinCheck)) ||
+	if (useNoServer && (useMyIPCheck && useHttBinCheck)) ||
+		(useMyIPCheck || useHttBinCheck) ||
 		(useTargetURL != "" && (useMyIPCheck || useHttBinCheck)) {
 		log.Println("use only one target")
 		return
@@ -22,7 +22,7 @@ func main() {
 
 	startAppTime := time.Now()
 
-	if useServer {
+	if !useNoServer {
 		go startServer()
 	}
 
@@ -31,7 +31,7 @@ func main() {
 	}
 
 	if useCheck {
-		checkProxy()
+		checkProxy(getProxyListFromDB())
 	}
 
 	log.Printf("Total time: %v\n", time.Since(startAppTime))

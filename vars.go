@@ -13,7 +13,7 @@ var (
 	useCheckAll          = false
 	useMyIPCheck         = false
 	useHttBinCheck       = false
-	useServer            = false
+	useNoServer          = false
 	useDebug             = false
 	useAddLink           = false
 	useNoAddLinks        = false

@@ -7,11 +7,16 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/serbe/adb"
+
 	"github.com/serbe/pool"
 )
 
 func findProxy() {
-	var addedProxy int64
+	var (
+		addedProxy int64
+		newList    []adb.Proxy
+	)
 	debugmsg("Start find proxy")
 	p := pool.New(numWorkers)
 	p.SetTimeout(timeout)
@@ -48,12 +53,16 @@ func findProxy() {
 		}
 		ml.update(result.Hostname)
 		links := ml.getNewLinksFromTask(result)
-		num := mp.numOfNewProxyInTask(result)
+		newProxy := mp.newProxyInTask(result)
+		num := int64(len(newProxy))
 		if num > 0 {
 			debugmsg("find", num, "proxy in", result.Hostname)
 			if link, ok := ml.get(result.Hostname); ok {
 				link.Num = link.Num + num
 				ml.set(link)
+			}
+			for _, np := range newProxy {
+				newList = append(newList, np)
 			}
 		}
 		if !useNoAddLinks {
@@ -72,9 +81,10 @@ func findProxy() {
 	}
 	debugmsg(addedProxy, "new proxy found")
 	debugmsg("end findProxy")
+	checkProxy(newList)
 }
 
-func checkProxy() {
+func checkProxy(list []adb.Proxy) {
 	debugmsg("start checkProxy")
 	var (
 		checked    int64
@@ -88,8 +98,6 @@ func checkProxy() {
 		return
 	}
 	targetURL := getTarget(myIP)
-
-	list := getProxyListFromDB()
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
