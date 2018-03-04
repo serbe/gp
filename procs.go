@@ -79,6 +79,7 @@ func findProxy() {
 		debugmsg("save proxy")
 		ml.saveAll()
 	}
+	p.Quit()
 	debugmsg(addedProxy, "new proxy found")
 	debugmsg("end findProxy")
 	checkProxy(newList)
@@ -116,6 +117,7 @@ breakCheckProxyLoop:
 			j++
 		}
 		p := pool.New(numWorkers)
+		defer p.Quit()
 		p.SetTimeout(timeout)
 		debugmsg("start add to pool")
 		for _, proxy := range mp.values {

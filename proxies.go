@@ -169,9 +169,9 @@ func getProxyListFromDB() []adb.Proxy {
 
 func saveProxy(p adb.Proxy) {
 	if p.Update {
-		chkErr("saveProxy ProxyUpdate", db.ProxyUpdate(p))
+		chkErr("saveProxy ProxyUpdate", db.ProxyUpdate(&p))
 	} else {
-		chkErr("saveProxy ProxyInsert", db.ProxyInsert(p))
+		chkErr("saveProxy ProxyInsert", db.ProxyInsert(&p))
 	}
 }
 

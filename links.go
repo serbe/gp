@@ -83,11 +83,11 @@ func (ml *mapLink) saveAll() {
 	for _, l := range ml.values {
 		if l.Insert {
 			i++
-			errmsg("saveAll LinkInsert", db.LinkInsert(l))
+			errmsg("saveAll LinkInsert", db.LinkInsert(&l))
 		}
 		if l.Update {
 			u++
-			errmsg("saveAll LinkUpdate", db.LinkUpdate(l))
+			errmsg("saveAll LinkUpdate", db.LinkUpdate(&l))
 		}
 	}
 	debugmsg("update links", u)
