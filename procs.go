@@ -61,9 +61,7 @@ func findProxy() {
 				link.Num = link.Num + num
 				ml.set(link)
 			}
-			for _, np := range newProxy {
-				newList = append(newList, np)
-			}
+			newList = append(newList, newProxy...)
 		}
 		if !useNoAddLinks {
 			for _, l := range links {

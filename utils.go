@@ -15,7 +15,6 @@ func checkFlags() {
 	flag.BoolVar(&useHttBinCheck, "h", useHttBinCheck, "check working proxy on httpbin.org")
 	flag.BoolVar(&useMyIPCheck, "m", useMyIPCheck, "check working proxy on myip.ru")
 	flag.BoolVar(&useNoAddLinks, "test", useNoAddLinks, "no add find links")
-	flag.BoolVar(&useNoServer, "ns", useNoServer, "no start server")
 	flag.BoolVar(&useTestScheme, "scheme", useTestScheme, "test all to scheme")
 	flag.IntVar(&serverPort, "p", serverPort, "server port")
 	flag.Int64Var(&timeout, "t", timeout, "timeout")

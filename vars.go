@@ -13,7 +13,6 @@ var (
 	useCheckAll          = false
 	useMyIPCheck         = false
 	useHttBinCheck       = false
-	useNoServer          = false
 	useDebug             = false
 	useAddLink           = false
 	useNoAddLinks        = false
@@ -105,22 +104,5 @@ var (
 	}
 	base16 = []string{
 		`PROXY_IP(?:'|"):(?:'|")((?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))(?:'|"),.*?,(?:'|")PROXY_PORT(?:'|"):(?:'|")([a-fA-F0-9]{1,4})(?:'|")`,
-	}
-	headers = []string{
-		"HTTP_VIA",
-		"HTTP_X_FORWARDED_FOR",
-		"HTTP_FORWARDED_FOR",
-		"HTTP_X_FORWARDED",
-		"HTTP_FORWARDED",
-		"HTTP_CLIENT_IP",
-		"HTTP_FORWARDED_FOR_IP",
-		"VIA",
-		"X_FORWARDED_FOR",
-		"FORWARDED_FOR",
-		"X_FORWARDED",
-		"FORWARDED",
-		"CLIENT_IP",
-		"FORWARDED_FOR_IP",
-		"HTTP_PROXY_CONNECTION",
 	}
 )

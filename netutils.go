@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -36,25 +35,6 @@ func getHost(u string) (string, error) {
 		return "", err
 	}
 	return h.Scheme + "://" + h.Host, err
-}
-
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	_, err := fmt.Fprintf(w, "<p>RemoteAddr: %s</p>", r.RemoteAddr)
-	chkErr("startServer fmt.Fprintf", err)
-	for _, header := range headers {
-		str := r.Header.Get(header)
-		if str == "" {
-			continue
-		}
-		_, err = fmt.Fprintf(w, "<p>%s: %s</p>", header, str)
-		chkErr("startServer fmt.Fprintf", err)
-	}
-}
-
-func startServer() {
-	debugmsg("Start server")
-	http.HandleFunc("/", rootHandler)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", serverPort), nil))
 }
 
 func convertPort(port string) string {
