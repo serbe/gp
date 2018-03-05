@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/url"
 	"os"
 	"os/signal"
@@ -151,7 +152,7 @@ breakCheckProxyLoop:
 						saveProxy(proxy)
 					}
 					totalProxy++
-					debugmsgf("%d/%d/%d %-15v %-5v %-6v anon=%v\n",
+					debugmsg(fmt.Sprintf("%d/%d/%d %-15v %-5v %-6v anon=%v\n",
 						totalProxy,
 						checked,
 						listLen,
@@ -159,7 +160,7 @@ breakCheckProxyLoop:
 						task.Proxy.Port(),
 						task.Proxy.Scheme,
 						proxy.IsAnon,
-					)
+					))
 					if proxy.IsAnon {
 						anonProxy++
 					}
@@ -170,7 +171,7 @@ breakCheckProxyLoop:
 			}
 		}
 	}
-	debugmsgf("%d is good\n", totalProxy)
-	debugmsgf("%d is anon\n", anonProxy)
+	debugmsg(fmt.Sprintf("%d is good\n", totalProxy))
+	debugmsg(fmt.Sprintf("%d is anon\n", anonProxy))
 	debugmsg("end checkProxy")
 }

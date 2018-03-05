@@ -78,9 +78,3 @@ func debugmsg(str ...interface{}) {
 		log.Println(str)
 	}
 }
-
-func debugmsgf(str string, attr ...interface{}) {
-	if cfg.LogDebug {
-		log.Printf(str, attr)
-	}
-}
