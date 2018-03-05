@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/base64"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -67,16 +66,12 @@ func decodeIP(src []byte) (string, string, error) {
 	return "", "", err
 }
 
-func getTarget(targetIP string) string {
-	target := useTargetURL
-	if useTargetURL == "" {
+func setTarget(targetIP string) {
+	if targetURL == "" {
 		if useMyIPCheck {
-			target = "http://myip.ru/"
+			targetURL = "http://myip.ru/"
 		} else if useHttBinCheck {
-			target = "http://httpbin.org/get?show_env=1"
-		} else {
-			target = fmt.Sprintf("http://%s:%d/", targetIP, serverPort)
+			targetURL = "http://httpbin.org/get?show_env=1"
 		}
 	}
-	return target
 }

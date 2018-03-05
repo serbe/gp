@@ -5,7 +5,6 @@ import "regexp"
 var (
 	numWorkers     int64 = 5
 	timeout        int64 = 15000
-	serverPort           = 19091
 	useFUP               = false
 	logErrors            = false
 	useFind              = false
@@ -18,7 +17,7 @@ var (
 	useNoAddLinks        = false
 	useTestLink          = false
 	useTestScheme        = false
-	useTargetURL         = ""
+	targetURL            = ""
 	useFile              = ""
 	testLink             = ""
 	addLink              = ""

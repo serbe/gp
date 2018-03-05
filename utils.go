@@ -16,13 +16,12 @@ func checkFlags() {
 	flag.BoolVar(&useMyIPCheck, "m", useMyIPCheck, "check working proxy on myip.ru")
 	flag.BoolVar(&useNoAddLinks, "test", useNoAddLinks, "no add find links")
 	flag.BoolVar(&useTestScheme, "scheme", useTestScheme, "test all to scheme")
-	flag.IntVar(&serverPort, "p", serverPort, "server port")
 	flag.Int64Var(&timeout, "t", timeout, "timeout")
 	flag.Int64Var(&numWorkers, "w", numWorkers, "number of workers")
 	flag.StringVar(&addLink, "add", addLink, "add primary link")
 	flag.StringVar(&useFile, "file", useFile, "use file with proxy list")
 	flag.StringVar(&testLink, "l", testLink, "link to test it")
-	flag.StringVar(&useTargetURL, "target", useTargetURL, "target URL to check like 'http://127.0.0.1:12345'")
+	flag.StringVar(&targetURL, "target", targetURL, "target URL to check like 'http://127.0.0.1:12345'")
 	flag.Parse()
 
 	if addLink != "" {

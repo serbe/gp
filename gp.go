@@ -13,8 +13,20 @@ func main() {
 	checkFlags()
 	if (useMyIPCheck && useHttBinCheck) ||
 		(useMyIPCheck || useHttBinCheck) ||
-		(useTargetURL != "" && (useMyIPCheck || useHttBinCheck)) {
+		(targetURL != "" && (useMyIPCheck || useHttBinCheck)) {
 		log.Println("use only one target")
+		return
+	}
+
+	myIP, err := getMyIP()
+	if err != nil {
+		errmsg("getMyIP", err)
+		return
+	}
+
+	setTarget(myIP)
+	if targetURL == "" {
+		errmsg("targetURL is empty", nil)
 		return
 	}
 
