@@ -152,7 +152,7 @@ breakCheckProxyLoop:
 						saveProxy(proxy)
 					}
 					totalProxy++
-					debugmsg(fmt.Sprintf("%d/%d/%d %-15v %-5v %-6v anon=%v\n",
+					debugmsg(fmt.Sprintf("%d/%d/%d %-15v %-5v %-6v anon=%v",
 						totalProxy,
 						checked,
 						listLen,
@@ -171,7 +171,7 @@ breakCheckProxyLoop:
 			}
 		}
 	}
-	debugmsg(fmt.Sprintf("%d is good\n", totalProxy))
-	debugmsg(fmt.Sprintf("%d is anon\n", anonProxy))
+	debugmsg(fmt.Sprintf("%d is good", totalProxy))
+	debugmsg(fmt.Sprintf("%d is anon", anonProxy))
 	debugmsg("end checkProxy")
 }
