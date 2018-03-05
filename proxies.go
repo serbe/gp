@@ -70,7 +70,7 @@ func (mp *mapProxy) taskToProxy(task *pool.Task, isNew bool, myIP string) (adb.P
 		return proxy, ok
 	}
 	pattern := reRemoteIP
-	if useMyIPCheck {
+	if cfg.MyIPCheck {
 		pattern = reMyIP
 	}
 	if !isNew {
@@ -82,7 +82,7 @@ func (mp *mapProxy) taskToProxy(task *pool.Task, isNew bool, myIP string) (adb.P
 	if pattern.Match(task.Body) && !strings.Contains(strBody, myIP) {
 		proxy.IsWork = true
 		proxy.Checks = 0
-		if !useMyIPCheck && strings.Count(strBody, "<p>") == 1 {
+		if !cfg.MyIPCheck && strings.Count(strBody, "<p>") == 1 {
 			proxy.IsAnon = true
 		}
 		return proxy, ok
@@ -93,10 +93,10 @@ func (mp *mapProxy) taskToProxy(task *pool.Task, isNew bool, myIP string) (adb.P
 }
 
 func (mp *mapProxy) loadProxyFromFile() {
-	if useFile == "" {
+	if testFile == "" {
 		return
 	}
-	fileBody, err := ioutil.ReadFile(useFile)
+	fileBody, err := ioutil.ReadFile(testFile)
 	if err != nil {
 		errmsg("findProxy ReadFile", err)
 		return
@@ -158,7 +158,7 @@ func getProxyListFromDB() []adb.Proxy {
 		chkErr("getProxyListFromDB ProxyGetAll", err)
 	} else if useFUP {
 		list = getFUPList()
-	} else if useTestScheme {
+	} else if useCheckScheme {
 		list = getListWithScheme()
 	} else {
 		list, err = db.ProxyGetAllOld()

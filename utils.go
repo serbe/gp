@@ -1,30 +1,58 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
+	"io/ioutil"
 	"log"
 )
 
+// Config all vars
+type config struct {
+	Target       string `json:"target"`
+	FindWorkers  int64  `json:"find_workers"`
+	CheckWorkers int64  `json:"check_workers"`
+	Timeout      int64  `json:"timeout"`
+	LogErrors    bool   `json:"log_errors"`
+	LogDebug     bool   `json:"log_debug"`
+	MyIPCheck    bool   `json:"my_ip_check"`
+	HTTPBinCheck bool   `json:"http_bin_check"`
+}
+
+func getConfig() {
+	file, err := ioutil.ReadFile("./config.json")
+	if err != nil {
+		log.Panic("getConfig ReadFile", err)
+	}
+	if err = json.Unmarshal(file, &cfg); err != nil {
+		log.Panic("getConfig Unmarshal", err)
+	}
+}
+
 func checkFlags() {
+	flag.Int64Var(&cfg.CheckWorkers, "cw", cfg.CheckWorkers, "number of workers to check")
+	flag.Int64Var(&cfg.FindWorkers, "fw", cfg.FindWorkers, "number of workers to find")
+	flag.BoolVar(&cfg.LogDebug, "d", cfg.LogDebug, "logging debug messages")
+	flag.BoolVar(&cfg.LogErrors, "e", cfg.LogErrors, "logging error messages")
+	flag.BoolVar(&cfg.HTTPBinCheck, "h", cfg.HTTPBinCheck, "check working proxy with httpbin.org")
+	flag.BoolVar(&cfg.MyIPCheck, "m", cfg.MyIPCheck, "check working proxy with myip.ru")
+	flag.Int64Var(&cfg.Timeout, "t", cfg.Timeout, "timeout")
+	flag.StringVar(&cfg.Target, "target", cfg.Target, "target URL to check like 'http://127.0.0.1:12345/target'")
+
 	flag.BoolVar(&useCheckAll, "all", useCheckAll, "check all proxy")
 	flag.BoolVar(&useCheck, "c", useCheck, "check proxy")
-	flag.BoolVar(&useDebug, "d", useDebug, "show debug messages")
-	flag.BoolVar(&logErrors, "e", logErrors, "logging all errors")
 	flag.BoolVar(&useFind, "f", useFind, "find new proxy")
 	flag.BoolVar(&useFUP, "fup", useFUP, "test all hosts with frequently used ports")
-	flag.BoolVar(&useHttBinCheck, "h", useHttBinCheck, "check working proxy on httpbin.org")
-	flag.BoolVar(&useMyIPCheck, "m", useMyIPCheck, "check working proxy on myip.ru")
 	flag.BoolVar(&useNoAddLinks, "test", useNoAddLinks, "no add find links")
-	flag.BoolVar(&useTestScheme, "scheme", useTestScheme, "test all to scheme")
-	flag.Int64Var(&timeout, "t", timeout, "timeout")
-	flag.Int64Var(&numWorkers, "w", numWorkers, "number of workers")
-	flag.StringVar(&addLink, "add", addLink, "add primary link")
-	flag.StringVar(&useFile, "file", useFile, "use file with proxy list")
-	flag.StringVar(&testLink, "l", testLink, "link to test it")
-	flag.StringVar(&targetURL, "target", targetURL, "target URL to check like 'http://127.0.0.1:12345'")
+	flag.BoolVar(&useCheckScheme, "scheme", useCheckScheme, "check all http to https and socks5 scheme ")
+
+	flag.StringVar(&primaryLink, "p", primaryLink, "add primary link")
+	flag.StringVar(&testFile, "file", testFile, "use file with proxy list")
+	flag.StringVar(&testLink, "link", testLink, "link to test it")
+
 	flag.Parse()
 
-	if addLink != "" {
+	if primaryLink != "" {
 		useAddLink = true
 	}
 
@@ -40,13 +68,13 @@ func chkErr(str string, err error) {
 }
 
 func errmsg(str string, err error) {
-	if logErrors {
+	if cfg.LogErrors {
 		log.Println("Error in", str, err)
 	}
 }
 
 func debugmsg(str ...interface{}) {
-	if useDebug {
+	if cfg.LogDebug {
 		log.Println(str)
 	}
 }

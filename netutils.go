@@ -13,7 +13,7 @@ import (
 
 func getMyIP() (string, error) {
 	client := &http.Client{
-		Timeout: time.Duration(timeout) * time.Second,
+		Timeout: time.Duration(cfg.Timeout) * time.Second,
 	}
 	resp, err := client.Get("https://api.ipify.org")
 	if err != nil {
@@ -48,8 +48,8 @@ func cleanBody(body []byte) []byte {
 			body = re.ReplaceAll(body, []byte(replace[i][1]))
 		}
 	}
-	if useTestLink && useDebug {
-		ioutil.WriteFile("tmp.html", body, 0644)
+	if useTestLink && cfg.LogDebug {
+		chkErr("cleanBody WriteFile", ioutil.WriteFile("tmp.html", body, 0644))
 	}
 	return body
 }
@@ -67,11 +67,11 @@ func decodeIP(src []byte) (string, string, error) {
 }
 
 func setTarget(targetIP string) {
-	if targetURL == "" {
-		if useMyIPCheck {
-			targetURL = "http://myip.ru/"
-		} else if useHttBinCheck {
-			targetURL = "http://httpbin.org/get?show_env=1"
+	if cfg.Target == "" {
+		if cfg.MyIPCheck {
+			cfg.Target = "http://myip.ru/"
+		} else if cfg.HTTPBinCheck {
+			cfg.Target = "http://httpbin.org/get?show_env=1"
 		}
 	}
 }

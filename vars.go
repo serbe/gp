@@ -3,24 +3,18 @@ package main
 import "regexp"
 
 var (
-	numWorkers     int64 = 5
-	timeout        int64 = 15000
-	useFUP               = false
-	logErrors            = false
-	useFind              = false
-	useCheck             = false
-	useCheckAll          = false
-	useMyIPCheck         = false
-	useHttBinCheck       = false
-	useDebug             = false
-	useAddLink           = false
-	useNoAddLinks        = false
-	useTestLink          = false
-	useTestScheme        = false
-	targetURL            = ""
-	useFile              = ""
-	testLink             = ""
-	addLink              = ""
+	cfg            config
+	useFUP         = false
+	useFind        = false
+	useCheck       = false
+	useCheckAll    = false
+	useAddLink     = false
+	useNoAddLinks  = false
+	useTestLink    = false
+	useCheckScheme = false
+	testFile       = ""
+	testLink       = ""
+	primaryLink    = ""
 
 	reRemoteIP = regexp.MustCompile(`<p>RemoteAddr: (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d{1,5}</p>`)
 	reMyIP     = regexp.MustCompile(`<td>(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})</td>`)

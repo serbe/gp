@@ -18,8 +18,8 @@ func findProxy() {
 		newList    []adb.Proxy
 	)
 	debugmsg("Start find proxy")
-	p := pool.New(numWorkers)
-	p.SetTimeout(timeout)
+	p := pool.New(cfg.FindWorkers)
+	p.SetTimeout(cfg.Timeout)
 	ml := getMapLink()
 	mp := newMapProxy()
 	list := getProxyListFromDB()
@@ -29,7 +29,6 @@ func findProxy() {
 	debugmsg("load links", len(ml.values))
 	debugmsg("load proxies", len(mp.values))
 	debugmsg("start add to pool")
-	p.SetTimeout(timeout)
 	p.SetQuitTimeout(2000)
 	for _, link := range ml.values {
 		if useAddLink || useTestLink || link.Iterate && time.Since(link.UpdateAt) > time.Duration(1)*time.Hour {
@@ -113,14 +112,14 @@ breakCheckProxyLoop:
 			mp.set(list[j])
 			j++
 		}
-		p := pool.New(numWorkers)
+		p := pool.New(cfg.CheckWorkers)
 		defer p.Quit()
-		p.SetTimeout(timeout)
+		p.SetTimeout(cfg.Timeout)
 		debugmsg("start add to pool")
 		for _, proxy := range mp.values {
 			proxyURL, err := url.Parse(proxy.Hostname)
 			chkErr("parse url", err)
-			chkErr("add to pool", p.Add(targetURL, proxyURL))
+			chkErr("add to pool", p.Add(cfg.Target, proxyURL))
 		}
 		debugmsg("end add to pool")
 		p.EndWaitingTasks()
@@ -138,7 +137,7 @@ breakCheckProxyLoop:
 				}
 				checked++
 				isNew := false
-				if useFUP || useTestScheme {
+				if useFUP || useCheckScheme {
 					isNew = true
 				}
 				proxy, isOk := mp.taskToProxy(task, isNew, myIP)
@@ -146,11 +145,11 @@ breakCheckProxyLoop:
 					continue
 				}
 				mp.set(proxy)
-				if !(useFUP || useTestScheme) {
+				if !(useFUP || useCheckScheme) {
 					saveProxy(proxy)
 				}
 				if proxy.IsWork {
-					if useFUP || useTestScheme {
+					if useFUP || useCheckScheme {
 						saveProxy(proxy)
 					}
 					totalProxy++

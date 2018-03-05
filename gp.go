@@ -10,24 +10,23 @@ import (
 var db *adb.ADB
 
 func main() {
+	getConfig()
+
 	checkFlags()
-	if (useMyIPCheck && useHttBinCheck) ||
-		(useMyIPCheck || useHttBinCheck) ||
-		(targetURL != "" && (useMyIPCheck || useHttBinCheck)) {
-		log.Println("use only one target")
-		return
+	if (cfg.MyIPCheck && cfg.HTTPBinCheck) ||
+		(cfg.MyIPCheck || cfg.HTTPBinCheck) ||
+		(cfg.Target != "" && (cfg.MyIPCheck || cfg.HTTPBinCheck)) {
+		log.Panic("use only one target")
 	}
 
 	myIP, err := getMyIP()
 	if err != nil {
-		errmsg("getMyIP", err)
-		return
+		log.Panic("getMyIP", err)
 	}
 
 	setTarget(myIP)
-	if targetURL == "" {
-		errmsg("targetURL is empty", nil)
-		return
+	if cfg.Target == "" {
+		log.Panic("Target is empty", nil)
 	}
 
 	db = adb.InitDB("pr", "127.0.0.1:5432", "pr", "pr")
@@ -36,9 +35,7 @@ func main() {
 
 	if useFind {
 		findProxy()
-	}
-
-	if useCheck {
+	} else if useCheck {
 		checkProxy(getProxyListFromDB())
 	}
 
