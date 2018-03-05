@@ -1,1 +1,0 @@
-ALTER TABLE proxies ADD COLUMN scheme text NOT NULL default 'http';
