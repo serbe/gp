@@ -2,7 +2,7 @@
     "target": "http://127.0.0.1:12345/server",
     "find_workers": 3,
     "check_workers": 10,
-    "timeout": 15,
+    "timeout": 15000,
     "log_errors": false,
     "log_debug": false,
     "my_ip_check": false,

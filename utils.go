@@ -36,7 +36,7 @@ func checkFlags() {
 	flag.BoolVar(&cfg.LogErrors, "e", cfg.LogErrors, "logging error messages")
 	flag.BoolVar(&cfg.HTTPBinCheck, "h", cfg.HTTPBinCheck, "check working proxy with httpbin.org")
 	flag.BoolVar(&cfg.MyIPCheck, "m", cfg.MyIPCheck, "check working proxy with myip.ru")
-	flag.Int64Var(&cfg.Timeout, "t", cfg.Timeout, "timeout")
+	flag.Int64Var(&cfg.Timeout, "t", cfg.Timeout, "timeout in millisecond")
 	flag.StringVar(&cfg.Target, "target", cfg.Target, "target URL to check like 'http://127.0.0.1:12345/target'")
 
 	flag.BoolVar(&useCheckAll, "all", useCheckAll, "check all proxy")
