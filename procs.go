@@ -1,14 +1,12 @@
 package main
 
 import (
-	"log"
 	"net/url"
 	"os"
 	"os/signal"
 	"time"
 
 	"github.com/serbe/adb"
-
 	"github.com/serbe/pool"
 )
 
@@ -153,7 +151,7 @@ breakCheckProxyLoop:
 						saveProxy(proxy)
 					}
 					totalProxy++
-					log.Printf("%d/%d/%d %-15v %-5v %-6v anon=%v\n",
+					debugmsgf("%d/%d/%d %-15v %-5v %-6v anon=%v\n",
 						totalProxy,
 						checked,
 						listLen,
@@ -172,7 +170,7 @@ breakCheckProxyLoop:
 			}
 		}
 	}
-	log.Printf("%d is good\n", totalProxy)
-	log.Printf("%d is anon\n", anonProxy)
+	debugmsgf("%d is good\n", totalProxy)
+	debugmsgf("%d is anon\n", anonProxy)
 	debugmsg("end checkProxy")
 }

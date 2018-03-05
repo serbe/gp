@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -86,7 +85,6 @@ func usProxy(body []byte) []string {
 	}
 	dom.Find("tr").Each(func(_ int, s *goquery.Selection) {
 		td := s.Find("td")
-		log.Println(td.Length())
 		if td.Length() == 8 {
 			if td.Eq(6).Text() == "yes" {
 				ips = append(ips, "https://"+td.Eq(0).Text()+":"+td.Eq(1).Text())
