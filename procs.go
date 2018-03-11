@@ -152,7 +152,7 @@ breakCheckProxyLoop:
 						saveProxy(proxy)
 					}
 					totalProxy++
-					debugmsg(fmt.Sprintf("%d/%d/%d %-15v %-5v %-6v anon=%v",
+					debugmsg(fmt.Sprintf("%d/%d/%d %-15v %-5v %-6v %v",
 						totalProxy,
 						checked,
 						listLen,
