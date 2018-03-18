@@ -171,6 +171,9 @@ breakCheckProxyLoop:
 				break breakCheckProxyLoop
 			}
 		}
+		if listLen > 0 {
+			debugmsg(fmt.Sprintf("checked %d from %d", checked, listLen))
+		}
 	}
 	debugmsg(fmt.Sprintf("%d is good", totalProxy))
 	debugmsg(fmt.Sprintf("%d is anon", anonProxy))
