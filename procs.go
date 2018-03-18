@@ -112,7 +112,7 @@ breakCheckProxyLoop:
 			j++
 		}
 		p := pool.New(cfg.CheckWorkers)
-		// defer p.Quit()
+		defer p.Quit()
 		p.SetTimeout(cfg.Timeout)
 		debugmsg("start add to pool")
 		for _, proxy := range mp.values {
@@ -121,11 +121,12 @@ breakCheckProxyLoop:
 			chkErr("add to pool", p.Add(cfg.Target, proxyURL))
 		}
 		debugmsg("end add to pool")
-		p.EndWaitingTasks()
-		// if p.GetAddedTasks() == 0 {
-		// 	debugmsg("no task added to pool")
-		// 	return
-		// }
+		// p.EndWaitingTasks()
+		p.SetQuitTimeout(cfg.Timeout + 1000)
+		if p.GetAddedTasks() == 0 {
+			debugmsg("no task added to pool")
+			return
+		}
 	checkProxyLoop:
 		for {
 			select {
