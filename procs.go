@@ -112,7 +112,7 @@ breakCheckProxyLoop:
 			j++
 		}
 		p := pool.New(cfg.CheckWorkers)
-		defer p.Quit()
+		// defer p.Quit()
 		p.SetTimeout(cfg.Timeout)
 		debugmsg("start add to pool")
 		for _, proxy := range mp.values {
@@ -121,55 +121,53 @@ breakCheckProxyLoop:
 			chkErr("add to pool", p.Add(cfg.Target, proxyURL))
 		}
 		debugmsg("end add to pool")
-		debugmsg(j, p.GetAddedTasks())
+		debugmsg(j, p.GetAddedTasks(), listLen)
 		p.EndWaitingTasks()
-		// p.SetQuitTimeout(cfg.Timeout + 1000)
-		// if p.GetAddedTasks() == 0 {
-		// 	debugmsg("no task added to pool")
-		// 	return
-		// }
-	checkProxyLoop:
-		for {
-			select {
-			case task, ok := <-p.ResultChan:
-				if !ok {
-					debugmsg("break loop by close chan ResultChan")
-					break checkProxyLoop
-				}
-				checked++
-				isNew := false
-				if useFUP || useCheckScheme {
-					isNew = true
-				}
-				proxy, isOk := mp.taskToProxy(task, isNew, myIP)
-				if !isOk {
-					continue
-				}
-				mp.set(proxy)
-				if !(useFUP || useCheckScheme) {
-					saveProxy(proxy)
-				}
-				if proxy.IsWork {
+		p.SetQuitTimeout(cfg.Timeout + 1000)
+		if p.GetAddedTasks() > 0 {
+		checkProxyLoop:
+			for {
+				select {
+				case task, ok := <-p.ResultChan:
+					if !ok {
+						debugmsg("break loop by close chan ResultChan")
+						break checkProxyLoop
+					}
+					checked++
+					isNew := false
 					if useFUP || useCheckScheme {
+						isNew = true
+					}
+					proxy, isOk := mp.taskToProxy(task, isNew, myIP)
+					if !isOk {
+						continue
+					}
+					mp.set(proxy)
+					if !(useFUP || useCheckScheme) {
 						saveProxy(proxy)
 					}
-					totalProxy++
-					debugmsg(fmt.Sprintf("%d/%d/%d %-15v %-5v %-6v %v",
-						totalProxy,
-						checked,
-						listLen,
-						task.Proxy.Hostname(),
-						task.Proxy.Port(),
-						task.Proxy.Scheme,
-						proxy.IsAnon,
-					))
-					if proxy.IsAnon {
-						anonProxy++
+					if proxy.IsWork {
+						if useFUP || useCheckScheme {
+							saveProxy(proxy)
+						}
+						totalProxy++
+						debugmsg(fmt.Sprintf("%d/%d/%d %-15v %-5v %-6v %v",
+							totalProxy,
+							checked,
+							listLen,
+							task.Proxy.Hostname(),
+							task.Proxy.Port(),
+							task.Proxy.Scheme,
+							proxy.IsAnon,
+						))
+						if proxy.IsAnon {
+							anonProxy++
+						}
 					}
+				case <-c:
+					debugmsg("break loop by pressing ctrl+c")
+					break breakCheckProxyLoop
 				}
-			case <-c:
-				debugmsg("break loop by pressing ctrl+c")
-				break breakCheckProxyLoop
 			}
 		}
 		if listLen > 0 {
