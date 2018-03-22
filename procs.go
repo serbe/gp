@@ -103,9 +103,9 @@ func checkProxy(list []adb.Proxy) {
 breakCheckProxyLoop:
 	for j := 0; j < listLen; {
 		mp := newMapProxy()
-		var r = 10000
-		if j+10000 > listLen {
-			r = listLen % 10000
+		var r = 2000
+		if j+2000 > listLen {
+			r = listLen % 2000
 		}
 		for i := 0; i < r; i++ {
 			mp.set(list[j])
@@ -123,10 +123,10 @@ breakCheckProxyLoop:
 		debugmsg("end add to pool")
 		// p.EndWaitingTasks()
 		p.SetQuitTimeout(cfg.Timeout + 1000)
-		if p.GetAddedTasks() == 0 {
-			debugmsg("no task added to pool")
-			return
-		}
+		// if p.GetAddedTasks() == 0 {
+		// 	debugmsg("no task added to pool")
+		// 	return
+		// }
 	checkProxyLoop:
 		for {
 			select {
