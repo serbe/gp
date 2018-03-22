@@ -121,6 +121,7 @@ breakCheckProxyLoop:
 			chkErr("add to pool", p.Add(cfg.Target, proxyURL))
 		}
 		debugmsg("end add to pool")
+		debugmsg(j, p.GetAddedTasks())
 		// p.EndWaitingTasks()
 		p.SetQuitTimeout(cfg.Timeout + 1000)
 		// if p.GetAddedTasks() == 0 {
