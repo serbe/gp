@@ -130,6 +130,7 @@ breakCheckProxyLoop:
 				select {
 				case task, ok := <-p.ResultChan:
 					if !ok {
+						debugmsg(j, p.GetAddedTasks(), p.GetCompletedTasks(), listLen)
 						debugmsg("break loop by close chan ResultChan")
 						break checkProxyLoop
 					}
