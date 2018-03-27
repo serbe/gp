@@ -19,12 +19,12 @@ func main() {
 		log.Panic("use only one target")
 	}
 
-	myIP, err := getMyIP()
-	if err != nil {
-		log.Panic("getMyIP", err)
-	}
+	// myIP, err := getMyIP()
+	// if err != nil {
+	// 	log.Panic("getMyIP", err)
+	// }
 
-	setTarget(myIP)
+	setTarget()
 	if cfg.Target == "" {
 		log.Panic("Target is empty", nil)
 	}

@@ -66,7 +66,7 @@ func decodeIP(src []byte) (string, string, error) {
 	return "", "", err
 }
 
-func setTarget(targetIP string) {
+func setTarget() {
 	if cfg.Target == "" {
 		if cfg.MyIPCheck {
 			cfg.Target = "http://myip.ru/"
