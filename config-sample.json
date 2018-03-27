@@ -6,5 +6,9 @@
     "log_errors": false,
     "log_debug": false,
     "my_ip_check": false,
-    "http_bin_check": false
+    "http_bin_check": false,
+    "database": "db name",
+    "username": "db user",
+    "password": "db password",
+    "db_address": "127.0.0.1:5432"
 }

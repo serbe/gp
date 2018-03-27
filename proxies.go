@@ -77,7 +77,7 @@ func (mp *mapProxy) taskToProxy(task *pool.Task, isNew bool, myIP string) (adb.P
 		proxy.Update = true
 	}
 	proxy.UpdateAt = time.Now()
-	proxy.Response = task.ResponceTime
+	proxy.Response = task.ResponseTime
 	strBody := string(task.Body)
 	if pattern.Match(task.Body) && !strings.Contains(strBody, myIP) {
 		proxy.IsWork = true

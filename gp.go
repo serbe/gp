@@ -19,17 +19,12 @@ func main() {
 		log.Panic("use only one target")
 	}
 
-	// myIP, err := getMyIP()
-	// if err != nil {
-	// 	log.Panic("getMyIP", err)
-	// }
-
 	setTarget()
 	if cfg.Target == "" {
 		log.Panic("Target is empty", nil)
 	}
 
-	db = adb.InitDB("pr", "127.0.0.1:5432", "pr", "pr")
+	db = adb.InitDB(cfg.Database, cfg.DBAddress, cfg.Username, cfg.Password)
 
 	startAppTime := time.Now()
 

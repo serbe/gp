@@ -9,14 +9,18 @@ import (
 
 // Config all vars
 type config struct {
-	Target       string `json:"target"`
-	FindWorkers  int64  `json:"find_workers"`
-	CheckWorkers int64  `json:"check_workers"`
-	Timeout      int64  `json:"timeout"`
+	HTTPBinCheck bool   `json:"http_bin_check"`
 	LogErrors    bool   `json:"log_errors"`
 	LogDebug     bool   `json:"log_debug"`
 	MyIPCheck    bool   `json:"my_ip_check"`
-	HTTPBinCheck bool   `json:"http_bin_check"`
+	CheckWorkers int64  `json:"check_workers"`
+	FindWorkers  int64  `json:"find_workers"`
+	Timeout      int64  `json:"timeout"`
+	Database     string `json:"database"`
+	DBAddress    string `json:"db_address"`
+	Password     string `json:"password"`
+	Target       string `json:"target"`
+	Username     string `json:"username"`
 }
 
 func getConfig() {
