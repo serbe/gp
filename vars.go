@@ -20,10 +20,11 @@ var (
 	reMyIP     = regexp.MustCompile(`<td>(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})</td>`)
 
 	// siteList = []string{
+	// `http://webanetlabs.net/publ/24`
 	// 	`https://hidester.com/proxydata/php/data.php?mykey=data&offset=0&limit=1000&orderBy=latest_check&sortOrder=DESC&country=&port=&type=undefined&anonymity=undefined&ping=undefined&gproxy=2`,
 	// 	`http://gatherproxy.com/embed/`,
 	// 	`http://txt.proxyspy.net/proxy.txt`,
-	// 	`http://webanetlabs.net/publ/24`,
+	// 	,
 	// 	`http://awmproxy.com/freeproxy.php`,
 	// 	`http://www.samair.ru/proxy/type-01.htm`,
 	// 	`https://www.us-proxy.org/`,
