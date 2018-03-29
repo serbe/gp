@@ -21,7 +21,6 @@ INSERT INTO links (hostname) VALUES
     ('http://gatherproxy.com/embed/'),
     ('http://awmproxy.com/freeproxy.php'),
     ('http://www.samair.ru/proxy/type-01.htm'),
-    ('http://free-proxy-list.net/'),
     ('http://www.proxynova.com/proxy-server-list/'),
     ('http://proxyserverlist-24.blogspot.ru/'),
     ('http://gatherproxy.com/'),
@@ -29,7 +28,6 @@ INSERT INTO links (hostname) VALUES
     ('https://hidemy.name/en/proxy-list/?type=hs&anon=34#list'),
     ('http://www.idcloak.com/proxylist/free-proxy-servers-list.html'),
     ('https://premproxy.com/list/'),
-    ('https://www.sslproxies.org/')
 ON CONFLICT (hostname) DO NOTHING;
 
 UPDATE links SET iterate = TRUE WHERE hostname IN (
@@ -37,7 +35,6 @@ UPDATE links SET iterate = TRUE WHERE hostname IN (
 	'http://gatherproxy.com/embed/',
 	'http://awmproxy.com/freeproxy.php',
 	'http://www.samair.ru/proxy/type-01.htm',
-	'http://free-proxy-list.net/',
 	'http://www.proxynova.com/proxy-server-list/',
 	'http://proxyserverlist-24.blogspot.ru/',
 	'http://gatherproxy.com/',
@@ -46,7 +43,6 @@ UPDATE links SET iterate = TRUE WHERE hostname IN (
 	'http://www.idcloak.com/proxylist/free-proxy-servers-list.html',
 	'https://premproxy.com/list/',
 	'https://hidemy.name/en/proxy-list/en/proxy-list/?type=hs&anon=34#list',
-	'https://www.sslproxies.org/'
 )
 
 
@@ -82,11 +78,7 @@ http://proxy50-50.blogspot.com.tr/
 
 
 
-    ('http://free-proxy-list.net/', TRUE),
-    ()
 
-
-http://www.sslproxies.org/
 http://free-proxy-list.net/uk-proxy.html
 http://www.socks-proxy.net/
 http://proxy.ipcn.org/proxylist2.html
@@ -101,7 +93,6 @@ http://nntime.com/proxy-list-03.htm
 http://www.free-proxy-list.ru/free-proxy-list/all-working-proxies.php
 http://elite-proxies.blogspot.com/
 http://proxy-masterz.com/vb/f3/|#post|0
-http://www.proxies.cz.cc/
 https://incloak.com/proxy-list/
 http://topproxys.blogspot.com/
 
@@ -178,13 +169,12 @@ http://spys.ru/free-proxy-list/NL/
 http://proxy.centerblog.net/
 http://free-proxy.blogspot.com.tr/
 http://www.proxyfire.net/forum/forumdisplay.php?f=14|showthread.php?t=|0
-http://www.cybersyndrome.net|pl|0
+http://www.cybersyndrome.net/pla6.html
 http://elite-proxies.blogspot.com/
 http://proxy.ipcn.org/proxylist2.html
 http://www.free-proxy-list.ru/free-proxy-list/all-working-proxies.php
 http://proxy.ipcn.org/proxylist2.html
 http://proxy-masterz.com/vb/f3/|#post|0
-http://www.proxies.cz.cc/
 http://www.proxydb.ru/News.aspx|HTTP|0
 http://www.hayatforumda.com/anonymous-proxy/|#post|0
 http://www.dlnxt.com/f42-proxies/|#post|0
@@ -213,8 +203,6 @@ https://incloak.com/proxy-list/?type=h&anon=1
 http://www.cool-proxy.net/proxies/http_proxy_list/sort:score/direction:desc
 http://www.cool-proxy.net/proxies/http_proxy_list/country_code:CN/port:/anonymous:
 http://www.cool-proxy.net/proxies/http_proxy_list/country_code:US/port:/anonymous:
-http://free-proxy-list.net/
-    
 
 
 http://www.xicidaili.com/nn/1
