@@ -200,7 +200,7 @@ breakCheckProxyLoop:
 					}
 					checked++
 					isNew := false
-					if useFUP || useCheckScheme {
+					if useFUP || useCheckScheme || useFind {
 						isNew = true
 					}
 					proxy, isOk := mp.taskToProxy(task, isNew, myIP)
