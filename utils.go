@@ -16,8 +16,7 @@ type config struct {
 	LogErrors    bool   `json:"log_errors"`
 	LogDebug     bool   `json:"log_debug"`
 	MyIPCheck    bool   `json:"my_ip_check"`
-	CheckWorkers int64  `json:"check_workers"`
-	FindWorkers  int64  `json:"find_workers"`
+	Workers      int64  `json:"workers"`
 	Timeout      int64  `json:"timeout"`
 	Database     string `json:"database"`
 	DBAddress    string `json:"db_address"`
@@ -37,13 +36,12 @@ func getConfig() {
 }
 
 func checkFlags() {
-	flag.Int64Var(&cfg.CheckWorkers, "cw", cfg.CheckWorkers, "number of workers to check")
-	flag.Int64Var(&cfg.FindWorkers, "fw", cfg.FindWorkers, "number of workers to find")
 	flag.BoolVar(&cfg.LogDebug, "d", cfg.LogDebug, "logging debug messages")
 	flag.BoolVar(&cfg.LogErrors, "e", cfg.LogErrors, "logging error messages")
 	flag.BoolVar(&cfg.HTTPBinCheck, "h", cfg.HTTPBinCheck, "check working proxy with httpbin.org")
 	flag.BoolVar(&cfg.MyIPCheck, "m", cfg.MyIPCheck, "check working proxy with myip.ru")
 	flag.Int64Var(&cfg.Timeout, "t", cfg.Timeout, "timeout in millisecond")
+	flag.Int64Var(&cfg.Workers, "w", cfg.Workers, "number of workers")
 	flag.StringVar(&cfg.Target, "target", cfg.Target, "target URL to check like 'http://127.0.0.1:12345/target'")
 
 	flag.BoolVar(&useCheckAll, "all", useCheckAll, "check all proxy")

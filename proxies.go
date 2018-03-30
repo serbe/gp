@@ -57,7 +57,7 @@ func (mp *mapProxy) get(hostname string) (adb.Proxy, bool) {
 func newProxy(host, port, scheme string) (adb.Proxy, error) {
 	var proxy adb.Proxy
 	if scheme == "" {
-		scheme = "http"
+		scheme = HTTP
 	}
 	hostname := scheme + "://" + host + ":" + port
 	_, err := url.Parse(hostname)
@@ -106,6 +106,24 @@ func (mp *mapProxy) taskToProxy(task *pool.Task, isNew bool, myIP string) (adb.P
 	return proxy, ok
 }
 
+func proxyListFromSlice(ips []string) []adb.Proxy {
+	mp := newMapProxy()
+	list := getProxyListFromDB()
+	mp.fillMapProxy(list)
+	// mp.loadProxyFromFile()
+	newmp := newMapProxy()
+	for _, ip := range ips {
+		if !mp.existProxy(ip) && !newmp.existProxy(ip) {
+			newmp.setFromString(ip)
+		}
+	}
+	var pList []adb.Proxy
+	for _, value := range newmp.values {
+		pList = append(pList, value)
+	}
+	return pList
+}
+
 // func (mp *mapProxy) loadProxyFromFile() {
 // 	if testFile == "" {
 // 		return
@@ -145,14 +163,14 @@ func getFUPList() []adb.Proxy {
 
 func getListWithScheme() []adb.Proxy {
 	var newList []adb.Proxy
-	list, err := db.ProxyGetAllScheme("http")
+	list, err := db.ProxyGetAllScheme(HTTP)
 	chkErr("getListWithScheme ProxyGetAllScheme", err)
 	for _, item := range list {
-		proxy, err := newProxy(item.Host, item.Port, "https")
+		proxy, err := newProxy(item.Host, item.Port, HTTPS)
 		if err == nil {
 			newList = append(newList, proxy)
 		}
-		proxy, err = newProxy(item.Host, item.Port, "socks5")
+		proxy, err = newProxy(item.Host, item.Port, SOCKS5)
 		if err == nil {
 			newList = append(newList, proxy)
 		}

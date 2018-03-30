@@ -29,8 +29,7 @@ func main() {
 	startAppTime := time.Now()
 
 	if useFind {
-		// findProxy()
-		newFindProxy()
+		findProxy()
 	} else if useCheck {
 		checkProxy(getProxyListFromDB())
 	}

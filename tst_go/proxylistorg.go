@@ -33,7 +33,7 @@ func proxylistorgIPS(body []byte) []string {
 	dom.Find("ul").Each(func(_ int, s *goquery.Selection) {
 		scheme := strings.ToLower(s.Find("li.https").Text())
 		ip := decodeBase64(s.Find("li.proxy").Text())
-		if ip != "" && (scheme == "http" || scheme == "https" || scheme == "socks5") {
+		if ip != "" && (scheme == HTTP || scheme == HTTPS || scheme == SOCKS5) {
 			ips = append(ips, scheme+"://"+ip)
 		}
 	})

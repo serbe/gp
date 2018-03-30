@@ -22,7 +22,7 @@ func webanetlabs() []string {
 			errmsg("webanetlabs crawl", err)
 			continue
 		}
-		ips = append(ips, ipsFromBytes(body, "http")...)
+		ips = append(ips, ipsFromBytes(body, HTTP)...)
 	}
 	return ips
 }

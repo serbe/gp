@@ -26,9 +26,9 @@ func proxyserverlist24top() []string {
 				errmsg("proxyserverlist24top crawl", err)
 				continue
 			}
-			scheme := "http"
+			scheme := HTTP
 			if strings.Contains(link, "socks") {
-				scheme = "socks5"
+				scheme = SOCKS5
 			}
 			ips = append(ips, ipsFromBytes(body, scheme)...)
 		}

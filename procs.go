@@ -10,139 +10,14 @@ import (
 	"github.com/serbe/pool"
 )
 
-// func findProxy() {
-// 	var (
-// 		addedProxy int64
-// 		newList    []adb.Proxy
-// 	)
-// 	debugmsg("Start find proxy")
-// 	p := pool.New(cfg.FindWorkers)
-// 	p.SetTimeout(cfg.Timeout)
-// 	ml := getMapLink()
-// 	mp := newMapProxy()
-// 	list := getProxyListFromDB()
-// 	mp.fillMapProxy(list)
-// 	mp.loadProxyFromFile()
-
-// 	debugmsg("load links", len(ml.values))
-// 	debugmsg("load proxies", len(mp.values))
-// 	debugmsg("start add to pool")
-// 	p.SetQuitTimeout(2000)
-// 	for _, link := range ml.values {
-// 		if useAddLink || useTestLink || link.Iterate && time.Since(link.UpdateAt) > time.Duration(1)*time.Hour {
-// 			err := p.Add(link.Hostname, nil)
-// 			if err == nil {
-// 				addedProxy++
-// 			}
-// 			chkErr("findProxy p.Add", err)
-// 		}
-// 	}
-// 	if addedProxy == 0 {
-// 		debugmsg("not added tasks to pool")
-// 		return
-// 	}
-// 	debugmsg("end add to pool, added", p.GetAddedTasks(), "links")
-// 	debugmsg("start get from chan")
-// 	for result := range p.ResultChan {
-// 		if result.Error != nil {
-// 			errmsg("result", result.Error)
-// 			continue
-// 		}
-// 		ml.update(result.Hostname)
-// 		links := ml.getNewLinksFromTask(result)
-// 		newProxy := mp.newProxyInTask(result)
-// 		num := int64(len(newProxy))
-// 		if num > 0 {
-// 			debugmsg("find", num, "proxy in", result.Hostname)
-// 			if link, ok := ml.get(result.Hostname); ok {
-// 				link.Num = link.Num + num
-// 				ml.set(link)
-// 			}
-// 			newList = append(newList, newProxy...)
-// 		}
-// 		if !useNoAddLinks {
-// 			for _, l := range links {
-// 				chkErr("findProxy add to pool", p.Add(l.Hostname, nil))
-// 				debugmsg("add to pool", l.Hostname)
-// 			}
-// 		} else {
-// 			debugmsg("find", len(links), "links in", result.Hostname)
-// 		}
-// 		addedProxy = addedProxy + num
-// 	}
-// 	if !useTestLink {
-// 		debugmsg("save proxy")
-// 		ml.saveAll()
-// 	}
-// 	p.Quit()
-// 	debugmsg(addedProxy, "new proxy found")
-// 	debugmsg("end findProxy")
-// 	checkProxy(newList)
-// }
-
-func newFindProxy() {
-	var ips []string
-	type parser struct {
-		name string
-		ips  []string
-	}
+func findProxy() {
 	debugmsg("Start find proxy")
-	debugmsg("start parse sites")
-	ch := make(chan parser)
-	go func() {
-		data := parser{name: "freeproxylist", ips: freeproxylist()}
-		ch <- data
-	}()
-	go func() {
-		data := parser{name: "freeproxylistcom", ips: freeproxylistcom()}
-		ch <- data
-	}()
-	go func() {
-		data := parser{name: "gatherproxycom", ips: gatherproxycom()}
-		ch <- data
-	}()
-	go func() {
-		data := parser{name: "kuaidaili", ips: kuaidaili()}
-		ch <- data
-	}()
-	go func() {
-		data := parser{name: "proxylistorg", ips: proxylistorg()}
-		ch <- data
-	}()
-	go func() {
-		data := parser{name: "proxyserverlist24top", ips: proxyserverlist24top()}
-		ch <- data
-	}()
-	go func() {
-		data := parser{name: "rawlist", ips: rawlist()}
-		ch <- data
-	}()
-	go func() {
-		data := parser{name: "webanetlabs", ips: webanetlabs()}
-		ch <- data
-	}()
-	for i := 0; i < 8; i++ {
-		data := <-ch
-		ips = append(ips, data.ips...)
-	}
+	ips := parseSites()
 
-	mp := newMapProxy()
-	list := getProxyListFromDB()
-	mp.fillMapProxy(list)
-	// mp.loadProxyFromFile()
-	newmp := newMapProxy()
-	for _, ip := range ips {
-		if !mp.existProxy(ip) && !newmp.existProxy(ip) {
-			newmp.setFromString(ip)
-		}
-	}
-	mp = newMapProxy()
-	var pList []adb.Proxy
-	for _, value := range newmp.values {
-		pList = append(pList, value)
-	}
-	newmp = newMapProxy()
-	checkProxy(pList)
+	list := proxyListFromSlice(ips)
+
+	checkProxy(list)
+	debugmsg("End find proxy")
 }
 
 func checkProxy(list []adb.Proxy) {
@@ -175,7 +50,7 @@ breakCheckProxyLoop:
 			mp.set(list[j])
 			j++
 		}
-		p := pool.New(cfg.CheckWorkers)
+		p := pool.New(cfg.Workers)
 		// defer p.Quit()
 		p.SetTimeout(cfg.Timeout)
 		debugmsg("start add to pool")
@@ -242,4 +117,52 @@ breakCheckProxyLoop:
 	debugmsg(fmt.Sprintf("%d is good", totalProxy))
 	debugmsg(fmt.Sprintf("%d is anon", anonProxy))
 	debugmsg("end checkProxy")
+}
+
+func parseSites() []string {
+	type parser struct {
+		name string
+		ips  []string
+	}
+	var ips []string
+	debugmsg("start parse sites")
+	ch := make(chan parser)
+	go func() {
+		data := parser{name: "freeproxylist", ips: freeproxylist()}
+		ch <- data
+	}()
+	go func() {
+		data := parser{name: "freeproxylistcom", ips: freeproxylistcom()}
+		ch <- data
+	}()
+	go func() {
+		data := parser{name: "gatherproxycom", ips: gatherproxycom()}
+		ch <- data
+	}()
+	go func() {
+		data := parser{name: "kuaidaili", ips: kuaidaili()}
+		ch <- data
+	}()
+	go func() {
+		data := parser{name: "proxylistorg", ips: proxylistorg()}
+		ch <- data
+	}()
+	go func() {
+		data := parser{name: "proxyserverlist24top", ips: proxyserverlist24top()}
+		ch <- data
+	}()
+	go func() {
+		data := parser{name: "rawlist", ips: rawlist()}
+		ch <- data
+	}()
+	go func() {
+		data := parser{name: "webanetlabs", ips: webanetlabs()}
+		ch <- data
+	}()
+	for i := 0; i < 8; i++ {
+		data := <-ch
+		ips = append(ips, data.ips...)
+	}
+	debugmsg("end parse sites, found", len(ips), "proxy")
+	return ips
 }
