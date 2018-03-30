@@ -1,9 +1,7 @@
 package main
 
 import (
-	"io/ioutil"
 	"net/url"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -28,6 +26,22 @@ func newMapProxy() *mapProxy {
 }
 
 func (mp *mapProxy) set(proxy adb.Proxy) {
+	mp.Lock()
+	mp.values[proxy.Hostname] = proxy
+	mp.Unlock()
+}
+
+func (mp *mapProxy) setFromString(hostname string) {
+	u, err := url.Parse(hostname)
+	if err != nil {
+		errmsg("setFromString Parse", err)
+		return
+	}
+	proxy, err := newProxy(u.Hostname(), u.Port(), u.Scheme)
+	if err != nil {
+		errmsg("setFromString newProxy", err)
+		return
+	}
 	mp.Lock()
 	mp.values[proxy.Hostname] = proxy
 	mp.Unlock()
@@ -92,25 +106,25 @@ func (mp *mapProxy) taskToProxy(task *pool.Task, isNew bool, myIP string) (adb.P
 	return proxy, ok
 }
 
-func (mp *mapProxy) loadProxyFromFile() {
-	if testFile == "" {
-		return
-	}
-	fileBody, err := ioutil.ReadFile(testFile)
-	if err != nil {
-		errmsg("findProxy ReadFile", err)
-		return
-	}
-	var numProxy int64
-	pl := getProxyList(fileBody)
-	for _, p := range pl {
-		if mp.existProxy(p.Hostname) {
-			continue
-		}
-		mp.set(p)
-		numProxy++
-	}
-}
+// func (mp *mapProxy) loadProxyFromFile() {
+// 	if testFile == "" {
+// 		return
+// 	}
+// 	fileBody, err := ioutil.ReadFile(testFile)
+// 	if err != nil {
+// 		errmsg("findProxy ReadFile", err)
+// 		return
+// 	}
+// 	var numProxy int64
+// 	pl := getProxyList(fileBody)
+// 	for _, p := range pl {
+// 		if mp.existProxy(p.Hostname) {
+// 			continue
+// 		}
+// 		mp.set(p)
+// 		numProxy++
+// 	}
+// }
 
 func getFUPList() []adb.Proxy {
 	var list []adb.Proxy
@@ -175,73 +189,73 @@ func saveProxy(p adb.Proxy) {
 	}
 }
 
-func (mp *mapProxy) newProxyInTask(task *pool.Task) []adb.Proxy {
-	var list []adb.Proxy
-	body := cleanBody(task.Body)
-	proxies := getProxyList(body)
-	for _, p := range proxies {
-		if mp.existProxy(p.Hostname) {
-			continue
-		}
-		mp.set(p)
-		// chkErr("numOfNewProxyInTask ProxyInsert", db.ProxyInsert(p))
-		list = append(list, p)
-	}
-	return list
-}
+// func (mp *mapProxy) newProxyInTask(task *pool.Task) []adb.Proxy {
+// 	var list []adb.Proxy
+// 	body := cleanBody(task.Body)
+// 	proxies := getProxyList(body)
+// 	for _, p := range proxies {
+// 		if mp.existProxy(p.Hostname) {
+// 			continue
+// 		}
+// 		mp.set(p)
+// 		// chkErr("numOfNewProxyInTask ProxyInsert", db.ProxyInsert(p))
+// 		list = append(list, p)
+// 	}
+// 	return list
+// }
 
-func getProxyList(body []byte) []adb.Proxy {
-	var (
-		pList []adb.Proxy
-		err   error
-	)
-	for i := range baseDecode {
-		re := regexp.MustCompile(baseDecode[i])
-		if !re.Match(body) {
-			continue
-		}
-		results := re.FindAllSubmatch(body, -1)
-		for _, res := range results {
-			var ip, port string
-			ip, port, err = decodeIP(res[1])
-			if err != nil {
-				continue
-			}
-			var proxy adb.Proxy
-			proxy, err = newProxy(ip, port, "")
-			if err == nil {
-				pList = append(pList, proxy)
-			}
-		}
-	}
-	for i := range base16 {
-		re := regexp.MustCompile(base16[i])
-		if !re.Match(body) {
-			continue
-		}
-		results := re.FindAllSubmatch(body, -1)
-		for _, res := range results {
-			var proxy adb.Proxy
-			port := convertPort(string(res[2]))
-			proxy, err = newProxy(string(res[1]), port, "")
-			if err == nil {
-				pList = append(pList, proxy)
-			}
-		}
-	}
-	for i := range reCommaList {
-		re := regexp.MustCompile(reIP + reCommaList[i] + rePort)
-		if !re.Match(body) {
-			continue
-		}
-		results := re.FindAllSubmatch(body, -1)
-		for _, res := range results {
-			var proxy adb.Proxy
-			proxy, err = newProxy(string(res[1]), string(res[2]), "")
-			if err == nil {
-				pList = append(pList, proxy)
-			}
-		}
-	}
-	return pList
-}
+// func getProxyList(body []byte) []adb.Proxy {
+// 	var (
+// 		pList []adb.Proxy
+// 		err   error
+// 	)
+// 	for i := range baseDecode {
+// 		re := regexp.MustCompile(baseDecode[i])
+// 		if !re.Match(body) {
+// 			continue
+// 		}
+// 		results := re.FindAllSubmatch(body, -1)
+// 		for _, res := range results {
+// 			var ip, port string
+// 			ip, port, err = decodeIP(res[1])
+// 			if err != nil {
+// 				continue
+// 			}
+// 			var proxy adb.Proxy
+// 			proxy, err = newProxy(ip, port, "")
+// 			if err == nil {
+// 				pList = append(pList, proxy)
+// 			}
+// 		}
+// 	}
+// 	for i := range base16 {
+// 		re := regexp.MustCompile(base16[i])
+// 		if !re.Match(body) {
+// 			continue
+// 		}
+// 		results := re.FindAllSubmatch(body, -1)
+// 		for _, res := range results {
+// 			var proxy adb.Proxy
+// 			port := convertPort(string(res[2]))
+// 			proxy, err = newProxy(string(res[1]), port, "")
+// 			if err == nil {
+// 				pList = append(pList, proxy)
+// 			}
+// 		}
+// 	}
+// 	for i := range reCommaList {
+// 		re := regexp.MustCompile(reIP + reCommaList[i] + rePort)
+// 		if !re.Match(body) {
+// 			continue
+// 		}
+// 		results := re.FindAllSubmatch(body, -1)
+// 		for _, res := range results {
+// 			var proxy adb.Proxy
+// 			proxy, err = newProxy(string(res[1]), string(res[2]), "")
+// 			if err == nil {
+// 				pList = append(pList, proxy)
+// 			}
+// 		}
+// 	}
+// 	return pList
+// }

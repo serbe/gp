@@ -8,26 +8,26 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-func proxyListOrg() []string {
+func proxylistorg() []string {
 	var ips []string
-	links := proxyListOrgLinks()
+	links := proxylistorgLinks()
 	for _, link := range links {
 		body, err := crawl(link)
 		if err != nil {
-			chkErr("proxyListOrg crawl", err)
+			errmsg("proxylistorg crawl", err)
 			continue
 		}
-		ips = append(ips, proxyListOrgIPS(body)...)
+		ips = append(ips, proxylistorgIPS(body)...)
 	}
 	return ips
 }
 
-func proxyListOrgIPS(body []byte) []string {
+func proxylistorgIPS(body []byte) []string {
 	var ips []string
 	r := bytes.NewReader(body)
 	dom, err := goquery.NewDocumentFromReader(r)
 	if err != nil {
-		chkErr("proxyListOrg NewDocumentFromReader", err)
+		errmsg("proxylistorg NewDocumentFromReader", err)
 		return ips
 	}
 	dom.Find("ul").Each(func(_ int, s *goquery.Selection) {
@@ -40,7 +40,7 @@ func proxyListOrgIPS(body []byte) []string {
 	return ips
 }
 
-func proxyListOrgLinks() []string {
+func proxylistorgLinks() []string {
 	var links []string
 	for page := 1; page < 5; page++ {
 		links = append(links, fmt.Sprintf("https://proxy-list.org/english/index.php?p=%d", page))

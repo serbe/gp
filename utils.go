@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"io/ioutil"
 	"log"
+	"regexp"
+	"strings"
 )
 
 // Config all vars
@@ -81,4 +84,33 @@ func debugmsg(str ...interface{}) {
 	if cfg.LogDebug {
 		log.Println(str)
 	}
+}
+
+func decodeBase64(src string) string {
+	src = strings.Replace(src, "Proxy('", "", -1)
+	src = strings.Replace(src, "')", "", -1)
+	out, _ := base64.StdEncoding.DecodeString(src)
+	return string(out)
+}
+
+func ipsFromBytes(body []byte, scheme string) []string {
+	var ips []string
+	reIP := `((?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):\d{2,5})`
+	reIPWScheme := `([http|https|socks5]://(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):\d{2,5})`
+	re := regexp.MustCompile(reIP)
+	if scheme == "" {
+		re = regexp.MustCompile(reIPWScheme)
+	}
+	if !re.Match(body) {
+		return ips
+	}
+	results := re.FindAllSubmatch(body, -1)
+	for _, res := range results {
+		proxy := string(res[1])
+		if scheme != "" {
+			proxy = scheme + "://" + proxy
+		}
+		ips = append(ips, proxy)
+	}
+	return ips
 }

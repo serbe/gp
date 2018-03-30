@@ -66,7 +66,6 @@ func ipsFromBytes(body []byte, scheme string) []string {
 }
 
 func decodeBase64(src string) string {
-	//	Proxy('MTE5LjI4LjIyMS4yODo4MDg4')
 	src = strings.Replace(src, "Proxy('", "", -1)
 	src = strings.Replace(src, "')", "", -1)
 	out, _ := base64.StdEncoding.DecodeString(src)

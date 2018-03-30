@@ -14,7 +14,7 @@ func kuaidaili() []string {
 	for _, link := range links {
 		body, err := crawl(link)
 		if err != nil {
-			chkErr("kuaidaili crawl", err)
+			errmsg("kuaidaili crawl", err)
 			continue
 		}
 		ips = append(ips, kuaidailiIPS(body)...)
@@ -35,7 +35,7 @@ func kuaidailiIPS(body []byte) []string {
 	r := bytes.NewReader(body)
 	dom, err := goquery.NewDocumentFromReader(r)
 	if err != nil {
-		chkErr("kuaidailiIPS NewDocumentFromReader", err)
+		errmsg("kuaidailiIPS NewDocumentFromReader", err)
 		return ips
 	}
 	dom.Find("tr").Each(func(_ int, s *goquery.Selection) {

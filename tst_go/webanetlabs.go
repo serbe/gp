@@ -11,7 +11,7 @@ func webanetlabs() []string {
 	var ips []string
 	body, err := crawl("http://webanetlabs.net/publ/24")
 	if err != nil {
-		chkErr("webanetlabs crawl", err)
+		errmsg("webanetlabs crawl", err)
 		return ips
 	}
 	ips = append(ips, webanetlabsIPS(body)...)
@@ -19,7 +19,7 @@ func webanetlabs() []string {
 	for _, link := range links {
 		body, err := crawl("http://webanetlabs.net" + link)
 		if err != nil {
-			chkErr("webanetlabs crawl", err)
+			errmsg("webanetlabs crawl", err)
 			continue
 		}
 		ips = append(ips, ipsFromBytes(body, "http")...)
@@ -32,7 +32,7 @@ func webanetlabsLinks(body []byte) []string {
 	r := bytes.NewReader(body)
 	dom, err := goquery.NewDocumentFromReader(r)
 	if err != nil {
-		chkErr("webanetlabsLinks NewDocumentFromReader", err)
+		errmsg("webanetlabsLinks NewDocumentFromReader", err)
 		return links
 	}
 	dom.Find("a").Each(func(_ int, s *goquery.Selection) {
@@ -49,7 +49,7 @@ func webanetlabsIPS(body []byte) []string {
 	r := bytes.NewReader(body)
 	dom, err := goquery.NewDocumentFromReader(r)
 	if err != nil {
-		chkErr("webanetlabs NewDocumentFromReader", err)
+		errmsg("webanetlabsIPS NewDocumentFromReader", err)
 		return ips
 	}
 	dom.Find("p").Each(func(_ int, s *goquery.Selection) {

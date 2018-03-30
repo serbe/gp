@@ -1,12 +1,8 @@
 package main
 
 import (
-	"encoding/base64"
 	"io/ioutil"
 	"net/http"
-	"net/url"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -28,43 +24,43 @@ func getMyIP() (string, error) {
 	return ip, err
 }
 
-func getHost(u string) (string, error) {
-	h, err := url.Parse(u)
-	if err != nil {
-		return "", err
-	}
-	return h.Scheme + "://" + h.Host, err
-}
+// func getHost(u string) (string, error) {
+// 	h, err := url.Parse(u)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	return h.Scheme + "://" + h.Host, err
+// }
 
-func convertPort(port string) string {
-	portInt, _ := strconv.ParseInt(port, 16, 32)
-	return strconv.Itoa(int(portInt))
-}
+// func convertPort(port string) string {
+// 	portInt, _ := strconv.ParseInt(port, 16, 32)
+// 	return strconv.Itoa(int(portInt))
+// }
 
-func cleanBody(body []byte) []byte {
-	for i := range replace {
-		re := regexp.MustCompile(replace[i][0])
-		if re.Match(body) {
-			body = re.ReplaceAll(body, []byte(replace[i][1]))
-		}
-	}
-	if useTestLink && cfg.LogDebug {
-		chkErr("cleanBody WriteFile", ioutil.WriteFile("tmp.html", body, 0644))
-	}
-	return body
-}
+// func cleanBody(body []byte) []byte {
+// 	for i := range replace {
+// 		re := regexp.MustCompile(replace[i][0])
+// 		if re.Match(body) {
+// 			body = re.ReplaceAll(body, []byte(replace[i][1]))
+// 		}
+// 	}
+// 	if useTestLink && cfg.LogDebug {
+// 		chkErr("cleanBody WriteFile", ioutil.WriteFile("tmp.html", body, 0644))
+// 	}
+// 	return body
+// }
 
-func decodeIP(src []byte) (string, string, error) {
-	out, err := base64.StdEncoding.DecodeString(string(src))
-	if err != nil {
-		return "", "", err
-	}
-	split := strings.Split(string(out), ":")
-	if len(split) == 2 {
-		return split[0], split[1], nil
-	}
-	return "", "", err
-}
+// func decodeIP(src []byte) (string, string, error) {
+// 	out, err := base64.StdEncoding.DecodeString(string(src))
+// 	if err != nil {
+// 		return "", "", err
+// 	}
+// 	split := strings.Split(string(out), ":")
+// 	if len(split) == 2 {
+// 		return split[0], split[1], nil
+// 	}
+// 	return "", "", err
+// }
 
 func setTarget() {
 	if cfg.Target == "" {
@@ -74,4 +70,27 @@ func setTarget() {
 			cfg.Target = "http://httpbin.org/get?show_env=1"
 		}
 	}
+}
+
+func crawl(target string) ([]byte, error) {
+	timeout := time.Duration(15000 * time.Millisecond)
+	client := &http.Client{
+		Timeout: timeout,
+	}
+	req, err := http.NewRequest("GET", target, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0")
+	req.Header.Set("Connection", "close")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+	req.Header.Set("Referer", "https://www.google.com/")
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	ioutil.WriteFile("tmp.html", body, 0644)
+	return body, err
 }

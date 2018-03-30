@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 func main() {
-	ips := rawlist()
+	ips := freeproxylist()
 	for _, ip := range ips {
 		fmt.Println(ip)
 	}

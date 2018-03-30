@@ -7,21 +7,21 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-func freeProxyListCom() []string {
+func freeproxylistcom() []string {
 	var ips []string
-	links := freeProxyListlComLinks()
+	links := freeproxylistcomLinks()
 	for _, link := range links {
 		body, err := crawl(link)
 		if err != nil {
-			chkErr("freeProxyListCom crawl", err)
+			errmsg("freeproxylistcom crawl", err)
 			continue
 		}
-		ips = append(ips, freeProxyListComIPS(body)...)
+		ips = append(ips, freeproxylistcomIPS(body)...)
 	}
 	return ips
 }
 
-func freeProxyListlComLinks() []string {
+func freeproxylistcomLinks() []string {
 	var links []string
 	for page := 1; page < 5; page++ {
 		links = append(links, fmt.Sprintf("https://free-proxy-list.com/?page=%d", page))
@@ -30,12 +30,12 @@ func freeProxyListlComLinks() []string {
 	return links
 }
 
-func freeProxyListComIPS(body []byte) []string {
+func freeproxylistcomIPS(body []byte) []string {
 	var ips []string
 	r := bytes.NewReader(body)
 	dom, err := goquery.NewDocumentFromReader(r)
 	if err != nil {
-		chkErr("freeProxyListComIPS NewDocumentFromReader", err)
+		errmsg("freeproxylistcomIPS NewDocumentFromReader", err)
 		return ips
 	}
 	dom.Find("tr").Each(func(_ int, s *goquery.Selection) {
