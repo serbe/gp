@@ -8,11 +8,12 @@ import (
 
 	"github.com/serbe/adb"
 	"github.com/serbe/pool"
+	"github.com/serbe/sites"
 )
 
 func findProxy() {
 	debugmsg("Start find proxy")
-	ips := parseSites()
+	ips := sites.ParseSites(cfg.LogDebug, cfg.LogErrors)
 
 	list := proxyListFromSlice(ips)
 
@@ -117,52 +118,4 @@ breakCheckProxyLoop:
 	debugmsg(fmt.Sprintf("%d is good", totalProxy))
 	debugmsg(fmt.Sprintf("%d is anon", anonProxy))
 	debugmsg("end checkProxy")
-}
-
-func parseSites() []string {
-	type parser struct {
-		name string
-		ips  []string
-	}
-	var ips []string
-	debugmsg("start parse sites")
-	ch := make(chan parser)
-	go func() {
-		data := parser{name: "freeproxylist", ips: freeproxylist()}
-		ch <- data
-	}()
-	go func() {
-		data := parser{name: "freeproxylistcom", ips: freeproxylistcom()}
-		ch <- data
-	}()
-	go func() {
-		data := parser{name: "gatherproxycom", ips: gatherproxycom()}
-		ch <- data
-	}()
-	go func() {
-		data := parser{name: "kuaidaili", ips: kuaidaili()}
-		ch <- data
-	}()
-	go func() {
-		data := parser{name: "proxylistorg", ips: proxylistorg()}
-		ch <- data
-	}()
-	go func() {
-		data := parser{name: "proxyserverlist24top", ips: proxyserverlist24top()}
-		ch <- data
-	}()
-	go func() {
-		data := parser{name: "rawlist", ips: rawlist()}
-		ch <- data
-	}()
-	go func() {
-		data := parser{name: "webanetlabs", ips: webanetlabs()}
-		ch <- data
-	}()
-	for i := 0; i < 8; i++ {
-		data := <-ch
-		ips = append(ips, data.ips...)
-	}
-	debugmsg("end parse sites, found", len(ips), "proxy")
-	return ips
 }
