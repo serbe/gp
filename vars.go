@@ -4,6 +4,7 @@ import (
 	"regexp"
 )
 
+// protocols
 const (
 	HTTP   = "http"
 	HTTPS  = "https"

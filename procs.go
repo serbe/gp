@@ -55,8 +55,8 @@ breakCheckProxyLoop:
 		// defer p.Quit()
 		p.SetTimeout(cfg.Timeout)
 		debugmsg("start add to pool")
-		for _, proxy := range mp.values {
-			proxyURL, err := url.Parse(proxy.Hostname)
+		for i := range mp.values {
+			proxyURL, err := url.Parse(mp.values[i].Hostname)
 			chkErr("parse url", err)
 			chkErr("add to pool", p.Add(cfg.Target, proxyURL))
 		}

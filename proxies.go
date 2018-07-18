@@ -16,8 +16,8 @@ type mapProxy struct {
 }
 
 func (mp *mapProxy) fillMapProxy(proxyList []adb.Proxy) {
-	for _, proxy := range proxyList {
-		mp.set(proxy)
+	for i := range proxyList {
+		mp.set(proxyList[i])
 	}
 }
 
@@ -118,8 +118,8 @@ func proxyListFromSlice(ips []string) []adb.Proxy {
 		}
 	}
 	var pList []adb.Proxy
-	for _, value := range newmp.values {
-		pList = append(pList, value)
+	for i := range newmp.values {
+		pList = append(pList, newmp.values[i])
 	}
 	return pList
 }
@@ -165,12 +165,12 @@ func getListWithScheme() []adb.Proxy {
 	var newList []adb.Proxy
 	list, err := db.ProxyGetAllScheme(HTTP)
 	chkErr("getListWithScheme ProxyGetAllScheme", err)
-	for _, item := range list {
-		proxy, err := newProxy(item.Host, item.Port, HTTPS)
+	for i := range list {
+		proxy, err := newProxy(list[i].Host, list[i].Port, HTTPS)
 		if err == nil {
 			newList = append(newList, proxy)
 		}
-		proxy, err = newProxy(item.Host, item.Port, SOCKS5)
+		proxy, err = newProxy(list[i].Host, list[i].Port, SOCKS5)
 		if err == nil {
 			newList = append(newList, proxy)
 		}
