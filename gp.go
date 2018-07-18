@@ -24,6 +24,10 @@ func main() {
 		log.Panic("Target is empty", nil)
 	}
 
+	if !checkTarget() {
+		log.Panic("Target", cfg.Target, "unavailable")
+	}
+
 	db = adb.InitDB(cfg.Database, cfg.DBAddress, cfg.Username, cfg.Password)
 
 	startAppTime := time.Now()

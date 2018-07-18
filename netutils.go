@@ -33,3 +33,11 @@ func setTarget() {
 		}
 	}
 }
+
+func checkTarget() bool {
+	client := &http.Client{
+		Timeout: time.Duration(cfg.Timeout) * time.Second,
+	}
+	_, err := client.Get(cfg.Target)
+	return err == nil
+}
