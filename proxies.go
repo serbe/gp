@@ -15,16 +15,25 @@ type mapProxy struct {
 	values map[string]adb.Proxy
 }
 
-func (mp *mapProxy) fillMapProxy(proxyList []adb.Proxy) {
-	for i := range proxyList {
-		mp.set(proxyList[i])
+func proxyFromString(hostname string) (adb.Proxy, error) {
+	var proxy adb.Proxy
+	u, err := url.Parse(hostname)
+	if err != nil {
+		return proxy, err
 	}
+	proxy, err = newProxy(u.Hostname(), u.Port(), u.Scheme)
+	return proxy, err
 }
 
 func newMapProxy() *mapProxy {
 	return &mapProxy{values: make(map[string]adb.Proxy)}
 }
 
+func (mp *mapProxy) fillMapProxy(proxyList []adb.Proxy) {
+	for i := range proxyList {
+		mp.set(proxyList[i])
+	}
+}
 func (mp *mapProxy) set(proxy adb.Proxy) {
 	mp.Lock()
 	mp.values[proxy.Hostname] = proxy
@@ -32,14 +41,9 @@ func (mp *mapProxy) set(proxy adb.Proxy) {
 }
 
 func (mp *mapProxy) setFromString(hostname string) {
-	u, err := url.Parse(hostname)
+	proxy, err := proxyFromString(hostname)
 	if err != nil {
-		errmsg("setFromString Parse", err)
-		return
-	}
-	proxy, err := newProxy(u.Hostname(), u.Port(), u.Scheme)
-	if err != nil {
-		errmsg("setFromString newProxy", err)
+		errmsg("setFromString proxyFromString", err)
 		return
 	}
 	mp.Lock()
@@ -107,19 +111,16 @@ func (mp *mapProxy) taskToProxy(task *pool.Task, isNew bool, myIP string) (adb.P
 }
 
 func proxyListFromSlice(ips []string) []adb.Proxy {
-	mp := newMapProxy()
-	list := getProxyListFromDB()
-	mp.fillMapProxy(list)
-	// mp.loadProxyFromFile()
-	newmp := newMapProxy()
-	for _, ip := range ips {
-		if !mp.existProxy(ip) && !newmp.existProxy(ip) {
-			newmp.setFromString(ip)
-		}
-	}
+	list, err := db.CheckNotExists(ips)
+	chkErr("getNew CheckNotExists", err)
 	var pList []adb.Proxy
-	for i := range newmp.values {
-		pList = append(pList, newmp.values[i])
+	for i := range list {
+		proxy, err := proxyFromString(list[i])
+		if err != nil {
+			errmsg("getNew proxyFromString", err)
+		} else {
+			pList = append(pList, proxy)
+		}
 	}
 	return pList
 }
@@ -185,7 +186,7 @@ func getProxyListFromDB() []adb.Proxy {
 	)
 	if useTestLink {
 		return list
-	} else if useCheckAll || useFind {
+	} else if useCheckAll {
 		list, err = db.ProxyGetAll()
 		chkErr("getProxyListFromDB ProxyGetAll", err)
 	} else if useFUP {

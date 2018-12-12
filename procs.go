@@ -15,6 +15,7 @@ func findProxy() {
 	debugmsg("Start find proxy")
 	ips := sites.ParseSites(cfg.LogDebug, cfg.LogErrors)
 	list := proxyListFromSlice(ips)
+	ips = []string{}
 	checkProxy(list)
 	debugmsg("End find proxy")
 }
