@@ -112,6 +112,7 @@ func (mp *mapProxy) taskToProxy(task *pool.Task, isNew bool, myIP string) (adb.P
 
 func proxyListFromSlice(ips []string) []adb.Proxy {
 	list, err := db.CheckNotExists(ips)
+	debugmsg("find new", len(list))
 	chkErr("getNew CheckNotExists", err)
 	var pList []adb.Proxy
 	for i := range list {
