@@ -14,9 +14,7 @@ import (
 func findProxy() {
 	debugmsg("Start find proxy")
 	ips := sites.ParseSites(cfg.LogDebug, cfg.LogErrors)
-
 	list := proxyListFromSlice(ips)
-
 	checkProxy(list)
 	debugmsg("End find proxy")
 }
@@ -28,13 +26,11 @@ func checkProxy(list []adb.Proxy) {
 		totalProxy int64
 		anonProxy  int64
 	)
-
 	myIP, err := getMyIP()
 	if err != nil {
 		errmsg("checkProxy getMyIP", err)
 		return
 	}
-
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	listLen := len(list)
