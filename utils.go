@@ -77,6 +77,6 @@ func errmsg(str string, err error) {
 
 func debugmsg(str ...interface{}) {
 	if cfg.LogDebug {
-		log.Println(str)
+		log.Println(str...)
 	}
 }
