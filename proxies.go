@@ -29,27 +29,28 @@ func newMapProxy() *mapProxy {
 	return &mapProxy{values: make(map[string]adb.Proxy)}
 }
 
-func (mp *mapProxy) fillMapProxy(proxyList []adb.Proxy) {
-	for i := range proxyList {
-		mp.set(proxyList[i])
-	}
-}
+// func (mp *mapProxy) fillMapProxy(proxyList []adb.Proxy) {
+// 	for i := range proxyList {
+// 		mp.set(proxyList[i])
+// 	}
+// }
+
 func (mp *mapProxy) set(proxy adb.Proxy) {
 	mp.Lock()
 	mp.values[proxy.Hostname] = proxy
 	mp.Unlock()
 }
 
-func (mp *mapProxy) setFromString(hostname string) {
-	proxy, err := proxyFromString(hostname)
-	if err != nil {
-		errmsg("setFromString proxyFromString", err)
-		return
-	}
-	mp.Lock()
-	mp.values[proxy.Hostname] = proxy
-	mp.Unlock()
-}
+// func (mp *mapProxy) setFromString(hostname string) {
+// 	proxy, err := proxyFromString(hostname)
+// 	if err != nil {
+// 		errmsg("setFromString proxyFromString", err)
+// 		return
+// 	}
+// 	mp.Lock()
+// 	mp.values[proxy.Hostname] = proxy
+// 	mp.Unlock()
+// }
 
 func (mp *mapProxy) get(hostname string) (adb.Proxy, bool) {
 	mp.Lock()
@@ -77,10 +78,10 @@ func newProxy(host, port, scheme string) (adb.Proxy, error) {
 	return proxy, err
 }
 
-func (mp *mapProxy) existProxy(hostname string) bool {
-	_, ok := mp.get(hostname)
-	return ok
-}
+// func (mp *mapProxy) existProxy(hostname string) bool {
+// 	_, ok := mp.get(hostname)
+// 	return ok
+// }
 
 func (mp *mapProxy) taskToProxy(task *pool.Task, isNew bool, myIP string) (adb.Proxy, bool) {
 	proxy, ok := mp.get(task.Proxy.String())
