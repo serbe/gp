@@ -21,7 +21,7 @@ func proxyFromString(hostname string) (adb.Proxy, error) {
 	if err != nil {
 		return proxy, err
 	}
-	proxy, err = newProxy(u.Hostname(), u.Port(), u.Scheme)
+	proxy = newProxy(u)
 	return proxy, err
 }
 
@@ -59,23 +59,16 @@ func (mp *mapProxy) get(hostname string) (adb.Proxy, bool) {
 	return proxy, ok
 }
 
-func newProxy(host, port, scheme string) (adb.Proxy, error) {
+func newProxy(u *url.URL) adb.Proxy {
 	var proxy adb.Proxy
-	if scheme == "" {
-		scheme = HTTP
-	}
-	hostname := scheme + "://" + host + ":" + port
-	_, err := url.Parse(hostname)
-	if err != nil {
-		return proxy, err
-	}
-	proxy.Hostname = hostname
 	proxy.Insert = true
-	proxy.Host = host
-	proxy.Port = port
-	proxy.Scheme = scheme
+	proxy.Host = u.Hostname()
+	proxy.Port = u.Port()
+	proxy.Scheme = u.Scheme
 	proxy.CreateAt = time.Now()
-	return proxy, err
+	hostname := proxy.Scheme + "://" + proxy.Host + ":" + proxy.Port
+	proxy.Hostname = hostname
+	return proxy
 }
 
 // func (mp *mapProxy) existProxy(hostname string) bool {
@@ -93,7 +86,11 @@ func (mp *mapProxy) taskToProxy(task *pool.Task, isNew bool, myIP string) (adb.P
 		pattern = reMyIP
 	}
 	if !isNew {
+		proxy.Insert = false
 		proxy.Update = true
+	} else {
+		proxy.Insert = true
+		proxy.Update = false
 	}
 	proxy.UpdateAt = time.Now()
 	proxy.Response = task.ResponseTime
@@ -113,8 +110,8 @@ func (mp *mapProxy) taskToProxy(task *pool.Task, isNew bool, myIP string) (adb.P
 
 func proxyListFromSlice(ips []string) []adb.Proxy {
 	list, err := db.CheckNotExists(ips)
-	debugmsg("find new", len(list))
 	chkErr("getNew CheckNotExists", err)
+	debugmsg("find new", len(list))
 	var pList []adb.Proxy
 	for i := range list {
 		proxy, err := proxyFromString(list[i])
@@ -155,9 +152,9 @@ func getFUPList() []adb.Proxy {
 	chkErr("getFUPList ProxyGetFrequentlyUsedPorts", err)
 	for _, host := range hosts {
 		for _, port := range ports {
-			proxy, err := newProxy(host, port, "")
+			u, err := url.Parse("http://" + host + ":" + port)
 			if err == nil {
-				list = append(list, proxy)
+				list = append(list, newProxy(u))
 			}
 		}
 	}
@@ -169,13 +166,13 @@ func getListWithScheme() []adb.Proxy {
 	list, err := db.ProxyGetAllScheme(HTTP)
 	chkErr("getListWithScheme ProxyGetAllScheme", err)
 	for i := range list {
-		proxy, err := newProxy(list[i].Host, list[i].Port, HTTPS)
+		u, err := url.Parse("https://" + list[i].Host + ":" + list[i].Port)
 		if err == nil {
-			newList = append(newList, proxy)
+			newList = append(newList, newProxy(u))
 		}
-		proxy, err = newProxy(list[i].Host, list[i].Port, SOCKS5)
+		u, err = url.Parse("socks5://" + list[i].Host + ":" + list[i].Port)
 		if err == nil {
-			newList = append(newList, proxy)
+			newList = append(newList, newProxy(u))
 		}
 	}
 	return newList
@@ -204,9 +201,9 @@ func getProxyListFromDB() []adb.Proxy {
 
 func saveProxy(p adb.Proxy) {
 	if p.Update {
-		chkErr("saveProxy ProxyUpdate", db.ProxyUpdate(&p))
+		chkErr("saveProxy ProxyUpdate "+p.Hostname, db.ProxyUpdate(&p))
 	} else {
-		chkErr("saveProxy ProxyInsert", db.ProxyInsert(&p))
+		chkErr("saveProxy ProxyInsert "+p.Hostname, db.ProxyInsert(&p))
 	}
 }
 
