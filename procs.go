@@ -81,13 +81,13 @@ breakCheckProxyLoop:
 						continue
 					}
 					mp.set(proxy)
-					if !(useFUP || useCheckScheme) {
-						saveProxy(proxy)
-					}
+					// if !(useFUP || useCheckScheme) {
+					saveProxy(proxy)
+					// }
 					if proxy.IsWork {
-						if useFUP || useCheckScheme {
-							saveProxy(proxy)
-						}
+						// if useFUP || useCheckScheme {
+						// 	saveProxy(proxy)
+						// }
 						totalProxy++
 						debugmsg(fmt.Sprintf("%d/%d/%d %-15v %-5v %-6v %v",
 							totalProxy,
