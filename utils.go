@@ -54,9 +54,9 @@ func checkFlags() {
 
 	flag.Parse()
 
-	if primaryLink != "" {
-		useAddLink = true
-	}
+	// if primaryLink != "" {
+	// 	useAddLink = true
+	// }
 
 	if testLink != "" {
 		useTestLink = true

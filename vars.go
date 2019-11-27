@@ -6,19 +6,19 @@ import (
 
 // protocols
 const (
-	HTTP   = "http"
-	HTTPS  = "https"
-	SOCKS5 = "socks5"
+	HTTP = "http"
+	// HTTPS  = "https"
+	// SOCKS5 = "socks5"
 )
 
 var (
 	cfg config
 
-	useFUP         = false
-	useFind        = false
-	useCheck       = false
-	useCheckAll    = false
-	useAddLink     = false
+	useFUP      = false
+	useFind     = false
+	useCheck    = false
+	useCheckAll = false
+	// useAddLink     = false
 	useNoAddLinks  = false
 	useTestLink    = false
 	useCheckScheme = false

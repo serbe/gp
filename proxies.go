@@ -76,8 +76,8 @@ func newProxy(u *url.URL) adb.Proxy {
 // 	return ok
 // }
 
-func (mp *mapProxy) taskToProxy(task *pool.Task, isNew bool, myIP string) (adb.Proxy, bool) {
-	proxy, ok := mp.get(task.Proxy.String())
+func (mp *mapProxy) taskToProxy(task *pool.TaskResult, isNew bool, myIP string) (adb.Proxy, bool) {
+	proxy, ok := mp.get(task.Proxy)
 	if !ok {
 		return proxy, ok
 	}
