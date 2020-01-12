@@ -15,11 +15,8 @@ type config struct {
 	MyIPCheck    bool   `json:"my_ip_check"`
 	Workers      int64  `json:"workers"`
 	Timeout      int64  `json:"timeout"`
-	Database     string `json:"database"`
-	DBAddress    string `json:"db_address"`
-	Password     string `json:"password"`
+	DatabaseURL  string `json:"database"`
 	Target       string `json:"target"`
-	Username     string `json:"username"`
 }
 
 func getConfig() {

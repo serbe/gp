@@ -7,7 +7,7 @@ import (
 	"github.com/serbe/adb"
 )
 
-var db *adb.ADB
+var db adb.DB
 
 func main() {
 	getConfig()
@@ -28,14 +28,14 @@ func main() {
 		log.Panic("Target", cfg.Target, "unavailable")
 	}
 
-	db = adb.InitDB(cfg.Database, cfg.DBAddress, cfg.Username, cfg.Password)
+	db = adb.InitDB(cfg.DatabaseURL)
 
 	startAppTime := time.Now()
 
 	if useFind {
 		findProxy()
 	} else if useCheck {
-		checkProxy(getProxyListFromDB())
+		checkProxy(getProxyListFromDB(), true)
 	}
 
 	log.Printf("Total time: %v\n", time.Since(startAppTime))

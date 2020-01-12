@@ -5,19 +5,18 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/serbe/adb"
 	"github.com/serbe/pool"
 	"github.com/serbe/sites"
 )
 
 func findProxy() {
 	debugmsg("Start find proxy")
-	list := proxyListFromSlice(sites.ParseSites(cfg.LogDebug, cfg.LogErrors))
-	checkProxy(list)
+	list := sites.ParseSites(cfg.LogDebug, cfg.LogErrors)
+	checkProxy(list, false)
 	debugmsg("End find proxy")
 }
 
-func checkProxy(list []adb.Proxy) {
+func checkProxy(list []string, isUpdate bool) {
 	debugmsg("start checkProxy")
 	var (
 		checked    int64
@@ -34,78 +33,55 @@ func checkProxy(list []adb.Proxy) {
 	listLen := len(list)
 	debugmsg("load proxies", listLen)
 
-breakCheckProxyLoop:
-	for j := 0; j < listLen; {
-		mp := newMapProxy()
-		var r = 2000
-		if j+2000 > listLen {
-			r = listLen % 2000
-		}
-		for i := 0; i < r; i++ {
-			mp.set(list[j])
-			j++
-		}
-		p := pool.New(cfg.Workers)
-		// defer p.Quit()
-		p.SetTimeout(cfg.Timeout)
-		debugmsg("start add to pool")
-		for i := range mp.values {
-			chkErr("add to pool", p.Add(cfg.Target, mp.values[i].Hostname))
-		}
-		debugmsg("end add to pool")
-		debugmsg(j, p.GetAddedTasks(), listLen)
-		p.EndWaitingTasks()
-		p.SetQuitTimeout(cfg.Timeout + 1000)
-		if p.GetAddedTasks() > 0 {
-		checkProxyLoop:
-			for {
-				select {
-				case task, ok := <-p.ResultChan:
-					if !ok {
-						debugmsg(j, p.GetAddedTasks(), p.GetCompletedTasks(), listLen)
-						debugmsg("break loop by close chan ResultChan")
-						break checkProxyLoop
-					}
-					checked++
-					isNew := false
-					if useFUP || useCheckScheme || useFind {
-						isNew = true
-					}
-					proxy, isOk := mp.taskToProxy(task, isNew, myIP)
-					if !isOk {
-						continue
-					}
+	p := pool.New(cfg.Workers)
+	// defer p.Quit()
+	p.SetTimeout(cfg.Timeout)
+	debugmsg("start add to pool")
+	for i := range list {
+		chkErr("add to pool", p.Add(cfg.Target, list[i]))
+	}
+	debugmsg("end add to pool")
+	debugmsg(p.GetAddedTasks(), listLen)
+	p.EndWaitingTasks()
+	p.SetQuitTimeout(cfg.Timeout + 1000)
 
-					mp.set(proxy)
-					if !(useFUP || useCheckScheme) {
-						saveProxy(proxy)
-					}
-					if proxy.IsWork {
-						if useFUP || useCheckScheme {
-							saveProxy(proxy)
-						}
-						totalProxy++
-						debugmsg(fmt.Sprintf("%d/%d/%d %v %v",
-							totalProxy,
-							checked,
-							listLen,
-							proxy.IsAnon,
-							task.Proxy,
-						))
-						if proxy.IsAnon {
-							anonProxy++
-						}
-					}
-				case <-c:
-					debugmsg("break loop by pressing ctrl+c")
-					break breakCheckProxyLoop
+	if p.GetAddedTasks() > 0 {
+	checkProxyLoop:
+		for {
+			select {
+			case task, ok := <-p.ResultChan:
+				if !ok {
+					debugmsg(p.GetAddedTasks(), p.GetCompletedTasks(), listLen)
+					debugmsg("break loop by close chan ResultChan")
+					break checkProxyLoop
 				}
+				checked++
+				proxy := taskToProxy(task, myIP)
+
+				saveProxy(proxy, isUpdate)
+				if proxy.IsWork {
+					totalProxy++
+					debugmsg(fmt.Sprintf("%d/%d/%d %v %v",
+						totalProxy,
+						checked,
+						listLen,
+						proxy.IsAnon,
+						proxy.Hostname,
+					))
+					if proxy.IsAnon {
+						anonProxy++
+					}
+				}
+			case <-c:
+				debugmsg("break loop by pressing ctrl+c")
+				break checkProxyLoop
 			}
 		}
-		if listLen > 0 {
-			debugmsg(fmt.Sprintf("checked %d from %d", checked, listLen))
-		}
 	}
+	if listLen > 0 {
+		debugmsg(fmt.Sprintf("checked %d from %d", checked, listLen))
+	}
+
 	debugmsg(fmt.Sprintf("%d is good", totalProxy))
 	debugmsg(fmt.Sprintf("%d is anon", anonProxy))
 	debugmsg("end checkProxy")
