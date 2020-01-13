@@ -1,0 +1,10 @@
+{
+    "target": "http://127.0.0.1:12345/server",
+    "workers": 10,
+    "timeout": 15000,
+    "log_errors": true,
+    "log_debug": true,
+    "my_ip_check": false,
+    "http_bin_check": false,
+    "database": "db_uri"
+}
