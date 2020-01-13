@@ -12,6 +12,7 @@ import (
 func findProxy() {
 	debugmsg("Start find proxy")
 	list := sites.ParseSites(cfg.LogDebug, cfg.LogErrors)
+	list = removeDuplicates(list)
 	checkProxy(list, false)
 	debugmsg("End find proxy")
 }

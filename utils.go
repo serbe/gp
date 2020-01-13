@@ -60,6 +60,18 @@ func checkFlags() {
 	}
 }
 
+func removeDuplicates(list []string) []string {
+	newList := []string{}
+	mapList := map[string]bool{}
+	for i := range list {
+		if !mapList[list[i]] {
+			mapList[list[i]] = true
+			newList = append(newList, list[i])
+		}
+	}
+	return newList
+}
+
 func chkErr(str string, err error) {
 	if err != nil {
 		errmsg(str, err)

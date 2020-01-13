@@ -41,5 +41,8 @@ func checkTarget() bool {
 		Timeout: time.Duration(cfg.Timeout) * time.Second,
 	}
 	_, err := client.Get(cfg.Target)
+	if err != nil {
+		errmsg("checkTarget", err)
+	}
 	return err == nil
 }

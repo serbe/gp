@@ -25,7 +25,7 @@ func main() {
 	}
 
 	if !checkTarget() {
-		log.Panic("Target", cfg.Target, "unavailable")
+		log.Panic("Target ", cfg.Target, " unavailable")
 	}
 
 	db = adb.InitDB(cfg.DatabaseURL)

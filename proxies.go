@@ -27,20 +27,18 @@ func newProxy(u *url.URL) adb.Proxy {
 	proxy.Port, _ = strconv.Atoi(port)
 	proxy.Scheme = u.Scheme
 	proxy.CreateAt = time.Now()
+	proxy.UpdateAt = time.Now()
 	hostname := proxy.Scheme + "://" + proxy.Host + ":" + port
 	proxy.Hostname = hostname
 	return proxy
 }
 
 func taskToProxy(task *pool.TaskResult, myIP string) adb.Proxy {
-	var proxy adb.Proxy
-	proxy.Hostname = task.Proxy
+	proxy, _ := proxyFromString(task.Proxy)
 	pattern := reRemoteIP
 	if cfg.MyIPCheck {
 		pattern = reMyIP
 	}
-	proxy.CreateAt = time.Now()
-	proxy.UpdateAt = time.Now()
 	proxy.Response = task.ResponseTime
 	strBody := string(task.Body)
 	if pattern.Match(task.Body) && !strings.Contains(strBody, myIP) {

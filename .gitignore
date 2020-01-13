@@ -26,6 +26,6 @@ _testmain.go
 *.lock
 gp
 
-tmp.html
+*.html
 
 config.json
