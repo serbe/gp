@@ -61,8 +61,15 @@ func checkFlags() {
 }
 
 func removeDuplicates(list []string) []string {
+	lastUpdated, err := db.GetLast(50000)
+	chkErr("lastUpdated", err)
 	newList := []string{}
 	mapList := map[string]bool{}
+	for i := range lastUpdated {
+		if !mapList[list[i]] {
+			mapList[list[i]] = true
+		}
+	}
 	for i := range list {
 		if !mapList[list[i]] {
 			mapList[list[i]] = true

@@ -29,33 +29,24 @@ func checkProxy(list []string, isUpdate bool) {
 		errmsg("checkProxy getMyIP", err)
 		return
 	}
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt)
 	listLen := len(list)
 	debugmsg("load proxies", listLen)
 
 	p := pool.New(cfg.Workers)
-	// defer p.Quit()
-	p.SetTimeout(cfg.Timeout)
+	p.NetTimeout(cfg.Timeout)
 	debugmsg("start add to pool")
 	for i := range list {
 		chkErr("add to pool", p.Add(cfg.Target, list[i]))
 	}
 	debugmsg("end add to pool")
-	debugmsg(p.GetAddedTasks(), listLen)
-	p.EndWaitingTasks()
-	p.SetQuitTimeout(cfg.Timeout + 1000)
-
-	if p.GetAddedTasks() > 0 {
-	checkProxyLoop:
-		for {
+	debugmsg(p.Added(), listLen)
+	ch := p.UseOutChan()
+	if p.Added() > 0 {
+		for p.Added() > p.Completed() {
 			select {
-			case task, ok := <-p.ResultChan:
-				if !ok {
-					debugmsg(p.GetAddedTasks(), p.GetCompletedTasks(), listLen)
-					debugmsg("break loop by close chan ResultChan")
-					break checkProxyLoop
-				}
+			case task := <-ch:
 				checked++
 				proxy := taskToProxy(task, myIP)
 
@@ -73,9 +64,9 @@ func checkProxy(list []string, isUpdate bool) {
 						anonProxy++
 					}
 				}
-			case <-c:
-				debugmsg("break loop by pressing ctrl+c")
-				break checkProxyLoop
+			case <-sig:
+				debugmsg("press ctrl+c")
+				break
 			}
 		}
 	}

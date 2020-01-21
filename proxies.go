@@ -33,7 +33,7 @@ func newProxy(u *url.URL) adb.Proxy {
 	return proxy
 }
 
-func taskToProxy(task *pool.TaskResult, myIP string) adb.Proxy {
+func taskToProxy(task pool.Task, myIP string) adb.Proxy {
 	proxy, _ := proxyFromString(task.Proxy)
 	pattern := reRemoteIP
 	if cfg.MyIPCheck {
