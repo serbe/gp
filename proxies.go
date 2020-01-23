@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/serbe/adb"
-	"github.com/serbe/pool"
 )
 
 func proxyFromString(hostname string) (adb.Proxy, error) {
@@ -33,15 +32,15 @@ func newProxy(u *url.URL) adb.Proxy {
 	return proxy
 }
 
-func taskToProxy(task pool.Task, myIP string) adb.Proxy {
-	proxy, _ := proxyFromString(task.Proxy)
+func respToProxy(resp resp, myIP string) adb.Proxy {
+	proxy, _ := proxyFromString(resp.Proxy)
 	pattern := reRemoteIP
 	if cfg.MyIPCheck {
 		pattern = reMyIP
 	}
-	proxy.Response = task.ResponseTime
-	strBody := string(task.Body)
-	if pattern.Match(task.Body) && !strings.Contains(strBody, myIP) {
+	proxy.Response = resp.Response
+	strBody := string(resp.Body)
+	if pattern.Match(resp.Body) && !strings.Contains(strBody, myIP) {
 		proxy.IsWork = true
 		if !cfg.MyIPCheck && strings.Count(strBody, "<p>") == 1 {
 			proxy.IsAnon = true
@@ -149,7 +148,7 @@ func saveProxy(p adb.Proxy, isUpdate bool) {
 	}
 }
 
-// func (mp *mapProxy) newProxyInTask(task *pool.Task) []adb.Proxy {
+// func (mp *mapProxy) newProxyInTask(task *Task) []adb.Proxy {
 // 	var list []adb.Proxy
 // 	body := cleanBody(task.Body)
 // 	proxies := getProxyList(body)

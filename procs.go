@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/serbe/pool"
 	"github.com/serbe/sites"
 )
 
@@ -34,7 +33,7 @@ func checkProxy(list []string, isUpdate bool) {
 	listLen := len(list)
 	debugmsg("load proxies", listLen)
 
-	p := pool.New(cfg.Workers)
+	p := NewPool(cfg.Workers)
 	p.NetTimeout(cfg.Timeout)
 	debugmsg("start add to pool")
 	for i := range list {
@@ -42,13 +41,13 @@ func checkProxy(list []string, isUpdate bool) {
 	}
 	debugmsg("end add to pool")
 	debugmsg(p.Added(), listLen)
-	ch := p.UseOutChan()
+	ch := p.outTasks
 	if p.Added() > 0 {
 		for p.Added() > p.Completed() {
 			select {
-			case task := <-ch:
+			case resp := <-ch:
 				checked++
-				proxy := taskToProxy(task, myIP)
+				proxy := respToProxy(resp, myIP)
 
 				saveProxy(proxy, isUpdate)
 				if proxy.IsWork {
