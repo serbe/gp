@@ -9,10 +9,9 @@ import (
 )
 
 var (
-	timeout        int64 = 10000
-	errEmptyTarget       = errors.New("error: empty target hostname")
-	errNotRun            = errors.New("error: pool is not running")
-	errNotWait           = errors.New("error: pool is not waiting tasks")
+	errEmptyTarget = errors.New("error: empty target hostname")
+	errNotRun      = errors.New("error: pool is not running")
+	errNotWait     = errors.New("error: pool is not waiting tasks")
 )
 
 // Pool - specification of golang pool
@@ -22,11 +21,10 @@ type Pool struct {
 	numWorkers     int64
 	addedTasks     int64
 	completedTasks int64
-	in             reqQueue
-	out            respQueue
-	toWork         chan req
-	fromWork       chan resp
-	outTasks       chan resp
+	out            Queue
+	toWork         chan string
+	fromWork       chan Task
+	outTasks       chan Task
 	quit           chan struct{}
 	workers        []worker
 	wg             sync.WaitGroup
@@ -39,11 +37,10 @@ func NewPool(numWorkers int64) *Pool {
 	// rand.Seed(time.Now().UnixNano())
 	p := &Pool{
 		numWorkers: numWorkers,
-		in:         newReqQueue(),
-		out:        newRespQueue(),
-		toWork:     make(chan req, numWorkers),
-		fromWork:   make(chan resp, numWorkers),
-		outTasks:   make(chan resp, 1),
+		out:        newQueue(),
+		toWork:     make(chan string, numWorkers),
+		fromWork:   make(chan Task, numWorkers),
+		outTasks:   make(chan Task, 1),
 		quit:       make(chan struct{}),
 	}
 	p.wg.Add(1)
@@ -77,21 +74,21 @@ func (p *Pool) startWorkers() {
 func (p *Pool) start() {
 	p.running = true
 	p.wg.Done()
-	tick := time.Tick(time.Duration(200) * time.Microsecond)
-	ticker := time.NewTicker(time.Duration(timeout*3) * time.Millisecond)
+	// tick := time.Tick(time.Duration(200) * time.Microsecond)
+	ticker := time.NewTicker(time.Duration(cfg.Timeout*3) * time.Millisecond)
 	for {
 		select {
 		case <-ticker.C:
 			log.Println("Pool is sleep")
-		case <-tick:
-			task, ok := p.in.get()
-			if ok {
-				p.toWork <- task
-			}
+		// case <-tick:
+		// 	task, ok := p.in.get()
+		// 	if ok {
+		// 		p.toWork <- task
+		// 	}
 		case task := <-p.fromWork:
 			p.outTasks <- task
 			p.incCompleted()
-			ticker = time.NewTicker(time.Duration(timeout*3) * time.Millisecond)
+			ticker = time.NewTicker(time.Duration(cfg.Timeout*3) * time.Millisecond)
 			p.taskWG.Done()
 		case <-p.quit:
 			for i := range p.workers {
@@ -112,13 +109,13 @@ func (p *Pool) Add(hostname string, proxy string) error {
 	if !p.running {
 		return errNotRun
 	}
-	req := req{
-		ID:       p.addedTasks,
-		Hostname: hostname,
-		Proxy:    proxy,
-	}
+	// req := req{
+	// 	ID:       p.addedTasks,
+	// 	Hostname: hostname,
+	// 	Proxy:    proxy,
+	// }
 	p.incAdded()
-	p.in.put(req)
+	// p.in.put(req)
 	p.taskWG.Add(1)
 	return nil
 }
@@ -128,11 +125,6 @@ func (p *Pool) Stop() {
 	p.quit <- struct{}{}
 	p.wg.Wait()
 	p.running = false
-}
-
-// NetTimeout - set crawl timeout in milliseconds
-func (p *Pool) NetTimeout(millis int64) {
-	timeout = millis
 }
 
 // IsRunning - check pool status is running

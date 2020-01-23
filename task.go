@@ -4,17 +4,11 @@ import (
 	"time"
 )
 
-type resp struct {
+// Task - result from crawl
+type Task struct {
 	ID       int64
-	Hostname string
 	Proxy    string
 	Body     []byte
 	Response time.Duration
 	Error    error
-}
-
-type req struct {
-	ID       int64
-	Hostname string
-	Proxy    string
 }

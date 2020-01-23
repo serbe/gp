@@ -50,35 +50,32 @@ import (
 // 	return userAgents[rand.Intn(len(userAgents))]
 // }
 
-func crawl(req req) resp {
+func crawl(proxyURL string) Task {
 	startTime := time.Now()
 	var (
 		proxy *url.URL
-		resp  resp
+		task  Task
 		err   error
 	)
-	resp.Hostname = req.Hostname
-	resp.Proxy = req.Proxy
-	if resp.Proxy != "" {
-		proxy, err = url.Parse(resp.Proxy)
+	task.Proxy = proxyURL
+	if task.Proxy != "" {
+		proxy, err = url.Parse(task.Proxy)
 		if err != nil {
-			resp.Error = err
-			return resp
+			task.Error = err
+			return task
 		}
 	}
 	client := &http.Client{
-		Timeout: time.Duration(timeout) * time.Millisecond,
+		Timeout: time.Duration(cfg.Timeout) * time.Millisecond,
 	}
-	if proxy != nil {
-		client.Transport = &http.Transport{
-			Proxy:             http.ProxyURL(proxy),
-			DisableKeepAlives: true,
-		}
+	client.Transport = &http.Transport{
+		Proxy:             http.ProxyURL(proxy),
+		DisableKeepAlives: true,
 	}
-	request, err := http.NewRequest(http.MethodGet, resp.Hostname, nil)
+	request, err := http.NewRequest(http.MethodGet, cfg.Target, nil)
 	if err != nil {
-		resp.Error = err
-		return resp
+		task.Error = err
+		return task
 	}
 	request.Header.Set("User-Agent", "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)")
 	request.Header.Set("Connection", "close")
@@ -89,25 +86,25 @@ func crawl(req req) resp {
 		if response != nil {
 			_ = response.Body.Close()
 		}
-		resp.Error = err
-		return resp
+		task.Error = err
+		return task
 	}
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		resp.Error = err
+		task.Error = err
 		err = response.Body.Close()
 		if err != nil {
-			resp.Error = err
+			task.Error = err
 		}
-		return resp
+		return task
 	}
-	resp.Body = body
-	resp.Response = time.Since(startTime)
+	task.Body = body
+	task.Response = time.Since(startTime)
 	err = response.Body.Close()
 	if err != nil {
-		resp.Error = err
+		task.Error = err
 	}
-	return resp
+	return task
 }
 
 func getMyIP() (string, error) {

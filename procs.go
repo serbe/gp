@@ -34,7 +34,6 @@ func checkProxy(list []string, isUpdate bool) {
 	debugmsg("load proxies", listLen)
 
 	p := NewPool(cfg.Workers)
-	p.NetTimeout(cfg.Timeout)
 	debugmsg("start add to pool")
 	for i := range list {
 		chkErr("add to pool", p.Add(cfg.Target, list[i]))
@@ -45,9 +44,9 @@ func checkProxy(list []string, isUpdate bool) {
 	if p.Added() > 0 {
 		for p.Added() > p.Completed() {
 			select {
-			case resp := <-ch:
+			case task := <-ch:
 				checked++
-				proxy := respToProxy(resp, myIP)
+				proxy := taskToProxy(task, myIP)
 
 				saveProxy(proxy, isUpdate)
 				if proxy.IsWork {

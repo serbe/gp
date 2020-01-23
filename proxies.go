@@ -32,15 +32,15 @@ func newProxy(u *url.URL) adb.Proxy {
 	return proxy
 }
 
-func respToProxy(resp resp, myIP string) adb.Proxy {
-	proxy, _ := proxyFromString(resp.Proxy)
+func taskToProxy(task Task, myIP string) adb.Proxy {
+	proxy, _ := proxyFromString(task.Proxy)
 	pattern := reRemoteIP
 	if cfg.MyIPCheck {
 		pattern = reMyIP
 	}
-	proxy.Response = resp.Response
-	strBody := string(resp.Body)
-	if pattern.Match(resp.Body) && !strings.Contains(strBody, myIP) {
+	proxy.Response = task.Response
+	strBody := string(task.Body)
+	if pattern.Match(task.Body) && !strings.Contains(strBody, myIP) {
 		proxy.IsWork = true
 		if !cfg.MyIPCheck && strings.Count(strBody, "<p>") == 1 {
 			proxy.IsAnon = true
