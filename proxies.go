@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -32,15 +33,18 @@ func newProxy(u *url.URL) adb.Proxy {
 	return proxy
 }
 
-func taskToProxy(task Task, myIP string) adb.Proxy {
+func taskToProxy(task Task, cfg *config) adb.Proxy {
+	var pattern *regexp.Regexp
 	proxy, _ := proxyFromString(task.Proxy)
-	pattern := reRemoteIP
+
 	if cfg.MyIPCheck {
-		pattern = reMyIP
+		pattern = regexp.MustCompile(`<td>(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})</td>`)
+	} else {
+		pattern = regexp.MustCompile(`<p>RemoteAddr: (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d{1,5}</p>`)
 	}
 	proxy.Response = task.Response
 	strBody := string(task.Body)
-	if pattern.Match(task.Body) && !strings.Contains(strBody, myIP) {
+	if pattern.Match(task.Body) && !strings.Contains(strBody, cfg.myIP) {
 		proxy.IsWork = true
 		if !cfg.MyIPCheck && strings.Count(strBody, "<p>") == 1 {
 			proxy.IsAnon = true
@@ -51,21 +55,21 @@ func taskToProxy(task Task, myIP string) adb.Proxy {
 	return proxy
 }
 
-func proxyListFromSlice(ips []string) []adb.Proxy {
-	list, err := db.CheckNotExists(ips)
-	chkErr("getNew CheckNotExists", err)
-	debugmsg("find new", len(list))
-	var pList []adb.Proxy
-	for i := range list {
-		proxy, err := proxyFromString(list[i])
-		if err != nil {
-			errmsg("getNew proxyFromString", err)
-		} else {
-			pList = append(pList, proxy)
-		}
-	}
-	return pList
-}
+// func proxyListFromSlice(ips []string, cfg *config) []adb.Proxy {
+// 	list, err := cfg.db.CheckNotExists(ips)
+// 	chkErr("getNew CheckNotExists", err)
+// 	debugmsg(cfg.LogDebug, "find new", len(list))
+// 	var pList []adb.Proxy
+// 	for i := range list {
+// 		proxy, err := proxyFromString(list[i])
+// 		if err != nil {
+// 			errmsg("getNew proxyFromString", err)
+// 		} else {
+// 			pList = append(pList, proxy)
+// 		}
+// 	}
+// 	return pList
+// }
 
 // func (mp *mapProxy) loadProxyFromFile() {
 // 	if testFile == "" {
@@ -86,67 +90,6 @@ func proxyListFromSlice(ips []string) []adb.Proxy {
 // 		numProxy++
 // 	}
 // }
-
-func getFUPList() []string {
-	var list []string
-	hosts, err := db.GetUniqueHosts()
-	chkErr("getFUPList ProxyGetUniqueHosts", err)
-	ports, err := db.GetFrequentlyUsedPorts()
-	chkErr("getFUPList ProxyGetFrequentlyUsedPorts", err)
-	for _, host := range hosts {
-		for _, port := range ports {
-			u := "http://" + host + ":" + strconv.Itoa(port)
-			_, err := url.Parse(u)
-			if err == nil {
-				list = append(list, u)
-			}
-		}
-	}
-	return list
-}
-
-func getListWithScheme() []string {
-	var newList []string
-	list, err := db.GetAllScheme(HTTP)
-	chkErr("getListWithScheme ProxyGetAllScheme", err)
-	for i := range list {
-		u, err := url.Parse(list[i])
-		if err == nil {
-			newList = append(newList, "https://"+u.Host+":"+u.Port())
-			newList = append(newList, "socks5://"+u.Host+":"+u.Port())
-		}
-	}
-	return newList
-}
-
-func getProxyListFromDB() []string {
-	var (
-		list []string
-		err  error
-	)
-	if useTestLink {
-		return list
-	} else if useCheckAll {
-		list, err = db.GetAll()
-		chkErr("getProxyListFromDB ProxyGetAll", err)
-	} else if useFUP {
-		list = getFUPList()
-	} else if useCheckScheme {
-		list = getListWithScheme()
-	} else {
-		list, err = db.GetAllOld()
-		chkErr("getProxyListFromDB ProxyGetAllOld", err)
-	}
-	return list
-}
-
-func saveProxy(p adb.Proxy, isUpdate bool) {
-	if isUpdate {
-		chkErr("saveProxy Update "+p.Hostname, db.Update(&p))
-	} else {
-		chkErr("saveProxy Insert "+p.Hostname, db.Insert(&p))
-	}
-}
 
 // func (mp *mapProxy) newProxyInTask(task *Task) []adb.Proxy {
 // 	var list []adb.Proxy

@@ -7,7 +7,7 @@ import (
 // Queue - no race queue
 type Queue struct {
 	sync.RWMutex
-	nodes []Task
+	nodes []string
 	head  int
 	tail  int
 	cnt   int
@@ -15,12 +15,12 @@ type Queue struct {
 
 func newQueue() Queue {
 	return Queue{
-		nodes: make([]Task, 2),
+		nodes: make([]string, 2),
 	}
 }
 
 func (q *Queue) resize(n int) {
-	nodes := make([]Task, n)
+	nodes := make([]string, n)
 	if q.head < q.tail {
 		copy(nodes, q.nodes[q.head:q.tail])
 	} else {
@@ -33,25 +33,25 @@ func (q *Queue) resize(n int) {
 	q.nodes = nodes
 }
 
-func (q *Queue) put(Task Task) {
+func (q *Queue) put(value string) {
 	q.Lock()
 	if q.cnt == len(q.nodes) {
 		q.resize(q.cnt * 2)
 	}
-	q.nodes[q.tail] = Task
+	q.nodes[q.tail] = value
 	q.tail = (q.tail + 1) % len(q.nodes)
 	q.cnt++
 	q.Unlock()
 }
 
-func (q *Queue) get() (Task, bool) {
-	var task Task
+func (q *Queue) get() (string, bool) {
+	var value string
 	q.Lock()
 	if q.cnt == 0 {
 		q.Unlock()
-		return task, false
+		return value, false
 	}
-	task = q.nodes[q.head]
+	value = q.nodes[q.head]
 	q.head = (q.head + 1) % len(q.nodes)
 	q.cnt--
 
@@ -59,7 +59,7 @@ func (q *Queue) get() (Task, bool) {
 		q.resize(n)
 	}
 	q.Unlock()
-	return task, true
+	return value, true
 }
 
 func (q *Queue) cap() int {

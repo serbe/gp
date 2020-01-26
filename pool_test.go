@@ -1,5 +1,11 @@
 package main
 
+import (
+	"fmt"
+	"net/http"
+	"time"
+)
+
 // import (
 // 	"fmt"
 // 	"net/http"
@@ -8,20 +14,27 @@ package main
 // 	"time"
 // )
 
-// var (
-// 	numWorkers int64 = 4
-// 	t10ms            = time.Duration(10) * time.Millisecond
-// 	t30ms            = time.Duration(30) * time.Millisecond
-// )
+var (
+	numWorkers int64 = 4
+	t10ms            = time.Duration(10) * time.Millisecond
+	t30ms            = time.Duration(30) * time.Millisecond
+	testList         = []string{
+		"http://41.217.219.49*:51283",
+		"http://197.232.69.137*:33053",
+		"http://68.183.33.150:3128",
+		"http://171.7.69.234:8213",
+		"http://36.66.203.127:8080",
+	}
+)
 
-// func testHandler(w http.ResponseWriter, _ *http.Request) {
-// 	fmt.Fprint(w, "Test page")
-// }
+func testHandler(w http.ResponseWriter, _ *http.Request) {
+	fmt.Fprint(w, "Test page")
+}
 
-// func testHandlerWithTimeout(w http.ResponseWriter, _ *http.Request) {
-// 	time.Sleep(t30ms)
-// 	fmt.Fprint(w, "Test page with timeout")
-// }
+func testHandlerWithTimeout(w http.ResponseWriter, _ *http.Request) {
+	time.Sleep(t30ms)
+	fmt.Fprint(w, "Test page with timeout")
+}
 
 // // func TestClosedInputTaskChanByTimeout(t *testing.T) {
 // // 	ts := httptest.NewServer(http.HandlerFunc(testHandler))

@@ -1,52 +1,44 @@
 package main
 
 import (
-	"errors"
-	"log"
-	"sync"
-	"sync/atomic"
 	"time"
-)
 
-var (
-	errEmptyTarget = errors.New("error: empty target hostname")
-	errNotRun      = errors.New("error: pool is not running")
-	errNotWait     = errors.New("error: pool is not waiting tasks")
+	"github.com/serbe/adb"
+	"github.com/serbe/sites"
 )
 
 // Pool - specification of golang pool
 type Pool struct {
-	running        bool
-	useOutChan     bool
-	numWorkers     int64
-	addedTasks     int64
-	completedTasks int64
-	out            Queue
-	toWork         chan string
-	fromWork       chan Task
-	outTasks       chan Task
-	quit           chan struct{}
-	workers        []worker
-	wg             sync.WaitGroup
-	taskWG         sync.WaitGroup
+	// running    bool
+	nums    *nums
+	input   Queue
+	dp      *dbPool
+	out     chan string
+	quit    chan struct{}
+	workers []worker
+	cfg     *config
 }
 
-// NewPool - create new goroutine pool with channels
-// numWorkers - max workers
-func NewPool(numWorkers int64) *Pool {
-	// rand.Seed(time.Now().UnixNano())
-	p := &Pool{
-		numWorkers: numWorkers,
-		out:        newQueue(),
-		toWork:     make(chan string, numWorkers),
-		fromWork:   make(chan Task, numWorkers),
-		outTasks:   make(chan Task, 1),
-		quit:       make(chan struct{}),
+func newPool(cfg config) *Pool {
+	nums := new(nums)
+	db := adb.InitDB(cfg.DatabaseURL)
+	dp := &dbPool{
+		input: make(chan Task),
+		nums:  nums,
+		db:    &db,
+		cfg:   &cfg,
 	}
-	p.wg.Add(1)
+	p := &Pool{
+		input: newQueue(),
+		out:   make(chan string, cfg.Workers),
+		dp:    dp,
+		quit:  make(chan struct{}),
+		nums:  nums,
+		cfg:   &cfg,
+	}
 	p.startWorkers()
+	go dp.start()
 	go p.start()
-	p.wg.Wait()
 	return p
 }
 
@@ -55,14 +47,14 @@ func (p *Pool) startWorkers() {
 		i       int64
 		workers []worker
 	)
-	for i < p.numWorkers {
-		p.wg.Add(1)
+	for i < p.cfg.Workers {
 		worker := worker{
-			id:   i,
-			in:   p.toWork,
-			out:  p.fromWork,
-			quit: make(chan struct{}),
-			wg:   &p.wg,
+			id:     i,
+			in:     p.out,
+			out:    p.dp.input,
+			quit:   make(chan struct{}),
+			target: p.cfg.Target,
+			nums:   p.nums,
 		}
 		go worker.start()
 		workers = append(workers, worker)
@@ -72,27 +64,27 @@ func (p *Pool) startWorkers() {
 }
 
 func (p *Pool) start() {
-	p.running = true
-	p.wg.Done()
-	// tick := time.Tick(time.Duration(200) * time.Microsecond)
-	ticker := time.NewTicker(time.Duration(cfg.Timeout*3) * time.Millisecond)
+	// p.running = true
+	tick := time.Tick(time.Duration(200) * time.Microsecond)
+	// ticker := time.NewTicker(time.Duration(p.cfg.Timeout*3) * time.Millisecond)
 	for {
 		select {
-		case <-ticker.C:
-			log.Println("Pool is sleep")
-		// case <-tick:
-		// 	task, ok := p.in.get()
-		// 	if ok {
-		// 		p.toWork <- task
-		// 	}
-		case task := <-p.fromWork:
-			p.outTasks <- task
-			p.incCompleted()
-			ticker = time.NewTicker(time.Duration(cfg.Timeout*3) * time.Millisecond)
-			p.taskWG.Done()
+		// case <-ticker.C:
+		// 	log.Println("Pool is sleep")
+		// 	p.stop()
+		case <-tick:
+			if p.nums.getFreeWorkers() > 0 {
+				value, ok := p.input.get()
+				if ok {
+					p.nums.decFreeWorkers()
+					p.out <- value
+					// ticker = time.NewTicker(time.Duration(p.cfg.Timeout*3) * time.Millisecond)
+				}
+			}
 		case <-p.quit:
+			p.dp.stop()
 			for i := range p.workers {
-				p.wg.Add(1)
+				// p.wg.Add(1)
 				p.workers[i].stop()
 			}
 			// close(p.quit)
@@ -101,56 +93,73 @@ func (p *Pool) start() {
 	}
 }
 
-// Add - adding task to pool
-func (p *Pool) Add(hostname string, proxy string) error {
+func (p *Pool) add(hostname string) error {
 	if hostname == "" {
-		return errEmptyTarget
+		return errEmptyHostname
 	}
-	if !p.running {
-		return errNotRun
-	}
+	// if !p.running {
+	// 	return errNotRun
+	// }
 	// req := req{
 	// 	ID:       p.addedTasks,
 	// 	Hostname: hostname,
 	// 	Proxy:    proxy,
 	// }
-	p.incAdded()
-	// p.in.put(req)
-	p.taskWG.Add(1)
+	p.input.put(hostname)
+	p.nums.incAddedTasks()
+	// p.taskWG.Add(1)
 	return nil
 }
 
-// Stop - stop pool and all workers
-func (p *Pool) Stop() {
-	p.quit <- struct{}{}
-	p.wg.Wait()
-	p.running = false
-}
+// func (p *Pool) stop() {
+// 	p.quit <- struct{}{}
+// 	// p.wg.Wait()
+// 	// p.running = false
+// }
 
-// IsRunning - check pool status is running
-func (p *Pool) IsRunning() bool {
-	return p.running
-}
+// // IsRunning - check pool status is running
+// func (p *Pool) IsRunning() bool {
+// 	return p.running
+// }
 
-// Wait - wait all task is done
-func (p *Pool) Wait() {
-	p.taskWG.Wait()
-}
+// // Wait - wait all task is done
+// func (p *Pool) Wait() {
+// 	p.taskWG.Wait()
+// }
 
-func (p *Pool) incAdded() {
-	atomic.AddInt64(&p.addedTasks, 1)
-}
+func (p *Pool) getHostList() {
+	var list []string
+	if p.cfg.UseFind {
+		debugmsg("Start find proxy")
+		newList := sites.ParseSites(p.cfg.LogDebug, p.cfg.LogErrors)
+		saveToFile("newlist.txt", newList)
+		oldList := p.dp.getLastProxy(100000)
+		saveToFile("oldlist.txt", oldList)
+		list = removeDuplicates(newList, oldList)
+		saveToFile("list.txt", list)
+		p.cfg.isUpdate = false
+		debugmsg("End find proxy")
+	} else if p.cfg.UseCheck {
+		debugmsg("Start get proxy from db")
+		if p.cfg.useTestLink {
+			debugmsg("list empty for test link")
+		} else if p.cfg.UseCheckAll {
+			list = p.dp.getAllProxy()
+		} else if p.cfg.UseFUP {
+			list = p.dp.getFUPList()
+		} else if p.cfg.UseCheckScheme {
+			list = p.dp.getListWithScheme()
+		} else {
+			list = p.dp.getAllOld()
+		}
+		p.cfg.isUpdate = true
+		debugmsg("End get proxy from db")
+	}
 
-// Added - number of adding tasks
-func (p *Pool) Added() int64 {
-	return atomic.LoadInt64(&p.addedTasks)
-}
+	for i := range list {
+		err := p.add(list[i])
+		chkErr("add host to pool", err)
+	}
 
-func (p *Pool) incCompleted() {
-	atomic.AddInt64(&p.completedTasks, 1)
-}
-
-// Completed - number of completed tasks
-func (p *Pool) Completed() int64 {
-	return atomic.LoadInt64(&p.completedTasks)
+	debugmsg("End get proxy from db")
 }
