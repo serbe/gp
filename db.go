@@ -6,17 +6,20 @@ import (
 	"strconv"
 
 	"github.com/serbe/adb"
+
 )
 
 type dbPool struct {
-	input chan Task
-	quit  chan struct{}
-	nums  *nums
-	db    *adb.DB
-	cfg   *config
+	running bool
+	input   chan Task
+	quit    chan struct{}
+	nums    *nums
+	db      *adb.DB
+	cfg     *config
 }
 
 func (dp *dbPool) start() {
+	dp.running = true
 	for {
 		select {
 		case task := <-dp.input:
@@ -45,7 +48,8 @@ func (dp *dbPool) start() {
 
 		case <-dp.quit:
 			debugmsg("dbPool quit")
-			break
+			dp.running = false
+			return
 		}
 	}
 }
