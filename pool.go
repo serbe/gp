@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sync"
 	"time"
 
 	"github.com/serbe/adb"
@@ -9,7 +10,7 @@ import (
 
 // Pool - specification of golang pool
 type Pool struct {
-	// running    bool
+	running bool
 	nums    *nums
 	input   Queue
 	dp      *dbPool
@@ -17,36 +18,33 @@ type Pool struct {
 	quit    chan struct{}
 	workers []worker
 	cfg     *config
+	wg      *sync.WaitGroup
 }
 
 func newPool(cfg config) *Pool {
+	var (
+		i       int64
+		workers []worker
+	)
+	wg := new(sync.WaitGroup)
 	nums := new(nums)
 	db := adb.InitDB(cfg.DatabaseURL)
+	p := &Pool{
+		input: newQueue(),
+		out:   make(chan string, cfg.Workers),
+		quit:  make(chan struct{}),
+		nums:  nums,
+		cfg:   &cfg,
+		wg:    wg,
+	}
 	dp := &dbPool{
 		input: make(chan Task),
 		nums:  nums,
 		db:    &db,
 		cfg:   &cfg,
+		wg:    wg,
 	}
-	p := &Pool{
-		input: newQueue(),
-		out:   make(chan string, cfg.Workers),
-		dp:    dp,
-		quit:  make(chan struct{}),
-		nums:  nums,
-		cfg:   &cfg,
-	}
-	p.startWorkers()
-	go dp.start()
-	go p.start()
-	return p
-}
-
-func (p *Pool) startWorkers() {
-	var (
-		i       int64
-		workers []worker
-	)
+	p.dp = dp
 	for i < p.cfg.Workers {
 		worker := worker{
 			id:     i,
@@ -55,17 +53,29 @@ func (p *Pool) startWorkers() {
 			quit:   make(chan struct{}),
 			target: p.cfg.Target,
 			nums:   p.nums,
+			wg:     p.wg,
 		}
-		go worker.start()
 		workers = append(workers, worker)
 		i++
 	}
 	p.workers = workers
+	return p
+}
+
+func (p *Pool) run() {
+	for i := range p.workers {
+		p.workers[i].run()
+	}
+	p.dp.run()
+	p.wg.Add(1)
+	go p.start()
+	p.wg.Wait()
 }
 
 func (p *Pool) start() {
-	// p.running = true
+	p.running = true
 	tick := time.Tick(time.Duration(200) * time.Microsecond)
+	p.wg.Done()
 	// ticker := time.NewTicker(time.Duration(p.cfg.Timeout*3) * time.Millisecond)
 	for {
 		select {

@@ -14,7 +14,7 @@ func main() {
 
 	p.getHostList()
 
-	p.start()
+	p.run()
 
 	log.Printf("Total time: %v\n", time.Since(startAppTime))
 }

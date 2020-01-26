@@ -4,21 +4,32 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 )
 
 type worker struct {
 	id      int64
+	running bool
 	timeout int64
 	target  string
 	in      chan string
 	out     chan Task
 	quit    chan struct{}
 	nums    *nums
+	wg      *sync.WaitGroup
+}
+
+func (w *worker) run() {
+	w.wg.Add(1)
+	go w.start()
+	w.wg.Wait()
 }
 
 func (w *worker) start() {
 	w.nums.incFreeWorkers()
+	w.running = true
+	w.wg.Done()
 	for {
 		select {
 		case hostname := <-w.in:

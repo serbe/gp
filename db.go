@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"sync"
 
 	"github.com/serbe/adb"
 
@@ -16,10 +17,18 @@ type dbPool struct {
 	nums    *nums
 	db      *adb.DB
 	cfg     *config
+	wg      *sync.WaitGroup
+}
+
+func (dp *dbPool) run() {
+	dp.wg.Add(1)
+	go dp.start()
+	dp.wg.Wait()
 }
 
 func (dp *dbPool) start() {
 	dp.running = true
+	dp.wg.Done()
 	for {
 		select {
 		case task := <-dp.input:
@@ -49,6 +58,7 @@ func (dp *dbPool) start() {
 		case <-dp.quit:
 			debugmsg("dbPool quit")
 			dp.running = false
+			dp.wg.Done()
 			return
 		}
 	}
