@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/serbe/adb"
-
 )
 
 type dbPool struct {
@@ -54,7 +53,6 @@ func (dp *dbPool) start() {
 				proxy.Hostname,
 				task.Error,
 			))
-
 		case <-dp.quit:
 			debugmsg("dbPool quit")
 			dp.running = false

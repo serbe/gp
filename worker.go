@@ -36,6 +36,9 @@ func (w *worker) start() {
 			w.out <- w.crawl(hostname)
 			w.nums.incFreeWorkers()
 		case <-w.quit:
+			w.running = false
+			w.nums.decFreeWorkers()
+			w.wg.Done()
 			return
 		}
 	}

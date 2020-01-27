@@ -63,13 +63,17 @@ func newPool(cfg config) *Pool {
 }
 
 func (p *Pool) run() {
+	p.wg.Add(1)
+	go p.start()
+	p.wg.Wait()
+}
+
+func (p *Pool) runAll() {
 	for i := range p.workers {
 		p.workers[i].run()
 	}
 	p.dp.run()
-	p.wg.Add(1)
-	go p.start()
-	p.wg.Wait()
+	p.run()
 }
 
 func (p *Pool) start() {
@@ -94,9 +98,10 @@ func (p *Pool) start() {
 		case <-p.quit:
 			p.dp.stop()
 			for i := range p.workers {
-				// p.wg.Add(1)
+				p.wg.Add(1)
 				p.workers[i].stop()
 			}
+			p.wg.Done()
 			// close(p.quit)
 			return
 		}
@@ -121,11 +126,12 @@ func (p *Pool) add(hostname string) error {
 	return nil
 }
 
-// func (p *Pool) stop() {
-// 	p.quit <- struct{}{}
-// 	// p.wg.Wait()
-// 	// p.running = false
-// }
+func (p *Pool) stop() {
+	p.wg.Add(1)
+	p.quit <- struct{}{}
+	p.wg.Wait()
+	p.running = false
+}
 
 // // IsRunning - check pool status is running
 // func (p *Pool) IsRunning() bool {

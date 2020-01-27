@@ -1,105 +1,103 @@
 package main
 
-import (
-	"fmt"
-	"net/http"
-	"time"
-)
-
 // import (
 // 	"fmt"
 // 	"net/http"
-// 	"net/http/httptest"
-// 	"testing"
 // 	"time"
 // )
 
-var (
-	numWorkers int64 = 4
-	t10ms            = time.Duration(10) * time.Millisecond
-	t30ms            = time.Duration(30) * time.Millisecond
-	testList         = []string{
-		"http://41.217.219.49*:51283",
-		"http://197.232.69.137*:33053",
-		"http://68.183.33.150:3128",
-		"http://171.7.69.234:8213",
-		"http://36.66.203.127:8080",
-	}
-)
+// // import (
+// // 	"fmt"
+// // 	"net/http"
+// // 	"net/http/httptest"
+// // 	"testing"
+// // 	"time"
+// // )
 
-func testHandler(w http.ResponseWriter, _ *http.Request) {
-	fmt.Fprint(w, "Test page")
-}
+// var (
+// 	numWorkers int64 = 4
+// 	t10ms            = time.Duration(10) * time.Millisecond
+// 	t30ms            = time.Duration(30) * time.Millisecond
+// 	testList         = []string{
+// 		"http://41.217.219.49*:51283",
+// 		"http://197.232.69.137*:33053",
+// 		"http://68.183.33.150:3128",
+// 		"http://171.7.69.234:8213",
+// 		"http://36.66.203.127:8080",
+// 	}
+// )
 
-func testHandlerWithTimeout(w http.ResponseWriter, _ *http.Request) {
-	time.Sleep(t30ms)
-	fmt.Fprint(w, "Test page with timeout")
-}
+// func testHandler(w http.ResponseWriter, _ *http.Request) {
+// 	fmt.Fprint(w, "Test page")
+// }
 
-// // func TestClosedInputTaskChanByTimeout(t *testing.T) {
-// // 	ts := httptest.NewServer(http.HandlerFunc(testHandler))
-// // 	defer ts.Close()
+// func testHandlerWithTimeout(w http.ResponseWriter, _ *http.Request) {
+// 	time.Sleep(t30ms)
+// 	fmt.Fprint(w, "Test page with timeout")
+// }
 
-// // 	p := NewPool(numWorkers)
-// // 	// p.SetQuitTimeout(10)
-// // 	err := p.Add(ts.URL, "")
-// // 	if err != nil {
-// // 		t.Errorf("Got %v error, want %v", err, nil)
-// // 	}
-// // 	time.Sleep(t30ms)
-// // 	err = p.Add(ts.URL, "")
-// // 	if err == nil {
-// // 		t.Errorf("Got %v error, want %v", nil, errNotRun)
-// // 	}
-// // }
+// func TestClosedInputTaskChanByTimeout(t *testing.T) {
+// 	ts := httptest.NewServer(http.HandlerFunc(testHandler))
+// 	defer ts.Close()
+
+// 	p := NewPool(numWorkers)
+// 	// p.SetQuitTimeout(10)
+// 	err := p.Add(ts.URL, "")
+// 	if err != nil {
+// 		t.Errorf("Got %v error, want %v", err, nil)
+// 	}
+// 	time.Sleep(t30ms)
+// 	err = p.Add(ts.URL, "")
+// 	if err == nil {
+// 		t.Errorf("Got %v error, want %v", nil, errNotRun)
+// 	}
+// }
 
 // func TestNoServer(t *testing.T) {
-// 	p := NewPool(numWorkers)
+// 	cfg := config{
+// 		Workers: numWorkers,
+// 	}
+// 	p := newPool(cfg)
+// 	p.run()
 // 	if !p.running {
 // 		t.Errorf("pool is %v, want %v", p.running, true)
 // 	}
-// 	if !p.IsRunning() {
-// 		t.Errorf("pool is %v, want %v", p.IsRunning(), true)
-// 	}
-// 	if p.numWorkers != numWorkers {
-// 		t.Errorf("pool have %v numWorkers, want %v", p.numWorkers, numWorkers)
+// 	if int64(len(p.workers)) != numWorkers {
+// 		t.Errorf("pool have %v numWorkers, want %v", len(p.workers), numWorkers)
 // 	}
 // 	if len(p.workers) != int(numWorkers) {
 // 		t.Errorf("pool have %v Workers, want %v", len(p.workers), numWorkers)
 // 	}
-// 	err := p.Add("", "")
-// 	if err != errEmptyTarget {
-// 		t.Errorf("Got %v error, want %v", err, errEmptyTarget)
+// 	err := p.add("")
+// 	if err != errEmptyHostname {
+// 		t.Errorf("Got %v error, want %v", err, errEmptyHostname)
 // 	}
-// 	if p.addedTasks != 0 {
-// 		t.Errorf("Wrong input jobs. got %v, want %v", p.addedTasks, 0)
+// 	if p.nums.getAddedTasks() != 0 {
+// 		t.Errorf("Wrong input added tasks, got %v, want %v", p.nums.getAddedTasks(), 0)
 // 	}
-// 	err = p.Add(":", "")
+// 	err = p.add(":")
 // 	if err != nil {
 // 		t.Errorf("Got %v error, want %v", err, nil)
 // 	}
-// 	err = p.Add("http://127.0.0.1:80/", ":")
+// 	err = p.add("http://127.0.0.1:80")
 // 	if err != nil {
 // 		t.Errorf("Got %v error, want %v", err, nil)
 // 	}
-// 	err = p.Add("http://127.0.0.1:80/", "")
+// 	err = p.add("http://127.0.0.1:80")
 // 	if err != nil {
 // 		t.Errorf("Got %v error, want %v", err, nil)
 // 	}
-// 	if p.addedTasks != 3 {
-// 		t.Errorf("Wrong input jobs. got %v, want %v", p.addedTasks, 3)
+// 	if p.nums.getAddedTasks() != 3 {
+// 		t.Errorf("Wrong input jobs. got %v, want %v", p.nums.getAddedTasks(), 3)
 // 	}
-// 	if p.addedTasks != p.Added() {
-// 		t.Errorf("Wrong input jobs. got %v, want %v", p.addedTasks, p.Added())
+// 	p.stop()
+// 	if p.running {
+// 		t.Errorf("pool is %v, want %v", p.running, false)
 // 	}
-// 	p.Stop()
-// 	if p.IsRunning() {
-// 		t.Errorf("pool is %v, want %v", p.IsRunning(), false)
-// 	}
-// 	err = p.Add("http://127.0.0.1:80/", "")
-// 	if err != errNotRun {
-// 		t.Errorf("Got %v error, want %v", err, errNotRun)
-// 	}
+// 	// err = p.add("http://127.0.0.1:80/", "")
+// 	// if err != errNotRun {
+// 	// 	t.Errorf("Got %v error, want %v", err, errNotRun)
+// 	// }
 // }
 
 // func TestWithServer(t *testing.T) {
