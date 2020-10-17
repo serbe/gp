@@ -5,10 +5,12 @@ go 1.13
 require (
 	github.com/andybalholm/cascadia v1.1.0 // indirect
 	github.com/jackc/pgx/v4 v4.2.1 // indirect
+	github.com/mattn/go-colorable v0.1.8 // indirect
+	github.com/mattn/go-runewidth v0.0.9 // indirect
+	github.com/mgechev/revive v1.0.2 // indirect
 	github.com/serbe/adb v1.0.3
 	github.com/serbe/pool v1.0.8
 	github.com/serbe/sites v1.0.2
-	golang.org/x/crypto v0.0.0-20200117160349-530e935923ad // indirect
-	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa // indirect
-	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 // indirect
+	golang.org/x/sys v0.0.0-20201017003518-b09fb700fbb7 // indirect
+	golang.org/x/tools v0.0.0-20201017001424-6003fad69a88 // indirect
 )
