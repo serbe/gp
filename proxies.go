@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -14,10 +15,10 @@ func proxyFromString(hostname string) (adb.Proxy, error) {
 	var proxy adb.Proxy
 	u, err := url.Parse(hostname)
 	if err != nil {
-		return proxy, err
+		return proxy, fmt.Errorf("failed parse url: %w", err)
 	}
 	proxy = newProxy(u)
-	return proxy, err
+	return proxy, nil
 }
 
 func newProxy(u *url.URL) adb.Proxy {

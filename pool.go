@@ -68,13 +68,13 @@ func (p *Pool) run() {
 	p.wg.Wait()
 }
 
-func (p *Pool) runAll() {
-	for i := range p.workers {
-		p.workers[i].run()
-	}
-	p.dp.run()
-	p.run()
-}
+// func (p *Pool) runAll() {
+// 	for i := range p.workers {
+// 		p.workers[i].run()
+// 	}
+// 	p.dp.run()
+// 	p.run()
+// }
 
 func (p *Pool) start() {
 	p.running = true
@@ -126,12 +126,12 @@ func (p *Pool) add(hostname string) error {
 	return nil
 }
 
-func (p *Pool) stop() {
-	p.wg.Add(1)
-	p.quit <- struct{}{}
-	p.wg.Wait()
-	p.running = false
-}
+// func (p *Pool) stop() {
+// 	p.wg.Add(1)
+// 	p.quit <- struct{}{}
+// 	p.wg.Wait()
+// 	p.running = false
+// }
 
 // // IsRunning - check pool status is running
 // func (p *Pool) IsRunning() bool {

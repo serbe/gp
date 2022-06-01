@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -55,17 +56,17 @@ func getMyIP(cfg *config) error {
 	}
 	resp, err := client.Get("https://api.ipify.org")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed get ip: %w", err)
 	}
 	defer func() {
 		chkErr("r.Body.Close", resp.Body.Close())
 	}()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed read body: %w", err)
 	}
 	cfg.myIP = strings.Replace(string(body), "\n", "", 1)
-	return err
+	return nil
 }
 
 func checkTarget(cfg *config) bool {
