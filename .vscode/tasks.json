@@ -1,8 +1,23 @@
 {
     "owner": "go",
-    "version": "0.1.0",
+    "version": "2.0.0",
     "command": "go",
-    "isShellCommand": true,
-    "showOutput": "always",
-    "args": ["build"]
+    "args": [
+        "build"
+    ],
+    "tasks": [
+        {
+            "label": "go",
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "build"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "_id": "build",
+                "isDefault": false
+            }
+        }
+    ]
 }

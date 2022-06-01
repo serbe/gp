@@ -72,9 +72,10 @@ func checkTarget(cfg *config) bool {
 	client := &http.Client{
 		Timeout: time.Duration(cfg.Timeout) * time.Millisecond,
 	}
-	_, err := client.Get(cfg.Target)
+	resp, err := client.Get(cfg.Target)
 	if err != nil {
 		errmsg("checkTarget", err)
 	}
+	defer resp.Body.Close()
 	return err == nil
 }

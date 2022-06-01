@@ -1,0 +1,8 @@
+{
+    "owner": "go",
+    "version": "0.1.0",
+    "command": "go",
+    "isShellCommand": true,
+    "showOutput": "always",
+    "args": ["build"]
+}
